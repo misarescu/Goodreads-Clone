@@ -421,7 +421,7 @@ func TestBusiness_SearchBooksByTitle(t *testing.T) {
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, books []db.Book) {
-				assert.Len(t, books, 0)
+				assert.Empty(t, books)
 			},
 		},
 	}

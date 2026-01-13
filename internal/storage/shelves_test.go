@@ -92,8 +92,8 @@ func TestShelfRepository_GetByID(t *testing.T) {
 			shelf, err := s.Shelves.GetByID(ctx, tt.id)
 
 			if tt.wantErr {
-				assert.Error(t, err)
-				assert.ErrorIs(t, err, sql.ErrNoRows)
+				require.Error(t, err)
+				require.ErrorIs(t, err, sql.ErrNoRows)
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, created.ID, shelf.ID)
@@ -122,13 +122,13 @@ func TestShelfRepository_GetByUserAndName(t *testing.T) {
 
 	t.Run("non-existent shelf", func(t *testing.T) {
 		shelf, err := s.Shelves.GetByUserAndName(ctx, user.ID, "Nonexistent")
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 		assert.Nil(t, shelf)
 	})
 
 	t.Run("wrong user", func(t *testing.T) {
 		shelf, err := s.Shelves.GetByUserAndName(ctx, 99999, "My Shelf")
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 		assert.Nil(t, shelf)
 	})
 }
@@ -171,7 +171,7 @@ func TestShelfRepository_ListByUser(t *testing.T) {
 		user3 := createTestUser(t, s, "user3@example.com", "user3")
 		shelves, err := s.Shelves.ListByUser(ctx, user3.ID)
 		require.NoError(t, err)
-		assert.Len(t, shelves, 0)
+		assert.Empty(t, shelves)
 	})
 }
 
@@ -193,7 +193,7 @@ func TestShelfRepository_Update(t *testing.T) {
 
 	t.Run("update non-existent shelf", func(t *testing.T) {
 		shelf, err := s.Shelves.Update(ctx, 99999, "Should Fail")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, shelf)
 	})
 }
@@ -212,7 +212,7 @@ func TestShelfRepository_Delete(t *testing.T) {
 
 		// Verify deletion
 		_, err = s.Shelves.GetByID(ctx, created.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 
 	t.Run("delete non-existent shelf", func(t *testing.T) {
@@ -252,7 +252,7 @@ func TestShelfRepository_GetDefaultsByUser(t *testing.T) {
 
 		shelves, err := s.Shelves.GetDefaultsByUser(ctx, user2.ID)
 		require.NoError(t, err)
-		assert.Len(t, shelves, 0)
+		assert.Empty(t, shelves)
 	})
 }
 
@@ -276,5 +276,5 @@ func TestShelfRepository_Delete_CascadeShelfBooks(t *testing.T) {
 
 	// Verify shelf_books entry was cascade deleted
 	_, err = s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
-	assert.ErrorIs(t, err, sql.ErrNoRows)
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }

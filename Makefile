@@ -43,6 +43,12 @@ frontend-dev: frontend-install
 frontend-lint:
 	cd frontend && bun run lint
 
+backend-lint:
+	golangci-lint config verify
+	golangci-lint run 
+
+lint: frontend-lint backend-lint
+
 # Database
 gen-db:
 	sqlc -f db/sqlc.yaml generate
@@ -57,9 +63,6 @@ migrate:
 		sqlite3 goodreads.db < $$file; \
 	done
 	@echo "Migrations complete"
-
-lint:
-	golangci-lint run 
 
 # Testing
 gen-mocks:

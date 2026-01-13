@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	"goodreads-clone.com/internal/business"
@@ -35,5 +36,8 @@ func (s *Server) Handler() http.Handler {
 
 // ListenAndServe starts the HTTP server on the specified address.
 func (s *Server) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, s.Handler())
+	if err := http.ListenAndServe(addr, s.Handler()); err != nil {
+		return fmt.Errorf("HTTP server error: %w", err)
+	}
+	return nil
 }

@@ -134,8 +134,8 @@ func TestBookRepository_GetByID(t *testing.T) {
 			book, err := s.Books.GetByID(ctx, tt.id)
 
 			if tt.wantErr {
-				assert.Error(t, err)
-				assert.ErrorIs(t, err, sql.ErrNoRows)
+				require.Error(t, err)
+				require.ErrorIs(t, err, sql.ErrNoRows)
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, created.ID, book.ID)
@@ -172,7 +172,7 @@ func TestBookRepository_GetByISBN(t *testing.T) {
 
 	t.Run("non-existent ISBN", func(t *testing.T) {
 		book, err := s.Books.GetByISBN(ctx, "978-0000000000")
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 		assert.Nil(t, book)
 	})
 }
@@ -222,7 +222,7 @@ func TestBookRepository_Update(t *testing.T) {
 		}
 
 		book, err := s.Books.Update(ctx, params)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, book)
 	})
 }
@@ -240,7 +240,7 @@ func TestBookRepository_Delete(t *testing.T) {
 
 		// Verify deletion
 		_, err = s.Books.GetByID(ctx, created.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 
 	t.Run("delete non-existent book", func(t *testing.T) {
@@ -351,10 +351,10 @@ func TestBookRepository_SearchByTitle(t *testing.T) {
 			checkTitles: []string{"1984"},
 		},
 		{
-			name:       "partial match - 'Great'",
-			query:      "Great",
-			limit:      10,
-			minResults: 2,
+			name:        "partial match - 'Great'",
+			query:       "Great",
+			limit:       10,
+			minResults:  2,
 			checkTitles: []string{"The Great Gatsby", "Great Expectations"},
 		},
 		{
@@ -418,5 +418,5 @@ func TestBookRepository_Delete_CascadeShelfBooks(t *testing.T) {
 
 	// Verify shelf_books entry was cascade deleted
 	_, err = s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
-	assert.ErrorIs(t, err, sql.ErrNoRows)
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }

@@ -6,6 +6,10 @@ run:
   modules-download-mode: readonly
 
 linters:
+  exclusions:
+    paths:
+      - ./internal/mocks/
+      - static/static.go
   enable:
     - errcheck
     - govet
@@ -14,6 +18,20 @@ linters:
     - unused
     - misspell
     - revive
+    - lll
+    - copyloopvar
+    - cyclop
+    - embeddedstructfieldcheck
+    - gocognit
+    - goconst
+    - gocritic
+    - prealloc
+    - recvcheck
+    - sloglint
+    - testifylint
+    - unconvert
+    - whitespace
+    - wrapcheck
 
 issues:
   max-same-issues: 0

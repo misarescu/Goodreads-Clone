@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 
 	"goodreads-clone.com/internal/db"
 )
@@ -17,7 +18,7 @@ func (r *shelfRepository) Create(ctx context.Context, userID int64, name string,
 		IsDefault: isDefault,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create shelf query failed: %w", err)
 	}
 	return &shelf, nil
 }
@@ -25,7 +26,7 @@ func (r *shelfRepository) Create(ctx context.Context, userID int64, name string,
 func (r *shelfRepository) GetByID(ctx context.Context, id int64) (*db.Shelf, error) {
 	shelf, err := r.queries.GetShelfByID(ctx, id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get shelf by ID query failed: %w", err)
 	}
 	return &shelf, nil
 }
@@ -36,13 +37,17 @@ func (r *shelfRepository) GetByUserAndName(ctx context.Context, userID int64, na
 		Name:   name,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("get shelf by user and name query failed: %w", err)
 	}
 	return &shelf, nil
 }
 
 func (r *shelfRepository) ListByUser(ctx context.Context, userID int64) ([]db.Shelf, error) {
-	return r.queries.ListShelvesByUser(ctx, userID)
+	shelves, err := r.queries.ListShelvesByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list shelves by user query failed: %w", err)
+	}
+	return shelves, nil
 }
 
 func (r *shelfRepository) Update(ctx context.Context, id int64, name string) (*db.Shelf, error) {
@@ -51,15 +56,22 @@ func (r *shelfRepository) Update(ctx context.Context, id int64, name string) (*d
 		Name: name,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update shelf query failed: %w", err)
 	}
 	return &shelf, nil
 }
 
 func (r *shelfRepository) Delete(ctx context.Context, id int64) error {
-	return r.queries.DeleteShelf(ctx, id)
+	if err := r.queries.DeleteShelf(ctx, id); err != nil {
+		return fmt.Errorf("delete shelf query failed: %w", err)
+	}
+	return nil
 }
 
 func (r *shelfRepository) GetDefaultsByUser(ctx context.Context, userID int64) ([]db.Shelf, error) {
-	return r.queries.GetDefaultShelvesByUser(ctx, userID)
+	shelves, err := r.queries.GetDefaultShelvesByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get default shelves by user query failed: %w", err)
+	}
+	return shelves, nil
 }

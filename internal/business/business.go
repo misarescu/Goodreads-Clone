@@ -37,5 +37,8 @@ func New(cfg Config) (*Business, error) {
 
 // Close releases all resources held by the Business instance.
 func (b *Business) Close() error {
-	return b.Storage.Close()
+	if err := b.Storage.Close(); err != nil {
+		return fmt.Errorf("closing storage: %w", err)
+	}
+	return nil
 }

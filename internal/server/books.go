@@ -3,6 +3,7 @@ package server
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,7 +47,7 @@ func (req *createBookRequest) toParams() (db.CreateBookParams, error) {
 	if req.ReleaseDate != nil {
 		t, err := time.Parse(time.RFC3339, *req.ReleaseDate)
 		if err != nil {
-			return params, err
+			return params, fmt.Errorf("parsing release date: %w", err)
 		}
 		params.ReleaseDate = sql.NullTime{Time: t, Valid: true}
 	}

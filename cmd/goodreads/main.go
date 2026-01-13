@@ -2,7 +2,8 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
 
 	_ "modernc.org/sqlite"
@@ -12,6 +13,13 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		slog.Error("Application error", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	dbPath := os.Getenv("DATABASE_PATH")
 	if dbPath == "" {
 		dbPath = "goodreads.db"
@@ -26,17 +34,18 @@ func main() {
 		DatabasePath: dbPath,
 	})
 	if err != nil {
-		log.Fatalf("Failed to initialize business layer: %v", err)
+		return fmt.Errorf("failed to initialize business layer: %w", err)
 	}
 	defer func() { _ = b.Close() }()
 
 	srv, err := server.New(b)
 	if err != nil {
-		log.Fatalf("Failed to initialize server: %v", err)
+		return fmt.Errorf("failed to initialize server: %w", err)
 	}
 
-	log.Printf("Server starting on %s", addr)
+	slog.Info("Server starting", "address", addr)
 	if err := srv.ListenAndServe(addr); err != nil {
-		log.Fatalf("Server error: %v", err)
+		return fmt.Errorf("server error: %w", err)
 	}
+	return nil
 }

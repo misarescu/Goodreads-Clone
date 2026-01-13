@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 
 	"goodreads-clone.com/internal/db"
 )
@@ -33,7 +34,10 @@ func New(sqlDB *sql.DB) *Storage {
 
 // Close closes the database connection and releases all resources.
 func (s *Storage) Close() error {
-	return s.db.Close()
+	if err := s.db.Close(); err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+	return nil
 }
 
 // DB returns the underlying database connection.
