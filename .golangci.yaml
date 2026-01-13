@@ -1,0 +1,38 @@
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - gofmt         # Enforce gofmt formatting
+    - goimports     # Enforce goimports import ordering
+    - govet         # Reports suspicious constructs
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Advanced static analysis
+    - unused        # Check for unused code
+    - gosimple      # Suggest code simplifications
+    - misspell      # Find commonly misspelled words
+    - revive        # Fast, configurable linting (successor to golint)
+
+linters-settings:
+  errcheck:
+    check-blank: true
+  govet:
+    enable-all: true
+  revive:
+    severity: warning
+
+issues:
+  exclude-dirs:
+    - internal/db           # Generated sqlc code
+    - internal/storage/mocks # Generated mockery code
+    - static                 # Embedded static files
+  max-same-issues: 0
+  max-issues-per-linter: 0
+
+output:
+  formats:
+    - format: colored-line-number
+  sort-results: true
