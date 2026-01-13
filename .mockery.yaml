@@ -1,10 +1,13 @@
-with-expecter: true
-dir: "internal/storage/mocks"
-outpkg: mocks
+dir: internal/mocks
+pkgname: mocks
+filename: "{{.InterfaceName}}.go"
+template: testify
+template-data:
+  unroll-variadic: true
 packages:
   goodreads-clone.com/internal/storage:
     interfaces:
-      UserRepository:
-      BookRepository:
-      ShelfRepository:
-      ShelfBookRepository:
+      BookRepository: {}
+      ShelfBookRepository: {}
+      ShelfRepository: {}
+      UserRepository: {}

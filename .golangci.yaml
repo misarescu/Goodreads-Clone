@@ -25,9 +25,9 @@ linters-settings:
 
 issues:
   exclude-dirs:
-    - internal/db           # Generated sqlc code
-    - internal/storage/mocks # Generated mockery code
-    - static                 # Embedded static files
+    - internal/db    # Generated sqlc code
+    - internal/mocks # Generated mockery code
+    - static         # Embedded static files
   max-same-issues: 0
   max-issues-per-linter: 0
 

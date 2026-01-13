@@ -12,8 +12,8 @@ import (
 
 	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/mocks"
 	"goodreads-clone.com/internal/storage"
-	"goodreads-clone.com/internal/storage/mocks"
 )
 
 func TestBusiness_AddBookToShelf(t *testing.T) {
