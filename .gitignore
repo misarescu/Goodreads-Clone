@@ -15,7 +15,7 @@
 # Testing
 coverage.out
 coverage.html
-internal/storage/mocks/
+internal/mocks
 
 # Dependency directories
 vendor/
