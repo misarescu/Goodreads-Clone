@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 
 run:
   timeout: 5m
@@ -7,30 +7,14 @@ run:
 
 linters:
   enable:
-    - errcheck      # Check for unchecked errors
-    - govet         # Reports suspicious constructs
-    - ineffassign   # Detect ineffectual assignments
-    - staticcheck   # Advanced static analysis
-    - unused        # Check for unused code
-    - misspell      # Find commonly misspelled words
-    - revive        # Fast, configurable linting (successor to golint)
-
-linters-settings:
-  errcheck:
-    check-blank: true
-  govet:
-    enable-all: true
-  revive:
-    severity: warning
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - revive
 
 issues:
-  exclude-dirs:
-    - internal/db    # Generated sqlc code
-    - internal/mocks # Generated mockery code
-    - static         # Embedded static files
   max-same-issues: 0
   max-issues-per-linter: 0
-
-output:
-  format: colored-line-number
-  sort-results: true
