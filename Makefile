@@ -10,6 +10,7 @@ install-deps-backend:
 	go mod download
 	go install github.com/vektra/mockery/v2@latest
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
 
 install-deps-frontend:
 	cd frontend && bun install
@@ -47,6 +48,9 @@ migrate:
 		sqlite3 goodreads.db < $$file; \
 	done
 	@echo "Migrations complete"
+
+lint: 
+	golangci-lint run
 
 # Testing
 gen-mocks:
