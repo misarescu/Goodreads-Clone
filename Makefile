@@ -24,7 +24,7 @@ install-deps-backend:
 install-deps-frontend:
 	cd frontend && bun install
 
-build: install-deps frontend-build backend-build
+build: frontend-build backend-build
 
 # Backend (depends on frontend-build for embedded static files and gen-db for database code)
 backend-build: frontend-build gen-db gen-mocks
