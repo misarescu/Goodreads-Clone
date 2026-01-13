@@ -30,7 +30,7 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
-          args: --timeout=5m --skip-files "static/static.go"
+          args: --timeout=5m 
 
   tests:
     name: Tests
