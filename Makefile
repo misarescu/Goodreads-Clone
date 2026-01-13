@@ -52,7 +52,7 @@ migrate:
 gen-mocks:
 	mockery
 
-test: gen-mocks
+test: build
 	go test -race ./...
 
 coverage: gen-mocks
