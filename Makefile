@@ -14,7 +14,7 @@ install-tools:
 	else \
 		echo "No package manager found. Installing via Go..."; \
 		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
-		go install github.com/vektra/mockery/v2@latest; \
+		go install github.com/vektra/mockery/v3@latest; \
 		go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest; \
 	fi
 
@@ -68,10 +68,10 @@ migrate:
 gen-mocks:
 	mockery
 
-test: build
+test: 
 	go test -race ./...
 
-coverage: gen-mocks
+coverage: 
 	go test $$(go list ./... | grep -v /mocks | grep -v /db | grep -v /cmd | grep -v /static) -coverprofile=coverage.out 
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
