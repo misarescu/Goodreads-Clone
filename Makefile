@@ -4,14 +4,23 @@
 all: build
 
 # Dependencies
-install-deps: install-deps-backend install-deps-frontend
+install-deps: install-deps-backend install-deps-frontend install-tools
+
+install-tools:
+	@echo "Installing development tools..."
+	@if command -v brew >/dev/null 2>&1; then \
+		echo "Using Homebrew (macOS/Linux)..."; \
+		brew install golangci-lint mockery sqlc; \
+	else \
+		echo "No package manager found. Installing via Go..."; \
+		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
+		go install github.com/vektra/mockery/v2@latest; \
+		go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest; \
+	fi
 
 install-deps-backend:
 	go mod download
-	go install github.com/vektra/mockery/v2@latest
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.8.0
-
+	
 install-deps-frontend:
 	cd frontend && bun install
 
