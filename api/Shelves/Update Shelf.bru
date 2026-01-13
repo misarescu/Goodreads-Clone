@@ -1,0 +1,39 @@
+meta {
+  name: Update Shelf
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:8080/api/shelves/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Updated Shelf Name"
+  }
+}
+
+docs {
+  Updates a custom shelf's name.
+
+  Note: Cannot update default shelves (To Read, Currently Reading, Finished, DNF).
+
+  Required fields:
+  - name (string)
+
+  Response: 200 OK
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "user_id": 1,
+      "name": "Updated Shelf Name",
+      "is_default": false,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+}

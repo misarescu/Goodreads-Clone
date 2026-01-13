@@ -1,0 +1,35 @@
+meta {
+  name: Get User by Username
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://localhost:8080/api/users?username=johndoe
+  body: none
+  auth: none
+}
+
+params:query {
+  username: johndoe
+}
+
+docs {
+  Retrieves a user by their username.
+
+  Query Parameters:
+  - username (required): User's username
+
+  Response: 200 OK
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "email": "user@example.com",
+      "username": "johndoe",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+}

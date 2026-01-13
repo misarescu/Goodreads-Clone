@@ -1,0 +1,51 @@
+meta {
+  name: List User Shelves
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:8080/api/users/1/shelves
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves all shelves for a specific user.
+
+  Response: 200 OK
+  ```json
+  {
+    "data": [
+      {
+        "id": 1,
+        "user_id": 1,
+        "name": "To Read",
+        "is_default": true,
+        "created_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "id": 2,
+        "user_id": 1,
+        "name": "Currently Reading",
+        "is_default": true,
+        "created_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "id": 3,
+        "user_id": 1,
+        "name": "Finished",
+        "is_default": true,
+        "created_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "id": 4,
+        "user_id": 1,
+        "name": "DNF",
+        "is_default": true,
+        "created_at": "2024-01-01T00:00:00Z"
+      }
+    ]
+  }
+  ```
+}

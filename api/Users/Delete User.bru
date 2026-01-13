@@ -1,0 +1,17 @@
+meta {
+  name: Delete User
+  type: http
+  seq: 7
+}
+
+delete {
+  url: http://localhost:8080/api/users/1
+  body: none
+  auth: none
+}
+
+docs {
+  Deletes a user by their ID.
+
+  Response: 204 No Content
+}

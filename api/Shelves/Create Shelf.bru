@@ -1,0 +1,39 @@
+meta {
+  name: Create Shelf
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/shelves
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": 1,
+    "name": "My Custom Shelf"
+  }
+}
+
+docs {
+  Creates a new custom shelf for a user.
+
+  Required fields:
+  - user_id (integer)
+  - name (string)
+
+  Response: 201 Created
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "user_id": 1,
+      "name": "My Custom Shelf",
+      "is_default": false,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+}

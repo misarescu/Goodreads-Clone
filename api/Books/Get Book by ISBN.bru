@@ -1,0 +1,38 @@
+meta {
+  name: Get Book by ISBN
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/api/books?isbn=978-0-7432-7356-5
+  body: none
+  auth: none
+}
+
+params:query {
+  isbn: 978-0-7432-7356-5
+}
+
+docs {
+  Retrieves a book by its ISBN.
+
+  Query Parameters:
+  - isbn (required): Book's ISBN
+
+  Response: 200 OK
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "page_count": 180,
+      "isbn": "978-0-7432-7356-5",
+      "release_date": "1925-04-10T00:00:00Z",
+      "language": "English",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+}

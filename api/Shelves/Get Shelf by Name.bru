@@ -1,0 +1,35 @@
+meta {
+  name: Get Shelf by Name
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/api/users/1/shelves?name=To Read
+  body: none
+  auth: none
+}
+
+params:query {
+  name: To Read
+}
+
+docs {
+  Retrieves a specific shelf for a user by name.
+
+  Query Parameters:
+  - name (required): Shelf name
+
+  Response: 200 OK
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "user_id": 1,
+      "name": "To Read",
+      "is_default": true,
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+}

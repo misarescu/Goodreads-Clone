@@ -1,0 +1,39 @@
+meta {
+  name: List Users
+  type: http
+  seq: 3
+}
+
+get {
+  url: http://localhost:8080/api/users?limit=20&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 20
+  offset: 0
+}
+
+docs {
+  Retrieves a paginated list of users.
+
+  Query Parameters:
+  - limit (optional): Number of users to return (default: 20, max: 100)
+  - offset (optional): Number of users to skip (default: 0)
+
+  Response: 200 OK
+  ```json
+  {
+    "data": [
+      {
+        "id": 1,
+        "email": "user1@example.com",
+        "username": "user1",
+        "created_at": "2024-01-01T00:00:00Z",
+        "updated_at": "2024-01-01T00:00:00Z"
+      }
+    ]
+  }
+  ```
+}

@@ -1,0 +1,52 @@
+meta {
+  name: Create Book
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "page_count": 180,
+    "isbn": "978-0-7432-7356-5",
+    "release_date": "1925-04-10T00:00:00Z",
+    "language": "English"
+  }
+}
+
+docs {
+  Creates a new book in the catalog.
+
+  Required fields:
+  - title (string)
+  - author (string)
+
+  Optional fields:
+  - page_count (integer)
+  - isbn (string)
+  - release_date (string, RFC3339 format)
+  - language (string)
+
+  Response: 201 Created
+  ```json
+  {
+    "data": {
+      "id": 1,
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "page_count": 180,
+      "isbn": "978-0-7432-7356-5",
+      "release_date": "1925-04-10T00:00:00Z",
+      "language": "English",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  }
+  ```
+}

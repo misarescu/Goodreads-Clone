@@ -1,0 +1,19 @@
+meta {
+  name: Delete Shelf
+  type: http
+  seq: 6
+}
+
+delete {
+  url: http://localhost:8080/api/shelves/1
+  body: none
+  auth: none
+}
+
+docs {
+  Deletes a custom shelf.
+
+  Note: Cannot delete default shelves (To Read, Currently Reading, Finished, DNF).
+
+  Response: 204 No Content
+}

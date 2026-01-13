@@ -1,0 +1,87 @@
+# Go-specific
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Testing
+coverage.out
+coverage.html
+internal/storage/mocks/
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Compiled Object files
+*.o
+*.a
+
+# Debug files
+debug
+__debug_bin
+
+# Air - live reload for Go apps
+tmp/
+
+# Frontend-specific (Node.js/Vite)
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+
+# Build output
+bin/
+dist/
+data/
+dist-ssr/
+build/
+*.local
+
+# IDEs and Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.sw?
+*~
+.DS_Store
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Environment variables
+.env
+.envrc
+.env.local
+.env.*.local
+
+# Temporary files
+temp/
+*.tmp
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated files
+Thumbs.db
