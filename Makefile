@@ -58,8 +58,8 @@ migrate:
 	done
 	@echo "Migrations complete"
 
-lint: 
-	golangci-lint run
+lint:
+	golangci-lint run --skip-files "static/static.go"
 
 # Testing
 gen-mocks:
