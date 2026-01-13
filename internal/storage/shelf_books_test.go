@@ -97,7 +97,7 @@ func TestShelfBookRepository_Get(t *testing.T) {
 
 	t.Run("non-existent shelf_book", func(t *testing.T) {
 		shelfBook, err := s.ShelfBooks.Get(ctx, 99999, book.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 		assert.Nil(t, shelfBook)
 	})
 }
@@ -133,7 +133,7 @@ func TestShelfBookRepository_UpdateProgress(t *testing.T) {
 
 	t.Run("update non-existent shelf_book", func(t *testing.T) {
 		shelfBook, err := s.ShelfBooks.UpdateProgress(ctx, 99999, 100, 50)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, shelfBook)
 	})
 }
@@ -157,7 +157,7 @@ func TestShelfBookRepository_Remove(t *testing.T) {
 
 		// Verify removal
 		_, err = s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 
 	t.Run("remove non-existent shelf_book", func(t *testing.T) {
@@ -210,7 +210,7 @@ func TestShelfBookRepository_ListBooksOnShelf(t *testing.T) {
 		emptyShelf := createTestShelf(t, s, user.ID, "Empty Shelf", false)
 		books, err := s.ShelfBooks.ListBooksOnShelf(ctx, emptyShelf.ID)
 		require.NoError(t, err)
-		assert.Len(t, books, 0)
+		assert.Empty(t, books)
 	})
 
 	t.Run("verify progress tracking", func(t *testing.T) {
@@ -271,14 +271,14 @@ func TestShelfBookRepository_GetUserBookShelves(t *testing.T) {
 		book2 := createTestBook(t, s, "Unlisted Book", "Author")
 		shelves, err := s.ShelfBooks.GetUserBookShelves(ctx, user.ID, book2.ID)
 		require.NoError(t, err)
-		assert.Len(t, shelves, 0)
+		assert.Empty(t, shelves)
 	})
 
 	t.Run("different user", func(t *testing.T) {
 		user2 := createTestUser(t, s, "user2@example.com", "user2")
 		shelves, err := s.ShelfBooks.GetUserBookShelves(ctx, user2.ID, book.ID)
 		require.NoError(t, err)
-		assert.Len(t, shelves, 0)
+		assert.Empty(t, shelves)
 	})
 }
 
@@ -302,7 +302,7 @@ func TestShelfBookRepository_ForeignKeyCascades(t *testing.T) {
 
 		// Verify shelf_books entry was cascade deleted
 		_, err = s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 
 	t.Run("cascade on book delete", func(t *testing.T) {
@@ -322,6 +322,6 @@ func TestShelfBookRepository_ForeignKeyCascades(t *testing.T) {
 
 		// Verify shelf_books entry was cascade deleted
 		_, err = s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 }

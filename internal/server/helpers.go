@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -35,12 +36,19 @@ func decodeJSON(r *http.Request, target any) error {
 
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	return decoder.Decode(target)
+	if err := decoder.Decode(target); err != nil {
+		return fmt.Errorf("decoding JSON: %w", err)
+	}
+	return nil
 }
 
 func parseID(r *http.Request, paramName string) (int64, error) {
 	idStr := r.PathValue(paramName)
-	return strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("parsing ID parameter %q: %w", paramName, err)
+	}
+	return id, nil
 }
 
 func handleDBError(w http.ResponseWriter, err error) {

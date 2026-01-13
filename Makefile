@@ -4,13 +4,23 @@
 all: build
 
 # Dependencies
-install-deps: install-deps-backend install-deps-frontend
+install-deps: install-deps-backend install-deps-frontend install-tools
+
+install-tools:
+	@echo "Installing development tools..."
+	@if command -v brew >/dev/null 2>&1; then \
+		echo "Using Homebrew (macOS/Linux)..."; \
+		brew install golangci-lint mockery sqlc; \
+	else \
+		echo "No package manager found. Installing via Go..."; \
+		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
+		go install github.com/vektra/mockery/v3@latest; \
+		go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest; \
+	fi
 
 install-deps-backend:
 	go mod download
-	go install github.com/vektra/mockery/v2@latest
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-
+	
 install-deps-frontend:
 	cd frontend && bun install
 
@@ -33,6 +43,12 @@ frontend-dev: frontend-install
 frontend-lint:
 	cd frontend && bun run lint
 
+backend-lint:
+	golangci-lint config verify
+	golangci-lint run 
+
+lint: frontend-lint backend-lint
+
 # Database
 gen-db:
 	sqlc -f db/sqlc.yaml generate
@@ -52,10 +68,10 @@ migrate:
 gen-mocks:
 	mockery
 
-test: gen-mocks
+test: 
 	go test -race ./...
 
-coverage: gen-mocks
+coverage: 
 	go test $$(go list ./... | grep -v /mocks | grep -v /db | grep -v /cmd | grep -v /static) -coverprofile=coverage.out 
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"

@@ -12,8 +12,8 @@ import (
 
 	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/mocks"
 	"goodreads-clone.com/internal/storage"
-	"goodreads-clone.com/internal/storage/mocks"
 )
 
 func TestBusiness_CreateBook(t *testing.T) {
@@ -421,7 +421,7 @@ func TestBusiness_SearchBooksByTitle(t *testing.T) {
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, books []db.Book) {
-				assert.Len(t, books, 0)
+				assert.Empty(t, books)
 			},
 		},
 	}

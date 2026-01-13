@@ -1,0 +1,38 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  exclusions:
+    paths:
+      - ./internal/mocks/
+      - static/static.go
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - revive
+    - lll
+    - copyloopvar
+    - cyclop
+    - embeddedstructfieldcheck
+    - gocognit
+    - goconst
+    - gocritic
+    - prealloc
+    - recvcheck
+    - sloglint
+    - testifylint
+    - unconvert
+    - whitespace
+    - wrapcheck
+
+issues:
+  max-same-issues: 0
+  max-issues-per-linter: 0

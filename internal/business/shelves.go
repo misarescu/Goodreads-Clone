@@ -2,11 +2,12 @@ package business
 
 import (
 	"context"
+	"fmt"
 
 	"goodreads-clone.com/internal/db"
 )
 
-// Default shelf names
+// DefaultShelfNames are the four default shelves created for each new user.
 var DefaultShelfNames = []string{
 	"To Read",
 	"Currently Reading",
@@ -16,7 +17,11 @@ var DefaultShelfNames = []string{
 
 // CreateShelf creates a new custom shelf for a user.
 func (b *Business) CreateShelf(ctx context.Context, userID int64, name string) (*db.Shelf, error) {
-	return b.Storage.Shelves.Create(ctx, userID, name, false)
+	shelf, err := b.Storage.Shelves.Create(ctx, userID, name, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create shelf: %w", err)
+	}
+	return shelf, nil
 }
 
 // CreateDefaultShelves creates the 4 default shelves for a user.
@@ -25,7 +30,7 @@ func (b *Business) CreateDefaultShelves(ctx context.Context, userID int64) ([]db
 	for _, name := range DefaultShelfNames {
 		shelf, err := b.Storage.Shelves.Create(ctx, userID, name, true)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to create default shelf %q: %w", name, err)
 		}
 		shelves = append(shelves, *shelf)
 	}
@@ -34,30 +39,53 @@ func (b *Business) CreateDefaultShelves(ctx context.Context, userID int64) ([]db
 
 // GetShelfByID retrieves a shelf by its ID.
 func (b *Business) GetShelfByID(ctx context.Context, id int64) (*db.Shelf, error) {
-	return b.Storage.Shelves.GetByID(ctx, id)
+	shelf, err := b.Storage.Shelves.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get shelf by ID: %w", err)
+	}
+	return shelf, nil
 }
 
 // GetShelfByUserAndName retrieves a shelf by user ID and name.
 func (b *Business) GetShelfByUserAndName(ctx context.Context, userID int64, name string) (*db.Shelf, error) {
-	return b.Storage.Shelves.GetByUserAndName(ctx, userID, name)
+	shelf, err := b.Storage.Shelves.GetByUserAndName(ctx, userID, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get shelf by user and name: %w", err)
+	}
+	return shelf, nil
 }
 
 // ListShelvesByUser retrieves all shelves for a user.
 func (b *Business) ListShelvesByUser(ctx context.Context, userID int64) ([]db.Shelf, error) {
-	return b.Storage.Shelves.ListByUser(ctx, userID)
+	shelves, err := b.Storage.Shelves.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list shelves by user: %w", err)
+	}
+	return shelves, nil
 }
 
 // UpdateShelf updates a custom shelf's name. Cannot update default shelves.
 func (b *Business) UpdateShelf(ctx context.Context, id int64, name string) (*db.Shelf, error) {
-	return b.Storage.Shelves.Update(ctx, id, name)
+	shelf, err := b.Storage.Shelves.Update(ctx, id, name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update shelf: %w", err)
+	}
+	return shelf, nil
 }
 
 // DeleteShelf deletes a custom shelf. Cannot delete default shelves.
 func (b *Business) DeleteShelf(ctx context.Context, id int64) error {
-	return b.Storage.Shelves.Delete(ctx, id)
+	if err := b.Storage.Shelves.Delete(ctx, id); err != nil {
+		return fmt.Errorf("failed to delete shelf: %w", err)
+	}
+	return nil
 }
 
 // GetDefaultShelvesByUser retrieves only the default shelves for a user.
 func (b *Business) GetDefaultShelvesByUser(ctx context.Context, userID int64) ([]db.Shelf, error) {
-	return b.Storage.Shelves.GetDefaultsByUser(ctx, userID)
+	shelves, err := b.Storage.Shelves.GetDefaultsByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default shelves by user: %w", err)
+	}
+	return shelves, nil
 }

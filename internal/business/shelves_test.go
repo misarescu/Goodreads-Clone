@@ -11,8 +11,8 @@ import (
 
 	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/mocks"
 	"goodreads-clone.com/internal/storage"
-	"goodreads-clone.com/internal/storage/mocks"
 )
 
 func TestBusiness_CreateDefaultShelves(t *testing.T) {
@@ -73,9 +73,9 @@ func TestBusiness_CreateDefaultShelves(t *testing.T) {
 
 		shelves, err := b.CreateDefaultShelves(ctx, userID)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, shelves)
-		assert.Equal(t, expectedErr, err)
+		assert.ErrorIs(t, err, expectedErr)
 	})
 
 	t.Run("returns error when second shelf creation fails", func(t *testing.T) {
@@ -102,9 +102,9 @@ func TestBusiness_CreateDefaultShelves(t *testing.T) {
 
 		shelves, err := b.CreateDefaultShelves(ctx, userID)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, shelves)
-		assert.Equal(t, expectedErr, err)
+		assert.ErrorIs(t, err, expectedErr)
 	})
 
 	t.Run("verifies DefaultShelfNames constant", func(t *testing.T) {
@@ -161,7 +161,7 @@ func TestBusiness_CreateShelf(t *testing.T) {
 
 		shelf, err := b.CreateShelf(ctx, userID, shelfName)
 
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, shelf)
 	})
 }
@@ -217,7 +217,7 @@ func TestBusiness_GetShelfByID(t *testing.T) {
 			shelf, err := b.GetShelfByID(ctx, shelfID)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 				tt.checkResult(t, shelf)
@@ -277,7 +277,7 @@ func TestBusiness_GetShelfByUserAndName(t *testing.T) {
 			shelf, err := b.GetShelfByUserAndName(ctx, userID, shelfName)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 				tt.checkResult(t, shelf)
@@ -366,7 +366,7 @@ func TestBusiness_UpdateShelf(t *testing.T) {
 			shelf, err := b.UpdateShelf(ctx, shelfID, newName)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 				tt.checkResult(t, shelf)
@@ -421,7 +421,7 @@ func TestBusiness_DeleteShelf(t *testing.T) {
 			err := b.DeleteShelf(ctx, shelfID)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}

@@ -12,8 +12,8 @@ import (
 
 	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/mocks"
 	"goodreads-clone.com/internal/storage"
-	"goodreads-clone.com/internal/storage/mocks"
 )
 
 func TestBusiness_AddBookToShelf(t *testing.T) {
@@ -365,7 +365,7 @@ func TestBusiness_ListBooksOnShelf(t *testing.T) {
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, books []db.ListBooksOnShelfRow) {
-				assert.Len(t, books, 0)
+				assert.Empty(t, books)
 			},
 		},
 	}
@@ -433,7 +433,7 @@ func TestBusiness_GetUserBookShelves(t *testing.T) {
 			},
 			wantErr: false,
 			checkResult: func(t *testing.T, shelves []db.Shelf) {
-				assert.Len(t, shelves, 0)
+				assert.Empty(t, shelves)
 			},
 		},
 	}

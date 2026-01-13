@@ -124,8 +124,8 @@ func TestUserRepository_GetByID(t *testing.T) {
 			user, err := s.Users.GetByID(ctx, tt.id)
 
 			if tt.wantErr {
-				assert.Error(t, err)
-				assert.ErrorIs(t, err, sql.ErrNoRows)
+				require.Error(t, err)
+				require.ErrorIs(t, err, sql.ErrNoRows)
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, created.ID, user.ID)
@@ -153,7 +153,7 @@ func TestUserRepository_GetByEmail(t *testing.T) {
 
 	t.Run("non-existent email", func(t *testing.T) {
 		user, err := s.Users.GetByEmail(ctx, "nonexistent@example.com")
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 		assert.Nil(t, user)
 	})
 }
@@ -175,7 +175,7 @@ func TestUserRepository_GetByUsername(t *testing.T) {
 
 	t.Run("non-existent username", func(t *testing.T) {
 		user, err := s.Users.GetByUsername(ctx, "nonexistent")
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 		assert.Nil(t, user)
 	})
 }
@@ -199,7 +199,7 @@ func TestUserRepository_Update(t *testing.T) {
 
 	t.Run("update non-existent user", func(t *testing.T) {
 		user, err := s.Users.Update(ctx, 99999, "test@example.com", "testuser")
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, user)
 	})
 }
@@ -218,7 +218,7 @@ func TestUserRepository_Delete(t *testing.T) {
 
 		// Verify deletion
 		_, err = s.Users.GetByID(ctx, created.ID)
-		assert.ErrorIs(t, err, sql.ErrNoRows)
+		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 
 	t.Run("delete non-existent user", func(t *testing.T) {
@@ -302,5 +302,5 @@ func TestUserRepository_Delete_CascadeShelves(t *testing.T) {
 
 	// Verify shelf was cascade deleted
 	_, err = s.Shelves.GetByID(ctx, shelf.ID)
-	assert.ErrorIs(t, err, sql.ErrNoRows)
+	require.ErrorIs(t, err, sql.ErrNoRows)
 }
