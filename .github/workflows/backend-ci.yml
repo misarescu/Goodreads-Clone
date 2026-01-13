@@ -54,10 +54,7 @@ jobs:
           node-version: 20
 
       - name: Install dependencies
-        run: make install-deps
-
-      - name: Generate mocks
-        run: make gen-mocks
+        run: make install-deps-backend
 
       - name: Run unit tests
         run: make test
