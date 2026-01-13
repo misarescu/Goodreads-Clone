@@ -1,3 +1,4 @@
+// Package storage implements the data access layer for the Goodreads clone application.
 package storage
 
 import (

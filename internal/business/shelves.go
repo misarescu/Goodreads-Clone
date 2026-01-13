@@ -6,7 +6,7 @@ import (
 	"goodreads-clone.com/internal/db"
 )
 
-// Default shelf names
+// DefaultShelfNames are the four default shelves created for each new user.
 var DefaultShelfNames = []string{
 	"To Read",
 	"Currently Reading",

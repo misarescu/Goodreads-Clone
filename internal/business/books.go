@@ -1,3 +1,4 @@
+// Package business implements the core business logic layer for the Goodreads clone application.
 package business
 
 import (

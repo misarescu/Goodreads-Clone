@@ -1,3 +1,4 @@
+// Package main provides the entry point for the Goodreads clone server application.
 package main
 
 import (
@@ -27,7 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize business layer: %v", err)
 	}
-	defer b.Close()
+	defer func() { _ = b.Close() }()
 
 	srv, err := server.New(b)
 	if err != nil {

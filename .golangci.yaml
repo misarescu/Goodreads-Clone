@@ -1,3 +1,5 @@
+version: 2
+
 run:
   timeout: 5m
   tests: true
@@ -6,13 +8,10 @@ run:
 linters:
   enable:
     - errcheck      # Check for unchecked errors
-    - gofmt         # Enforce gofmt formatting
-    - goimports     # Enforce goimports import ordering
     - govet         # Reports suspicious constructs
     - ineffassign   # Detect ineffectual assignments
     - staticcheck   # Advanced static analysis
     - unused        # Check for unused code
-    - gosimple      # Suggest code simplifications
     - misspell      # Find commonly misspelled words
     - revive        # Fast, configurable linting (successor to golint)
 

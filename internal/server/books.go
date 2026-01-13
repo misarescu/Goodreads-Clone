@@ -1,3 +1,4 @@
+// Package server implements the HTTP server and request handlers for the Goodreads clone API.
 package server
 
 import (

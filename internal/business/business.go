@@ -7,14 +7,18 @@ import (
 	"goodreads-clone.com/internal/storage"
 )
 
+// Business coordinates business logic operations and manages the storage layer.
 type Business struct {
 	Storage *storage.Storage
 }
 
+// Config holds configuration options for initializing the Business layer.
 type Config struct {
 	DatabasePath string
 }
 
+// New creates a new Business instance with the given configuration.
+// It opens the database connection and initializes the storage layer.
 func New(cfg Config) (*Business, error) {
 	db, err := sql.Open("sqlite", cfg.DatabasePath)
 	if err != nil {
@@ -31,6 +35,7 @@ func New(cfg Config) (*Business, error) {
 	}, nil
 }
 
+// Close releases all resources held by the Business instance.
 func (b *Business) Close() error {
 	return b.Storage.Close()
 }
