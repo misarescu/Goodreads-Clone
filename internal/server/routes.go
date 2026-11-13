@@ -34,8 +34,15 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("PUT /api/shelves/{id}", s.handleUpdateShelf)
 	s.mux.HandleFunc("DELETE /api/shelves/{id}", s.handleDeleteShelf)
 
+	// Unknown API routes
+	s.mux.HandleFunc("/api/", s.handleAPINotFound)
+
 	// Static files
 	s.registerStaticFiles()
+}
+
+func (s *Server) handleAPINotFound(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
 }
 
 func (s *Server) registerStaticFiles() {
