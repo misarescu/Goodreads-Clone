@@ -1,4 +1,0 @@
-# Frankie project config (frankie docs/spec/02). Read from main when a run starts.
-# loop-trial is a trial of the workflow interpreter; remove this line to go
-# back to the platform default.
-workflow: loop-trial
