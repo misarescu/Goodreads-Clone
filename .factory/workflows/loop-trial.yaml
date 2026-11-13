@@ -1,0 +1,21 @@
+# Trial of Frankie's workflow interpreter (frankie PR #27).
+# The changelog gate is deliberately strict and the coder is not told about
+# it, so the first attempt is expected to fail it and the run loops back to
+# implement with the gate's feedback.
+name: loop-trial
+version: 1
+steps:
+  - id: implement
+    agent: { role: coder }
+  - id: checks
+    gate:
+      type: command
+      run: ["mise run lint", "mise run test"]
+      onFail: { goto: implement, maxLoops: 2 }
+  - id: changelog
+    gate:
+      type: command
+      run: ["test -f CHANGELOG.md"]
+      onFail: { goto: implement, maxLoops: 1 }
+  - id: open-change-request
+    action: change-request.open
