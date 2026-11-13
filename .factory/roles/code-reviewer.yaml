@@ -1,9 +1,0 @@
-# Trial of Frankie's reviewer-triggered loop (M3 acceptance). Replaces the
-# platform's code-reviewer for this repo with a stricter one; remove
-# .factory/roles/ after the trial to go back to the platform's role.
-name: code-reviewer
-version: 1
-system_prompt_file: prompts/code-reviewer.md
-allowed_tools: [read, grep, glob, bash:readonly]
-output_contract:
-  schema: review-verdict
