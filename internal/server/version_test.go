@@ -24,6 +24,9 @@ func TestHandleVersion(t *testing.T) {
 	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
 		t.Errorf("Content-Type = %q, want application/json", ct)
 	}
+	if cc := rec.Header().Get("Cache-Control"); cc != "public, max-age=60" {
+		t.Errorf("Cache-Control = %q, want %q", cc, "public, max-age=60")
+	}
 	if got := strings.TrimSpace(rec.Body.String()); got != `{"version":"1.2.3"}` {
 		t.Errorf("body = %q, want %q", got, `{"version":"1.2.3"}`)
 	}

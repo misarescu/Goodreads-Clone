@@ -8,5 +8,6 @@ var Version = "dev"
 
 // handleVersion reports which build of the server is running.
 func (s *Server) handleVersion(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Cache-Control", "public, max-age=60")
 	writeJSON(w, http.StatusOK, map[string]string{"version": Version})
 }
