@@ -10,6 +10,7 @@ import (
 func (s *Server) registerRoutes() {
 	// Health API
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
+	s.mux.HandleFunc("GET /api/version", s.handleVersion)
 
 	// Users API
 	s.mux.HandleFunc("POST /api/users", s.handleCreateUser)
