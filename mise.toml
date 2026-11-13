@@ -1,8 +1,24 @@
 # Tool versions shared by humans, CI and the factory's agents and gates.
 # `mise install` installs them; the Makefile targets use them unchanged.
+# golangci-lint, mockery and sqlc match the versions CI uses.
 [tools]
 go = "1.25.5"
 bun = "1.4.4"
-golangci-lint = "2.15.0"
-mockery = "3.9.1"
-sqlc = "1.31.1"
+golangci-lint = "2.8.0"
+mockery = "3.6.1"
+sqlc = "1.30.0"
+
+# The factory's command gates run `mise run lint` and `mise run test`.
+[tasks."deps:frontend"]
+description = "Install frontend dependencies from bun.lock"
+dir = "frontend"
+run = "bun install --frozen-lockfile"
+
+[tasks.lint]
+description = "Lint backend and frontend (make lint)"
+depends = ["deps:frontend"]
+run = "make lint"
+
+[tasks.test]
+description = "Run unit tests (make test)"
+run = "make test"
