@@ -20,7 +20,7 @@ http://localhost:8080
 
 ### Books
 - `POST /api/books` - Create a new book
-- `GET /api/books/count` - Get the number of books in the catalog; returns `{"book_count": <number>}`
+- `GET /api/books/count` - Get the number of books in the catalog. Returns `200 OK` with `Content-Type: application/json` and `{"book_count": <number>}`.
 - `GET /api/books/{id}` - Get book by ID
 - `GET /api/books?isbn={isbn}` - Get book by ISBN
 - `GET /api/books?limit={limit}&offset={offset}` - List books (paginated)
