@@ -1,0 +1,4 @@
+# Frankie M4 acceptance trial: run issues on m4-mix, one workflow using all
+# three harnesses on two providers. Remove after the trial to return to the
+# platform's default-build.
+workflow: m4-mix
