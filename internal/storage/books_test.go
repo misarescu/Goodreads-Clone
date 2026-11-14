@@ -438,3 +438,30 @@ func TestBookRepository_Count(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), n)
 }
+
+func TestBookRepository_Rating(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+	created := createTestBook(t, s, "Rated", "Author")
+	assert.False(t, created.Rating.Valid)
+
+	params := db.UpdateBookParams{ID: created.ID, Title: "Rated", Author: "Author",
+		Rating: sql.NullFloat64{Float64: 4.25, Valid: true}}
+	updated, err := s.Books.Update(ctx, params)
+	require.NoError(t, err)
+	assert.InDelta(t, 4.25, updated.Rating.Float64, 0.0001)
+
+	got, err := s.Books.GetByID(ctx, created.ID)
+	require.NoError(t, err)
+	assert.InDelta(t, 4.25, got.Rating.Float64, 0.0001)
+
+	list, err := s.Books.List(ctx, 10, 0)
+	require.NoError(t, err)
+	require.NotEmpty(t, list)
+	assert.True(t, list[0].Rating.Valid)
+
+	params.Rating.Float64 = 4.1
+	_, err = s.Books.Update(ctx, params)
+	assert.Error(t, err, "DB must reject off-increment ratings")
+}

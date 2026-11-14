@@ -10,14 +10,15 @@ import (
 )
 
 type Book struct {
-	ID          int64          `json:"id"`
-	Title       string         `json:"title"`
-	Author      string         `json:"author"`
-	PageCount   sql.NullInt64  `json:"page_count"`
-	Isbn        sql.NullString `json:"isbn"`
-	ReleaseDate sql.NullTime   `json:"release_date"`
-	Language    sql.NullString `json:"language"`
-	CreatedAt   time.Time      `json:"created_at"`
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Author      string          `json:"author"`
+	PageCount   sql.NullInt64   `json:"page_count"`
+	Isbn        sql.NullString  `json:"isbn"`
+	ReleaseDate sql.NullTime    `json:"release_date"`
+	Language    sql.NullString  `json:"language"`
+	CreatedAt   time.Time       `json:"created_at"`
+	Rating      sql.NullFloat64 `json:"rating"`
 }
 
 type Shelf struct {

@@ -3,7 +3,9 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -21,12 +23,29 @@ type createBookRequest struct {
 }
 
 type updateBookRequest struct {
-	Title       string  `json:"title"`
-	Author      string  `json:"author"`
-	PageCount   *int64  `json:"page_count,omitempty"`
-	ISBN        *string `json:"isbn,omitempty"`
-	ReleaseDate *string `json:"release_date,omitempty"`
-	Language    *string `json:"language,omitempty"`
+	Title       string   `json:"title"`
+	Author      string   `json:"author"`
+	PageCount   *int64   `json:"page_count,omitempty"`
+	ISBN        *string  `json:"isbn,omitempty"`
+	ReleaseDate *string  `json:"release_date,omitempty"`
+	Language    *string  `json:"language,omitempty"`
+	Rating      *float64 `json:"rating,omitempty"`
+}
+
+// ratingParam validates the optional rating and converts it for storage.
+func (req *updateBookRequest) ratingParam() (sql.NullFloat64, error) {
+	if req.Rating == nil {
+		return sql.NullFloat64{}, nil
+	}
+	if !validRating(*req.Rating) {
+		return sql.NullFloat64{}, errors.New("rating must be between 0 and 5 in increments of 0.25")
+	}
+	return sql.NullFloat64{Float64: *req.Rating, Valid: true}, nil
+}
+
+// validRating reports whether r is within 0..5 in increments of 0.25.
+func validRating(r float64) bool {
+	return r >= 0 && r <= 5 && r*4 == math.Trunc(r*4)
 }
 
 func (req *createBookRequest) toParams() (db.CreateBookParams, error) {
@@ -160,6 +179,13 @@ func (s *Server) handleUpdateBook(w http.ResponseWriter, r *http.Request) {
 		Title:  req.Title,
 		Author: req.Author,
 	}
+
+	rating, err := req.ratingParam()
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	params.Rating = rating
 
 	if req.PageCount != nil {
 		params.PageCount = sql.NullInt64{Int64: *req.PageCount, Valid: true}

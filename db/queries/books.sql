@@ -10,7 +10,7 @@ SELECT * FROM books WHERE id = ?;
 SELECT * FROM books WHERE isbn = ?;
 
 -- name: UpdateBook :one
-UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?
+UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?, rating = ?
 WHERE id = ?
 RETURNING *;
 
