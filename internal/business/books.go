@@ -69,3 +69,12 @@ func (b *Business) SearchBooksByTitle(ctx context.Context, query string, limit i
 	}
 	return books, nil
 }
+
+// CountBooks returns how many books the catalog holds.
+func (b *Business) CountBooks(ctx context.Context) (int64, error) {
+	n, err := b.Storage.Books.Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count books: %w", err)
+	}
+	return n, nil
+}

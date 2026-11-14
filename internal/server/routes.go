@@ -22,6 +22,7 @@ func (s *Server) registerRoutes() {
 	// Books API
 	s.mux.HandleFunc("POST /api/books", s.handleCreateBook)
 	s.mux.HandleFunc("GET /api/books/search", s.handleSearchBooks)
+	s.mux.HandleFunc("GET /api/books/count", s.handleCountBooks)
 	s.mux.HandleFunc("GET /api/books/{id}", s.handleGetBookByID)
 	s.mux.HandleFunc("GET /api/books", s.handleGetBooks)
 	s.mux.HandleFunc("PUT /api/books/{id}", s.handleUpdateBook)

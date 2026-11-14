@@ -22,3 +22,6 @@ SELECT * FROM books ORDER BY created_at DESC LIMIT ? OFFSET ?;
 
 -- name: SearchBooksByTitle :many
 SELECT * FROM books WHERE title LIKE ? ORDER BY title LIMIT ?;
+
+-- name: CountBooks :one
+SELECT COUNT(*) FROM books;

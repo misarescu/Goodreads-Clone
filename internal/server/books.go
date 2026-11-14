@@ -202,3 +202,14 @@ func (s *Server) handleDeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (s *Server) handleCountBooks(w http.ResponseWriter, r *http.Request) {
+	n, err := s.business.CountBooks(r.Context())
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	w.Header().Set("Cache-Control", "no-store")
+	writeJSON(w, http.StatusOK, map[string]int64{"book_count": n})
+}
