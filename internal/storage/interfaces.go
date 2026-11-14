@@ -26,6 +26,7 @@ type BookRepository interface {
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, limit, offset int64) ([]db.Book, error)
 	SearchByTitle(ctx context.Context, query string, limit int64) ([]db.Book, error)
+	Count(ctx context.Context) (int64, error)
 }
 
 // ShelfRepository defines operations for managing user shelves.

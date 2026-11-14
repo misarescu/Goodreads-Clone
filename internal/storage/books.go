@@ -73,3 +73,11 @@ func (r *bookRepository) SearchByTitle(ctx context.Context, query string, limit 
 	}
 	return books, nil
 }
+
+func (r *bookRepository) Count(ctx context.Context) (int64, error) {
+	n, err := r.queries.CountBooks(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count books query failed: %w", err)
+	}
+	return n, nil
+}

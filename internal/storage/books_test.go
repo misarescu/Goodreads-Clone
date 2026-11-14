@@ -420,3 +420,21 @@ func TestBookRepository_Delete_CascadeShelfBooks(t *testing.T) {
 	_, err = s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
 	require.ErrorIs(t, err, sql.ErrNoRows)
 }
+
+func TestBookRepository_Count(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	n, err := s.Books.Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), n)
+
+	for i := 0; i < 2; i++ {
+		_, err := s.Books.Create(ctx, db.CreateBookParams{Title: fmt.Sprintf("T%d", i), Author: "A"})
+		require.NoError(t, err)
+	}
+	n, err = s.Books.Count(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), n)
+}
