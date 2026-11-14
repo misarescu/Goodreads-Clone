@@ -142,6 +142,7 @@ make gen-mocks
 ### Users
 - `POST /api/users` - Create user
 - `GET /api/users/{id}` - Get user by ID
+- `GET /api/users/{id}/stats` - Get a user's reading stats. Returns `200 OK` with `Content-Type: application/json` and `{"books_on_shelves": <number>, "pages_read": <number>, "books_finished": <number>}`. Returns `400 Bad Request` if the ID is not valid and `404 Not Found` if the user does not exist (error body: `{"Error": "<message>"}`).
 - `GET /api/users` - List users
 - `PUT /api/users/{id}` - Update user
 - `DELETE /api/users/{id}` - Delete user

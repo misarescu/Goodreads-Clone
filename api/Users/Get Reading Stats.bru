@@ -1,0 +1,38 @@
+meta {
+  name: Get Reading Stats
+  type: http
+  seq: 8
+}
+
+get {
+  url: http://localhost:8080/api/users/1/stats
+  body: none
+  auth: none
+}
+
+docs {
+  Retrieves the reading stats for a user by their ID.
+
+  Response: 200 OK
+  ```json
+  {
+    "books_on_shelves": 12,
+    "pages_read": 3400,
+    "books_finished": 8
+  }
+  ```
+
+  Response: 400 Bad Request (invalid user ID)
+  ```json
+  {
+    "Error": "invalid user ID"
+  }
+  ```
+
+  Response: 404 Not Found (unknown user)
+  ```json
+  {
+    "Error": "resource not found"
+  }
+  ```
+}
