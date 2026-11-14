@@ -150,3 +150,29 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+type userStatsResponse struct {
+	BooksOnShelves int64 `json:"books_on_shelves"`
+	PagesRead      int64 `json:"pages_read"`
+	BooksFinished  int64 `json:"books_finished"`
+}
+
+func (s *Server) handleGetUserStats(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	stats, err := s.business.GetUserReadingStats(r.Context(), id)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, userStatsResponse{
+		BooksOnShelves: stats.BooksOnShelves,
+		PagesRead:      stats.PagesRead,
+		BooksFinished:  stats.BooksFinished,
+	})
+}

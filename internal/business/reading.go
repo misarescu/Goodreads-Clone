@@ -65,3 +65,16 @@ func (b *Business) GetUserBookShelves(ctx context.Context, userID, bookID int64)
 	}
 	return shelves, nil
 }
+
+// GetUserReadingStats returns reading stats for a user. It returns an error
+// wrapping sql.ErrNoRows when the user does not exist.
+func (b *Business) GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error) {
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return nil, fmt.Errorf("failed to get user for reading stats: %w", err)
+	}
+	stats, err := b.Storage.ShelfBooks.GetUserReadingStats(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user reading stats: %w", err)
+	}
+	return stats, nil
+}

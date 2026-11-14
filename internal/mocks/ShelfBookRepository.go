@@ -272,6 +272,74 @@ func (_c *MockShelfBookRepository_GetUserBookShelves_Call) RunAndReturn(run func
 	return _c
 }
 
+// GetUserReadingStats provides a mock function for the type MockShelfBookRepository
+func (_mock *MockShelfBookRepository) GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserReadingStats")
+	}
+
+	var r0 *db.GetUserReadingStatsRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) (*db.GetUserReadingStatsRow, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) *db.GetUserReadingStatsRow); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*db.GetUserReadingStatsRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockShelfBookRepository_GetUserReadingStats_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserReadingStats'
+type MockShelfBookRepository_GetUserReadingStats_Call struct {
+	*mock.Call
+}
+
+// GetUserReadingStats is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+func (_e *MockShelfBookRepository_Expecter) GetUserReadingStats(ctx interface{}, userID interface{}) *MockShelfBookRepository_GetUserReadingStats_Call {
+	return &MockShelfBookRepository_GetUserReadingStats_Call{Call: _e.mock.On("GetUserReadingStats", ctx, userID)}
+}
+
+func (_c *MockShelfBookRepository_GetUserReadingStats_Call) Run(run func(ctx context.Context, userID int64)) *MockShelfBookRepository_GetUserReadingStats_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockShelfBookRepository_GetUserReadingStats_Call) Return(getUserReadingStatsRow *db.GetUserReadingStatsRow, err error) *MockShelfBookRepository_GetUserReadingStats_Call {
+	_c.Call.Return(getUserReadingStatsRow, err)
+	return _c
+}
+
+func (_c *MockShelfBookRepository_GetUserReadingStats_Call) RunAndReturn(run func(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)) *MockShelfBookRepository_GetUserReadingStats_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListBooksOnShelf provides a mock function for the type MockShelfBookRepository
 func (_mock *MockShelfBookRepository) ListBooksOnShelf(ctx context.Context, shelfID int64) ([]db.ListBooksOnShelfRow, error) {
 	ret := _mock.Called(ctx, shelfID)
