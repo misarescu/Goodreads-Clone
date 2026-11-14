@@ -460,3 +460,49 @@ func TestBusiness_GetUserBookShelves(t *testing.T) {
 		})
 	}
 }
+
+func TestBusiness_GetUserReadingStats(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	userID := int64(7)
+
+	t.Run("returns stats", func(t *testing.T) {
+		t.Parallel()
+		users := mocks.NewMockUserRepository(t)
+		sbs := mocks.NewMockShelfBookRepository(t)
+		users.EXPECT().GetByID(ctx, userID).Return(&db.User{ID: userID}, nil).Once()
+		sbs.EXPECT().GetUserReadingStats(ctx, userID).
+			Return(&db.GetUserReadingStatsRow{BooksOnShelves: 3, PagesRead: 450, BooksFinished: 1}, nil).Once()
+		b := &business.Business{Storage: &storage.Storage{Users: users, ShelfBooks: sbs}}
+
+		got, err := b.GetUserReadingStats(ctx, userID)
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), got.BooksOnShelves)
+		assert.Equal(t, int64(450), got.PagesRead)
+		assert.Equal(t, int64(1), got.BooksFinished)
+	})
+
+	t.Run("unknown user", func(t *testing.T) {
+		t.Parallel()
+		users := mocks.NewMockUserRepository(t)
+		sbs := mocks.NewMockShelfBookRepository(t)
+		users.EXPECT().GetByID(ctx, userID).Return(nil, sql.ErrNoRows).Once()
+		b := &business.Business{Storage: &storage.Storage{Users: users, ShelfBooks: sbs}}
+
+		got, err := b.GetUserReadingStats(ctx, userID)
+		require.ErrorIs(t, err, sql.ErrNoRows)
+		assert.Nil(t, got)
+	})
+
+	t.Run("stats error", func(t *testing.T) {
+		t.Parallel()
+		users := mocks.NewMockUserRepository(t)
+		sbs := mocks.NewMockShelfBookRepository(t)
+		users.EXPECT().GetByID(ctx, userID).Return(&db.User{ID: userID}, nil).Once()
+		sbs.EXPECT().GetUserReadingStats(ctx, userID).Return(nil, errors.New("boom")).Once()
+		b := &business.Business{Storage: &storage.Storage{Users: users, ShelfBooks: sbs}}
+
+		_, err := b.GetUserReadingStats(ctx, userID)
+		require.Error(t, err)
+	})
+}

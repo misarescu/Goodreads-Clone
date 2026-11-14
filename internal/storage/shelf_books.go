@@ -81,3 +81,14 @@ func (r *shelfBookRepository) GetUserBookShelves(ctx context.Context, userID, bo
 	}
 	return shelves, nil
 }
+
+func (r *shelfBookRepository) GetUserReadingStats(
+	ctx context.Context,
+	userID int64,
+) (*db.GetUserReadingStatsRow, error) {
+	stats, err := r.queries.GetUserReadingStats(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get user reading stats query failed: %w", err)
+	}
+	return &stats, nil
+}

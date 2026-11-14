@@ -48,4 +48,5 @@ type ShelfBookRepository interface {
 	Remove(ctx context.Context, shelfID, bookID int64) error
 	ListBooksOnShelf(ctx context.Context, shelfID int64) ([]db.ListBooksOnShelfRow, error)
 	GetUserBookShelves(ctx context.Context, userID, bookID int64) ([]db.Shelf, error)
+	GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)
 }

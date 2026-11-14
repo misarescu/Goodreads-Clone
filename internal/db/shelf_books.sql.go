@@ -108,6 +108,29 @@ func (q *Queries) GetUserBookShelves(ctx context.Context, arg GetUserBookShelves
 	return items, nil
 }
 
+const getUserReadingStats = `-- name: GetUserReadingStats :one
+SELECT
+    COUNT(DISTINCT sb.book_id) AS books_on_shelves,
+    CAST(COALESCE(SUM(sb.pages_read), 0) AS INTEGER) AS pages_read,
+    CAST(COALESCE(SUM(CASE WHEN sb.progress_percent = 100 THEN 1 ELSE 0 END), 0) AS INTEGER) AS books_finished
+FROM shelf_books sb
+JOIN shelves s ON s.id = sb.shelf_id
+WHERE s.user_id = ?
+`
+
+type GetUserReadingStatsRow struct {
+	BooksOnShelves int64 `json:"books_on_shelves"`
+	PagesRead      int64 `json:"pages_read"`
+	BooksFinished  int64 `json:"books_finished"`
+}
+
+func (q *Queries) GetUserReadingStats(ctx context.Context, userID int64) (GetUserReadingStatsRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserReadingStats, userID)
+	var i GetUserReadingStatsRow
+	err := row.Scan(&i.BooksOnShelves, &i.PagesRead, &i.BooksFinished)
+	return i, err
+}
+
 const listBooksOnShelf = `-- name: ListBooksOnShelf :many
 SELECT sb.id, sb.shelf_id, sb.book_id, sb.pages_read, sb.progress_percent, sb.added_at, sb.updated_at, b.title, b.author, b.page_count
 FROM shelf_books sb

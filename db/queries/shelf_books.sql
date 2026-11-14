@@ -25,3 +25,12 @@ ORDER BY sb.added_at DESC;
 SELECT s.* FROM shelves s
 JOIN shelf_books sb ON s.id = sb.shelf_id
 WHERE s.user_id = ? AND sb.book_id = ?;
+
+-- name: GetUserReadingStats :one
+SELECT
+    COUNT(DISTINCT sb.book_id) AS books_on_shelves,
+    CAST(COALESCE(SUM(sb.pages_read), 0) AS INTEGER) AS pages_read,
+    CAST(COALESCE(SUM(CASE WHEN sb.progress_percent = 100 THEN 1 ELSE 0 END), 0) AS INTEGER) AS books_finished
+FROM shelf_books sb
+JOIN shelves s ON s.id = sb.shelf_id
+WHERE s.user_id = ?;

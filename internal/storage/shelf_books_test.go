@@ -325,3 +325,41 @@ func TestShelfBookRepository_ForeignKeyCascades(t *testing.T) {
 		require.ErrorIs(t, err, sql.ErrNoRows)
 	})
 }
+
+func TestShelfBookRepository_GetUserReadingStats(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	user := createTestUser(t, s, "stats@example.com", "statsuser")
+	other := createTestUser(t, s, "other@example.com", "otheruser")
+
+	t.Run("no shelves gives zeros", func(t *testing.T) {
+		stats, err := s.ShelfBooks.GetUserReadingStats(ctx, user.ID)
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), stats.BooksOnShelves)
+		assert.Equal(t, int64(0), stats.PagesRead)
+		assert.Equal(t, int64(0), stats.BooksFinished)
+	})
+
+	reading := createTestShelf(t, s, user.ID, "Reading", false)
+	read := createTestShelf(t, s, user.ID, "Read", false)
+	otherShelf := createTestShelf(t, s, other.ID, "Reading", false)
+	b1 := createTestBook(t, s, "Book 1", "A")
+	b2 := createTestBook(t, s, "Book 2", "B")
+
+	_, err := s.ShelfBooks.Add(ctx, reading.ID, b1.ID, 100, 50)
+	require.NoError(t, err)
+	_, err = s.ShelfBooks.Add(ctx, read.ID, b1.ID, 200, 100)
+	require.NoError(t, err)
+	_, err = s.ShelfBooks.Add(ctx, read.ID, b2.ID, 300, 100)
+	require.NoError(t, err)
+	_, err = s.ShelfBooks.Add(ctx, otherShelf.ID, b2.ID, 999, 100)
+	require.NoError(t, err)
+
+	stats, err := s.ShelfBooks.GetUserReadingStats(ctx, user.ID)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), stats.BooksOnShelves)
+	assert.Equal(t, int64(600), stats.PagesRead)
+	assert.Equal(t, int64(2), stats.BooksFinished)
+}
