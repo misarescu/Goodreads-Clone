@@ -24,7 +24,7 @@ func (q *Queries) CountBooks(ctx context.Context) (int64, error) {
 const createBook = `-- name: CreateBook :one
 INSERT INTO books (title, author, page_count, isbn, release_date, language)
 VALUES (?, ?, ?, ?, ?, ?)
-RETURNING id, title, author, page_count, isbn, release_date, language, created_at
+RETURNING id, title, author, page_count, isbn, release_date, language, created_at, rating
 `
 
 type CreateBookParams struct {
@@ -55,6 +55,7 @@ func (q *Queries) CreateBook(ctx context.Context, arg CreateBookParams) (Book, e
 		&i.ReleaseDate,
 		&i.Language,
 		&i.CreatedAt,
+		&i.Rating,
 	)
 	return i, err
 }
@@ -69,7 +70,7 @@ func (q *Queries) DeleteBook(ctx context.Context, id int64) error {
 }
 
 const getBookByID = `-- name: GetBookByID :one
-SELECT id, title, author, page_count, isbn, release_date, language, created_at FROM books WHERE id = ?
+SELECT id, title, author, page_count, isbn, release_date, language, created_at, rating FROM books WHERE id = ?
 `
 
 func (q *Queries) GetBookByID(ctx context.Context, id int64) (Book, error) {
@@ -84,12 +85,13 @@ func (q *Queries) GetBookByID(ctx context.Context, id int64) (Book, error) {
 		&i.ReleaseDate,
 		&i.Language,
 		&i.CreatedAt,
+		&i.Rating,
 	)
 	return i, err
 }
 
 const getBookByISBN = `-- name: GetBookByISBN :one
-SELECT id, title, author, page_count, isbn, release_date, language, created_at FROM books WHERE isbn = ?
+SELECT id, title, author, page_count, isbn, release_date, language, created_at, rating FROM books WHERE isbn = ?
 `
 
 func (q *Queries) GetBookByISBN(ctx context.Context, isbn sql.NullString) (Book, error) {
@@ -104,12 +106,13 @@ func (q *Queries) GetBookByISBN(ctx context.Context, isbn sql.NullString) (Book,
 		&i.ReleaseDate,
 		&i.Language,
 		&i.CreatedAt,
+		&i.Rating,
 	)
 	return i, err
 }
 
 const listBooks = `-- name: ListBooks :many
-SELECT id, title, author, page_count, isbn, release_date, language, created_at FROM books ORDER BY created_at DESC LIMIT ? OFFSET ?
+SELECT id, title, author, page_count, isbn, release_date, language, created_at, rating FROM books ORDER BY created_at DESC LIMIT ? OFFSET ?
 `
 
 type ListBooksParams struct {
@@ -135,6 +138,7 @@ func (q *Queries) ListBooks(ctx context.Context, arg ListBooksParams) ([]Book, e
 			&i.ReleaseDate,
 			&i.Language,
 			&i.CreatedAt,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
@@ -150,7 +154,7 @@ func (q *Queries) ListBooks(ctx context.Context, arg ListBooksParams) ([]Book, e
 }
 
 const searchBooksByTitle = `-- name: SearchBooksByTitle :many
-SELECT id, title, author, page_count, isbn, release_date, language, created_at FROM books WHERE title LIKE ? ORDER BY title LIMIT ?
+SELECT id, title, author, page_count, isbn, release_date, language, created_at, rating FROM books WHERE title LIKE ? ORDER BY title LIMIT ?
 `
 
 type SearchBooksByTitleParams struct {
@@ -176,6 +180,7 @@ func (q *Queries) SearchBooksByTitle(ctx context.Context, arg SearchBooksByTitle
 			&i.ReleaseDate,
 			&i.Language,
 			&i.CreatedAt,
+			&i.Rating,
 		); err != nil {
 			return nil, err
 		}
@@ -191,19 +196,20 @@ func (q *Queries) SearchBooksByTitle(ctx context.Context, arg SearchBooksByTitle
 }
 
 const updateBook = `-- name: UpdateBook :one
-UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?
+UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?, rating = ?
 WHERE id = ?
-RETURNING id, title, author, page_count, isbn, release_date, language, created_at
+RETURNING id, title, author, page_count, isbn, release_date, language, created_at, rating
 `
 
 type UpdateBookParams struct {
-	Title       string         `json:"title"`
-	Author      string         `json:"author"`
-	PageCount   sql.NullInt64  `json:"page_count"`
-	Isbn        sql.NullString `json:"isbn"`
-	ReleaseDate sql.NullTime   `json:"release_date"`
-	Language    sql.NullString `json:"language"`
-	ID          int64          `json:"id"`
+	Title       string          `json:"title"`
+	Author      string          `json:"author"`
+	PageCount   sql.NullInt64   `json:"page_count"`
+	Isbn        sql.NullString  `json:"isbn"`
+	ReleaseDate sql.NullTime    `json:"release_date"`
+	Language    sql.NullString  `json:"language"`
+	Rating      sql.NullFloat64 `json:"rating"`
+	ID          int64           `json:"id"`
 }
 
 func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, error) {
@@ -214,6 +220,7 @@ func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, e
 		arg.Isbn,
 		arg.ReleaseDate,
 		arg.Language,
+		arg.Rating,
 		arg.ID,
 	)
 	var i Book
@@ -226,6 +233,7 @@ func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (Book, e
 		&i.ReleaseDate,
 		&i.Language,
 		&i.CreatedAt,
+		&i.Rating,
 	)
 	return i, err
 }

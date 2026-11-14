@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"goodreads-clone.com/internal/db"
@@ -26,15 +27,20 @@ func setupTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("failed to enable foreign keys: %v", err)
 	}
 
-	// Load and execute schema
-	schemaPath := filepath.Join("..", "..", "db", "migrations", "001_schema.sql")
-	schemaSQL, err := os.ReadFile(schemaPath)
-	if err != nil {
-		t.Fatalf("failed to read schema file: %v", err)
+	// Load and execute all migrations in order
+	files, err := filepath.Glob(filepath.Join("..", "..", "db", "migrations", "*.sql"))
+	if err != nil || len(files) == 0 {
+		t.Fatalf("failed to find migrations: %v", err)
 	}
-
-	if _, err := database.Exec(string(schemaSQL)); err != nil {
-		t.Fatalf("failed to execute schema: %v", err)
+	sort.Strings(files)
+	for _, f := range files {
+		schemaSQL, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatalf("failed to read schema file: %v", err)
+		}
+		if _, err := database.Exec(string(schemaSQL)); err != nil {
+			t.Fatalf("failed to execute %s: %v", f, err)
+		}
 	}
 
 	// Register cleanup
