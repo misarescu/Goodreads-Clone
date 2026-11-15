@@ -69,3 +69,19 @@ func (s *Server) handleGetChallenge(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, p)
 }
+
+func (s *Server) handleListChallenges(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	list, err := s.business.ListReadingChallengeProgress(r.Context(), userID)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, list)
+}

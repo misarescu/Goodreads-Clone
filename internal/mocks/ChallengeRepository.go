@@ -184,6 +184,74 @@ func (_c *MockChallengeRepository_Get_Call) RunAndReturn(run func(ctx context.Co
 	return _c
 }
 
+// ListByUser provides a mock function for the type MockChallengeRepository
+func (_mock *MockChallengeRepository) ListByUser(ctx context.Context, userID int64) ([]db.ReadingChallenge, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListByUser")
+	}
+
+	var r0 []db.ReadingChallenge
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) ([]db.ReadingChallenge, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) []db.ReadingChallenge); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]db.ReadingChallenge)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockChallengeRepository_ListByUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByUser'
+type MockChallengeRepository_ListByUser_Call struct {
+	*mock.Call
+}
+
+// ListByUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+func (_e *MockChallengeRepository_Expecter) ListByUser(ctx interface{}, userID interface{}) *MockChallengeRepository_ListByUser_Call {
+	return &MockChallengeRepository_ListByUser_Call{Call: _e.mock.On("ListByUser", ctx, userID)}
+}
+
+func (_c *MockChallengeRepository_ListByUser_Call) Run(run func(ctx context.Context, userID int64)) *MockChallengeRepository_ListByUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockChallengeRepository_ListByUser_Call) Return(readingChallenges []db.ReadingChallenge, err error) *MockChallengeRepository_ListByUser_Call {
+	_c.Call.Return(readingChallenges, err)
+	return _c
+}
+
+func (_c *MockChallengeRepository_ListByUser_Call) RunAndReturn(run func(ctx context.Context, userID int64) ([]db.ReadingChallenge, error)) *MockChallengeRepository_ListByUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Upsert provides a mock function for the type MockChallengeRepository
 func (_mock *MockChallengeRepository) Upsert(ctx context.Context, userID int64, year int64, goal int64) (*db.ReadingChallenge, error) {
 	ret := _mock.Called(ctx, userID, year, goal)

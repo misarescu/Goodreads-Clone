@@ -23,6 +23,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("GET /api/users/{id}/recommendations", s.handleGetRecommendations)
 
 	// Reading challenges API
+	s.mux.HandleFunc("GET /api/users/{id}/challenges", s.handleListChallenges)
 	s.mux.HandleFunc("PUT /api/users/{id}/challenges/{year}", s.handleSetChallenge)
 	s.mux.HandleFunc("GET /api/users/{id}/challenges/{year}", s.handleGetChallenge)
 
