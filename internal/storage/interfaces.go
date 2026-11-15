@@ -73,6 +73,7 @@ type ReviewRepository interface {
 	Get(ctx context.Context, bookID, userID int64) (*db.Review, error)
 	Delete(ctx context.Context, bookID, userID int64) error
 	ListByBook(ctx context.Context, bookID, limit, offset int64) ([]db.ListReviewsByBookRow, error)
+	ListByUser(ctx context.Context, userID, limit, offset int64) ([]db.ListReviewsByUserRow, error)
 	Stats(ctx context.Context, bookIDs []int64) ([]db.GetReviewStatsRow, error)
 }
 

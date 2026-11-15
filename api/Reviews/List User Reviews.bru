@@ -1,0 +1,17 @@
+meta {
+  name: List User Reviews
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:8080/api/users/1/reviews?limit=20&offset=0
+  body: none
+  auth: none
+}
+
+docs {
+  Lists the reviews a user wrote, newest first, each with the reviewed book's title.
+  Response: 200 [{"id", "book_id", "book_title", "user_id", "rating", "body", "created_at", "updated_at"}]
+  404 unknown user.
+}

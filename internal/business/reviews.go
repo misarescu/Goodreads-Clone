@@ -122,3 +122,19 @@ func (b *Business) WithReviewStat(ctx context.Context, book *db.Book) (*BookWith
 	}
 	return &out[0], nil
 }
+
+// ListUserReviews returns the reviews a user wrote, newest first, each with
+// the reviewed book's title. It returns an error wrapping sql.ErrNoRows when
+// the user does not exist.
+func (b *Business) ListUserReviews(
+	ctx context.Context, userID, limit, offset int64,
+) ([]db.ListReviewsByUserRow, error) {
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return nil, fmt.Errorf("failed to get user for reviews: %w", err)
+	}
+	rows, err := b.Storage.Reviews.ListByUser(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list user reviews: %w", err)
+	}
+	return rows, nil
+}
