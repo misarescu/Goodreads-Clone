@@ -1,0 +1,27 @@
+meta {
+  name: Set Reading Challenge
+  type: http
+  seq: 10
+}
+
+put {
+  url: http://localhost:8080/api/users/1/challenges/2026
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "goal": 24
+  }
+}
+
+docs {
+  Creates or updates the user's reading challenge for a year (goal 1-1000).
+  Response: 200 {"year": 2026, "goal": 24}
+  400 invalid IDs, year or goal, 404 unknown user.
+
+  GET /api/users/{id}/challenges/{year} returns
+  {"year", "goal", "finished", "expected_by_now", "ahead_by"}; 404 when the
+  user or the challenge does not exist.
+}

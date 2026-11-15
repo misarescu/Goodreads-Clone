@@ -3,6 +3,7 @@ package business
 import (
 	"database/sql"
 	"fmt"
+	"time"
 
 	"goodreads-clone.com/internal/storage"
 )
@@ -10,6 +11,8 @@ import (
 // Business coordinates business logic operations and manages the storage layer.
 type Business struct {
 	Storage *storage.Storage
+	// Now returns the current time; nil means time.Now. Tests set it to fix the clock.
+	Now func() time.Time
 }
 
 // Config holds configuration options for initializing the Business layer.

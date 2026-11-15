@@ -50,3 +50,10 @@ type ShelfBookRepository interface {
 	GetUserBookShelves(ctx context.Context, userID, bookID int64) ([]db.Shelf, error)
 	GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)
 }
+
+// ChallengeRepository defines operations for yearly reading challenges.
+type ChallengeRepository interface {
+	Upsert(ctx context.Context, userID, year, goal int64) (*db.ReadingChallenge, error)
+	Get(ctx context.Context, userID, year int64) (*db.ReadingChallenge, error)
+	CountFinishedInYear(ctx context.Context, userID, year int64) (int64, error)
+}
