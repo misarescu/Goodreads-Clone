@@ -87,3 +87,32 @@ func TestHandleUpdateBookRating(t *testing.T) {
 }
 
 func ptr(f float64) *float64 { return &f }
+
+func TestHandleSearchBooksLimit(t *testing.T) {
+	tests := map[string]struct {
+		query string
+		want  int64
+	}{
+		"default":       {"/api/books/search?q=a", 20},
+		"within cap":    {"/api/books/search?q=a&limit=50", 50},
+		"above cap":     {"/api/books/search?q=a&limit=1000000", 100},
+		"invalid limit": {"/api/books/search?q=a&limit=-5", 20},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			repo := mocks.NewMockBookRepository(t)
+			repo.EXPECT().SearchByTitle(mock.Anything, "a", tt.want).Return([]db.Book{}, nil)
+			s := &Server{
+				business: &business.Business{Storage: &storage.Storage{Books: repo}},
+				mux:      http.NewServeMux(),
+			}
+			s.registerRoutes()
+
+			rec := httptest.NewRecorder()
+			s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tt.query, nil))
+			if rec.Code != http.StatusOK {
+				t.Fatalf("status = %d, want 200", rec.Code)
+			}
+		})
+	}
+}
