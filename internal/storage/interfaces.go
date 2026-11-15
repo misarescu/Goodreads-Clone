@@ -17,6 +17,15 @@ type UserRepository interface {
 	List(ctx context.Context, limit, offset int64) ([]db.User, error)
 }
 
+// SearchParams is a full-text book search: an FTS5 MATCH expression, an optional
+// language filter (empty means any) and a page.
+type SearchParams struct {
+	Match    string
+	Language string
+	Limit    int64
+	Offset   int64
+}
+
 // BookRepository defines operations for managing book data.
 type BookRepository interface {
 	Create(ctx context.Context, params db.CreateBookParams) (*db.Book, error)
@@ -25,7 +34,7 @@ type BookRepository interface {
 	Update(ctx context.Context, params db.UpdateBookParams) (*db.Book, error)
 	Delete(ctx context.Context, id int64) error
 	List(ctx context.Context, limit, offset int64) ([]db.Book, error)
-	SearchByTitle(ctx context.Context, query string, limit int64) ([]db.Book, error)
+	Search(ctx context.Context, params SearchParams) ([]db.Book, int64, error)
 	Count(ctx context.Context) (int64, error)
 }
 

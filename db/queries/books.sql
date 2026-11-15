@@ -20,8 +20,8 @@ DELETE FROM books WHERE id = ?;
 -- name: ListBooks :many
 SELECT * FROM books ORDER BY created_at DESC LIMIT ? OFFSET ?;
 
--- name: SearchBooksByTitle :many
-SELECT * FROM books WHERE title LIKE ? ORDER BY title LIMIT ?;
-
 -- name: CountBooks :one
 SELECT COUNT(*) FROM books;
+
+-- Full-text search (SearchBooks, CountSearchBooks) is hand-written in
+-- internal/storage/books.go: sqlc cannot parse FTS5's MATCH on the table name.

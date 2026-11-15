@@ -11,6 +11,7 @@ import (
 
 type bookRepository struct {
 	queries *db.Queries
+	db      db.DBTX
 }
 
 func (r *bookRepository) Create(ctx context.Context, params db.CreateBookParams) (*db.Book, error) {
@@ -63,21 +64,47 @@ func (r *bookRepository) List(ctx context.Context, limit, offset int64) ([]db.Bo
 	return books, nil
 }
 
-func (r *bookRepository) SearchByTitle(ctx context.Context, query string, limit int64) ([]db.Book, error) {
-	books, err := r.queries.SearchBooksByTitle(ctx, db.SearchBooksByTitleParams{
-		Title: "%" + query + "%",
-		Limit: limit,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("search books by title query failed: %w", err)
-	}
-	return books, nil
-}
-
 func (r *bookRepository) Count(ctx context.Context) (int64, error) {
 	n, err := r.queries.CountBooks(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("count books query failed: %w", err)
 	}
 	return n, nil
+}
+
+// Search runs a full-text query (an FTS5 MATCH expression, see business.ParseSearchQuery)
+// and returns one page of books ranked by bm25 (title weighted above author), plus the total
+// number of matches. The SQL is hand-written because sqlc cannot parse FTS5's MATCH.
+func (r *bookRepository) Search(ctx context.Context, params SearchParams) ([]db.Book, int64, error) {
+	const from = `FROM books b
+JOIN books_fts(?1) ON books_fts.rowid = b.id
+WHERE (?2 = '' OR lower(b.language) = lower(?2))`
+
+	var total int64
+	if err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) "+from, params.Match, params.Language).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count search books query failed: %w", err)
+	}
+
+	rows, err := r.db.QueryContext(ctx,
+		"SELECT b.id, b.title, b.author, b.page_count, b.isbn, b.release_date, b.language, b.created_at, b.rating "+
+			from+" ORDER BY bm25(books_fts, 10.0, 1.0), b.id LIMIT ?3 OFFSET ?4",
+		params.Match, params.Language, params.Limit, params.Offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("search books query failed: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	books := []db.Book{}
+	for rows.Next() {
+		var b db.Book
+		if err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.PageCount, &b.Isbn,
+			&b.ReleaseDate, &b.Language, &b.CreatedAt, &b.Rating); err != nil {
+			return nil, 0, fmt.Errorf("scan searched book failed: %w", err)
+		}
+		books = append(books, b)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("search books rows failed: %w", err)
+	}
+	return books, total, nil
 }

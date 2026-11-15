@@ -21,6 +21,11 @@ type Book struct {
 	Rating      sql.NullFloat64 `json:"rating"`
 }
 
+type BooksFt struct {
+	Title  string `json:"title"`
+	Author string `json:"author"`
+}
+
 type ReadingChallenge struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`

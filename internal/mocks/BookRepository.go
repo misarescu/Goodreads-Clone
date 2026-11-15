@@ -9,6 +9,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/storage"
 )
 
 // NewMockBookRepository creates a new instance of MockBookRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -433,76 +434,76 @@ func (_c *MockBookRepository_List_Call) RunAndReturn(run func(ctx context.Contex
 	return _c
 }
 
-// SearchByTitle provides a mock function for the type MockBookRepository
-func (_mock *MockBookRepository) SearchByTitle(ctx context.Context, query string, limit int64) ([]db.Book, error) {
-	ret := _mock.Called(ctx, query, limit)
+// Search provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) Search(ctx context.Context, params storage.SearchParams) ([]db.Book, int64, error) {
+	ret := _mock.Called(ctx, params)
 
 	if len(ret) == 0 {
-		panic("no return value specified for SearchByTitle")
+		panic("no return value specified for Search")
 	}
 
 	var r0 []db.Book
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64) ([]db.Book, error)); ok {
-		return returnFunc(ctx, query, limit)
+	var r1 int64
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, storage.SearchParams) ([]db.Book, int64, error)); ok {
+		return returnFunc(ctx, params)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64) []db.Book); ok {
-		r0 = returnFunc(ctx, query, limit)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, storage.SearchParams) []db.Book); ok {
+		r0 = returnFunc(ctx, params)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]db.Book)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int64) error); ok {
-		r1 = returnFunc(ctx, query, limit)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, storage.SearchParams) int64); ok {
+		r1 = returnFunc(ctx, params)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(int64)
 	}
-	return r0, r1
+	if returnFunc, ok := ret.Get(2).(func(context.Context, storage.SearchParams) error); ok {
+		r2 = returnFunc(ctx, params)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
 }
 
-// MockBookRepository_SearchByTitle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SearchByTitle'
-type MockBookRepository_SearchByTitle_Call struct {
+// MockBookRepository_Search_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Search'
+type MockBookRepository_Search_Call struct {
 	*mock.Call
 }
 
-// SearchByTitle is a helper method to define mock.On call
+// Search is a helper method to define mock.On call
 //   - ctx context.Context
-//   - query string
-//   - limit int64
-func (_e *MockBookRepository_Expecter) SearchByTitle(ctx interface{}, query interface{}, limit interface{}) *MockBookRepository_SearchByTitle_Call {
-	return &MockBookRepository_SearchByTitle_Call{Call: _e.mock.On("SearchByTitle", ctx, query, limit)}
+//   - params storage.SearchParams
+func (_e *MockBookRepository_Expecter) Search(ctx interface{}, params interface{}) *MockBookRepository_Search_Call {
+	return &MockBookRepository_Search_Call{Call: _e.mock.On("Search", ctx, params)}
 }
 
-func (_c *MockBookRepository_SearchByTitle_Call) Run(run func(ctx context.Context, query string, limit int64)) *MockBookRepository_SearchByTitle_Call {
+func (_c *MockBookRepository_Search_Call) Run(run func(ctx context.Context, params storage.SearchParams)) *MockBookRepository_Search_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
 			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 storage.SearchParams
 		if args[1] != nil {
-			arg1 = args[1].(string)
-		}
-		var arg2 int64
-		if args[2] != nil {
-			arg2 = args[2].(int64)
+			arg1 = args[1].(storage.SearchParams)
 		}
 		run(
 			arg0,
 			arg1,
-			arg2,
 		)
 	})
 	return _c
 }
 
-func (_c *MockBookRepository_SearchByTitle_Call) Return(books []db.Book, err error) *MockBookRepository_SearchByTitle_Call {
-	_c.Call.Return(books, err)
+func (_c *MockBookRepository_Search_Call) Return(books []db.Book, n int64, err error) *MockBookRepository_Search_Call {
+	_c.Call.Return(books, n, err)
 	return _c
 }
 
-func (_c *MockBookRepository_SearchByTitle_Call) RunAndReturn(run func(ctx context.Context, query string, limit int64) ([]db.Book, error)) *MockBookRepository_SearchByTitle_Call {
+func (_c *MockBookRepository_Search_Call) RunAndReturn(run func(ctx context.Context, params storage.SearchParams) ([]db.Book, int64, error)) *MockBookRepository_Search_Call {
 	_c.Call.Return(run)
 	return _c
 }
