@@ -30,6 +30,16 @@ type ReadingChallenge struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Review struct {
+	ID        int64     `json:"id"`
+	BookID    int64     `json:"book_id"`
+	UserID    int64     `json:"user_id"`
+	Rating    int64     `json:"rating"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Shelf struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`

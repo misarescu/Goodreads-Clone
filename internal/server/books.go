@@ -112,8 +112,13 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
 		handleDBError(w, err)
 		return
 	}
+	withStats, err := s.business.WithReviewStat(r.Context(), book)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
 
-	writeJSON(w, http.StatusOK, book)
+	writeJSON(w, http.StatusOK, withStats)
 }
 
 func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +146,12 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
 			handleDBError(w, err)
 			return
 		}
-		writeJSON(w, http.StatusOK, book)
+		withStats, err := s.business.WithReviewStat(r.Context(), book)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, withStats)
 		return
 	}
 
@@ -151,8 +161,13 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
 		handleDBError(w, err)
 		return
 	}
+	withStats, err := s.business.WithReviewStats(r.Context(), books)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
 
-	writeJSON(w, http.StatusOK, books)
+	writeJSON(w, http.StatusOK, withStats)
 }
 
 func (s *Server) handleUpdateBook(w http.ResponseWriter, r *http.Request) {
