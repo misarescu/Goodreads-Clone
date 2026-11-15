@@ -66,6 +66,7 @@ type ChallengeRepository interface {
 	Get(ctx context.Context, userID, year int64) (*db.ReadingChallenge, error)
 	ListByUser(ctx context.Context, userID int64) ([]db.ReadingChallenge, error)
 	CountFinishedInYear(ctx context.Context, userID, year int64) (int64, error)
+	Delete(ctx context.Context, userID, year int64) error
 }
 
 // ReviewRepository defines operations for book reviews.

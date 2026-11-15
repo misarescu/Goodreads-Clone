@@ -1,0 +1,18 @@
+meta {
+  name: Delete Reading Challenge
+  type: http
+  seq: 11
+}
+
+delete {
+  url: http://localhost:8080/api/users/1/challenges/2026
+  body: none
+  auth: none
+}
+
+docs {
+  Deletes the user's reading challenge for a year.
+
+  Response: 204 No Content
+  400 invalid user ID or year, 404 when the user or the challenge does not exist.
+}
