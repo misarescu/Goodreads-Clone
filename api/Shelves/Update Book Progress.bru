@@ -23,7 +23,13 @@ docs {
   finished_at is set the first time progress reaches 100 and cleared if
   progress drops below 100 again.
 
-  Response: 200 OK with the shelf book
+  Response: 200 OK with the shelf book. finished_at is an RFC3339
+  timestamp string, or null while the book is not finished:
+
+    {"id": 1, "shelf_id": 1, "book_id": 1, "pages_read": 120,
+     "progress_percent": 40, "added_at": "2026-01-01T10:00:00Z",
+     "updated_at": "2026-01-02T10:00:00Z", "finished_at": null}
+
   400 invalid IDs or body, or pages_read above the page count,
   404 unknown shelf or book not on the shelf
 }

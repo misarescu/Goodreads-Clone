@@ -149,7 +149,7 @@ type ListBooksOnShelfRow struct {
 	ProgressPercent int64         `json:"progress_percent"`
 	AddedAt         time.Time     `json:"added_at"`
 	UpdatedAt       time.Time     `json:"updated_at"`
-	FinishedAt      sql.NullTime  `json:"finished_at"`
+	FinishedAt      *time.Time    `json:"finished_at"`
 	Title           string        `json:"title"`
 	Author          string        `json:"author"`
 	PageCount       sql.NullInt64 `json:"page_count"`

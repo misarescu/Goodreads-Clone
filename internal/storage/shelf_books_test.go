@@ -374,20 +374,20 @@ func TestShelfBookRepository_UpdateProgressFinishedAt(t *testing.T) {
 	book := createTestBook(t, s, "Finishing Book", "Author")
 	added, err := s.ShelfBooks.Add(ctx, shelf.ID, book.ID, 0, 0)
 	require.NoError(t, err)
-	assert.False(t, added.FinishedAt.Valid)
+	assert.Nil(t, added.FinishedAt)
 
 	finished, err := s.ShelfBooks.UpdateProgress(ctx, added.ID, 400, 100)
 	require.NoError(t, err)
-	require.True(t, finished.FinishedAt.Valid)
+	require.NotNil(t, finished.FinishedAt)
 
 	// Re-saving 100 keeps the original finish time.
 	_, err = s.ShelfBooks.UpdateProgress(ctx, added.ID, 400, 100)
 	require.NoError(t, err)
 	again, err := s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
 	require.NoError(t, err)
-	assert.Equal(t, finished.FinishedAt.Time, again.FinishedAt.Time)
+	assert.Equal(t, finished.FinishedAt, again.FinishedAt)
 
 	reopened, err := s.ShelfBooks.UpdateProgress(ctx, added.ID, 399, 99)
 	require.NoError(t, err)
-	assert.False(t, reopened.FinishedAt.Valid)
+	assert.Nil(t, reopened.FinishedAt)
 }

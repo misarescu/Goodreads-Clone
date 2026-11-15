@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
@@ -231,16 +232,18 @@ func TestShelfBooksProgress(t *testing.T) {
 		if tt.wantStatus != http.StatusOK {
 			continue
 		}
-		var got db.ShelfBook
+		var got map[string]any
 		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
 			t.Fatal(err)
 		}
-		if got.PagesRead != tt.wantPages || got.ProgressPercent != tt.wantPercent || got.FinishedAt.Valid != tt.wantFinished {
-			t.Errorf("%s: got %+v", tt.name, got)
+		if got["pages_read"] != float64(tt.wantPages) || got["progress_percent"] != float64(tt.wantPercent) {
+			t.Errorf("%s: got %v", tt.name, got)
 		}
+		assertFinishedAt(t, tt.name, got, tt.wantFinished)
 	}
 
-	assertListHasFinishedBook(t, s)
+	assertListFinishedAt(t, s, 1, true)
+	assertListFinishedAt(t, s, 2, false)
 }
 
 func addShelfBooks(t *testing.T, s *Server, ids ...string) {
@@ -253,8 +256,32 @@ func addShelfBooks(t *testing.T, s *Server, ids ...string) {
 	}
 }
 
-// assertListHasFinishedBook checks finished_at is in the list response for book 1.
-func assertListHasFinishedBook(t *testing.T, s *Server) {
+// assertFinishedAt checks finished_at is an RFC3339 string when finished, else JSON null.
+func assertFinishedAt(t *testing.T, name string, b map[string]any, finished bool) {
+	t.Helper()
+	v, ok := b["finished_at"]
+	if !ok {
+		t.Errorf("%s: finished_at missing: %v", name, b)
+		return
+	}
+	if !finished {
+		if v != nil {
+			t.Errorf("%s: finished_at = %v, want null", name, v)
+		}
+		return
+	}
+	str, isStr := v.(string)
+	if !isStr || str == "" {
+		t.Errorf("%s: finished_at = %v, want timestamp string", name, v)
+		return
+	}
+	if _, err := time.Parse(time.RFC3339, str); err != nil {
+		t.Errorf("%s: finished_at %q not RFC3339: %v", name, str, err)
+	}
+}
+
+// assertListFinishedAt checks finished_at in the list response for a book.
+func assertListFinishedAt(t *testing.T, s *Server, bookID int, finished bool) {
 	t.Helper()
 	rec := doRequest(s, http.MethodGet, "/api/shelves/1/books", "")
 	var list []map[string]any
@@ -262,9 +289,10 @@ func assertListHasFinishedBook(t *testing.T, s *Server) {
 		t.Fatal(err)
 	}
 	for _, b := range list {
-		if b["book_id"] == float64(1) && b["finished_at"] != nil {
+		if b["book_id"] == float64(bookID) {
+			assertFinishedAt(t, "list", b, finished)
 			return
 		}
 	}
-	t.Errorf("finished_at missing from list: %s", rec.Body.String())
+	t.Errorf("book %d missing from list: %s", bookID, rec.Body.String())
 }
