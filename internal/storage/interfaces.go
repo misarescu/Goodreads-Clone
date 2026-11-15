@@ -75,3 +75,8 @@ type ReviewRepository interface {
 	ListByBook(ctx context.Context, bookID, limit, offset int64) ([]db.ListReviewsByBookRow, error)
 	Stats(ctx context.Context, bookIDs []int64) ([]db.GetReviewStatsRow, error)
 }
+
+// RecommendationRepository defines operations for book recommendations.
+type RecommendationRepository interface {
+	ForUser(ctx context.Context, userID, limit int64) ([]db.GetRecommendationsRow, error)
+}
