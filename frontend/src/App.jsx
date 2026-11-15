@@ -3,6 +3,7 @@ import './App.css'
 import { fetchJSON } from './api.js'
 import { ReadingChallenge } from './ReadingChallenge.jsx'
 import { BookReviews } from './BookReviews.jsx'
+import { BookSearch } from './BookSearch.jsx'
 
 
 function UserStats({ userId }) {
@@ -61,6 +62,7 @@ function App() {
 
   return (
     <>
+      <BookSearch />
       <h1>Reading stats</h1>
       {users.status === 'loading' && <p>Loading users…</p>}
       {users.status === 'error' && (

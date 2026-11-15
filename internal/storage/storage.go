@@ -12,12 +12,13 @@ type Storage struct {
 	queries *db.Queries
 	db      *sql.DB
 
-	Users      UserRepository
-	Books      BookRepository
-	Shelves    ShelfRepository
-	ShelfBooks ShelfBookRepository
-	Challenges ChallengeRepository
-	Reviews    ReviewRepository
+	Users           UserRepository
+	Books           BookRepository
+	Shelves         ShelfRepository
+	ShelfBooks      ShelfBookRepository
+	Challenges      ChallengeRepository
+	Reviews         ReviewRepository
+	Recommendations RecommendationRepository
 }
 
 // New creates a new Storage instance with the given database connection.
@@ -33,6 +34,7 @@ func New(sqlDB *sql.DB) *Storage {
 	s.ShelfBooks = &shelfBookRepository{queries: queries}
 	s.Challenges = &challengeRepository{queries: queries}
 	s.Reviews = &reviewRepository{queries: queries}
+	s.Recommendations = &recommendationRepository{queries: queries}
 	return s
 }
 

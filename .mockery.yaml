@@ -10,6 +10,7 @@ packages:
       BookRepository: {}
       ChallengeRepository: {}
       ReviewRepository: {}
+      RecommendationRepository: {}
       ShelfBookRepository: {}
       ShelfRepository: {}
       UserRepository: {}
