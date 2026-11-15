@@ -1,0 +1,3 @@
+dependencies:
+  files: [go.mod, go.sum, go-packages.txt, frontend/package.json, frontend/bun.lock]
+  run: mise run deps:warm
