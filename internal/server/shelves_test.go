@@ -201,6 +201,8 @@ func TestHandleUpdateShelf(t *testing.T) {
 		s, repo := newShelfServer(t)
 		want := testShelf()
 		want.Name = "Renamed"
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
 		repo.EXPECT().Update(mock.Anything, int64(7), "Renamed").Return(want, nil)
 
 		rec := shelfRequest(s, http.MethodPut, "/api/shelves/7", `{"name":"Renamed"}`)
@@ -226,12 +228,16 @@ func TestHandleUpdateShelf(t *testing.T) {
 
 	t.Run("404 not found", func(t *testing.T) {
 		s, repo := newShelfServer(t)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
 		repo.EXPECT().Update(mock.Anything, int64(7), "x").Return(nil, sql.ErrNoRows)
 		assertErrorStatus(t, shelfRequest(s, http.MethodPut, "/api/shelves/7", `{"name":"x"}`), http.StatusNotFound)
 	})
 
 	t.Run("500 on business error", func(t *testing.T) {
 		s, repo := newShelfServer(t)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
 		repo.EXPECT().Update(mock.Anything, int64(7), "x").Return(nil, errors.New("boom"))
 		rec := shelfRequest(s, http.MethodPut, "/api/shelves/7", `{"name":"x"}`)
 		assertErrorStatus(t, rec, http.StatusInternalServerError)
@@ -241,6 +247,8 @@ func TestHandleUpdateShelf(t *testing.T) {
 func TestHandleDeleteShelf(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		s, repo := newShelfServer(t)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
 		repo.EXPECT().Delete(mock.Anything, int64(7)).Return(nil)
 
 		rec := shelfRequest(s, http.MethodDelete, "/api/shelves/7", "")
@@ -257,13 +265,33 @@ func TestHandleDeleteShelf(t *testing.T) {
 
 	t.Run("404 not found", func(t *testing.T) {
 		s, repo := newShelfServer(t)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
 		repo.EXPECT().Delete(mock.Anything, int64(7)).Return(sql.ErrNoRows)
 		assertErrorStatus(t, shelfRequest(s, http.MethodDelete, "/api/shelves/7", ""), http.StatusNotFound)
 	})
 
 	t.Run("500 on business error", func(t *testing.T) {
 		s, repo := newShelfServer(t)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
+		repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(testShelf(), nil)
 		repo.EXPECT().Delete(mock.Anything, int64(7)).Return(errors.New("boom"))
 		assertErrorStatus(t, shelfRequest(s, http.MethodDelete, "/api/shelves/7", ""), http.StatusInternalServerError)
 	})
+}
+
+func TestHandleDefaultShelfProtected(t *testing.T) {
+	def := testShelf()
+	def.IsDefault = true
+	for method, body := range map[string]string{http.MethodPut: `{"name":"x"}`, http.MethodDelete: ""} {
+		t.Run("409 "+method, func(t *testing.T) {
+			s, repo := newShelfServer(t)
+			repo.EXPECT().GetByID(mock.Anything, int64(7)).Return(def, nil)
+			rec := shelfRequest(s, method, "/api/shelves/7", body)
+			assertErrorStatus(t, rec, http.StatusConflict)
+			if !strings.Contains(rec.Body.String(), "default shelves cannot be renamed or deleted") {
+				t.Errorf("body = %q", rec.Body.String())
+			}
+		})
+	}
 }

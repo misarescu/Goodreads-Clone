@@ -1,7 +1,10 @@
 package server
 
 import (
+	"errors"
 	"net/http"
+
+	"goodreads-clone.com/internal/business"
 )
 
 type createShelfRequest struct {
@@ -90,6 +93,10 @@ func (s *Server) handleUpdateShelf(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shelf, err := s.business.UpdateShelf(r.Context(), id, req.Name)
+	if errors.Is(err, business.ErrDefaultShelf) {
+		writeError(w, http.StatusConflict, err.Error())
+		return
+	}
 	if err != nil {
 		handleDBError(w, err)
 		return
@@ -105,7 +112,12 @@ func (s *Server) handleDeleteShelf(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.business.DeleteShelf(r.Context(), id); err != nil {
+	err = s.business.DeleteShelf(r.Context(), id)
+	if errors.Is(err, business.ErrDefaultShelf) {
+		writeError(w, http.StatusConflict, err.Error())
+		return
+	}
+	if err != nil {
 		handleDBError(w, err)
 		return
 	}
