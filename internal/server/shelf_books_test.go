@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
@@ -185,4 +187,112 @@ func TestShelfBooksRemove(t *testing.T) {
 	if strings.TrimSpace(rec.Body.String()) != "[]" {
 		t.Errorf("list after remove = %q", rec.Body.String())
 	}
+}
+
+func TestShelfBooksProgress(t *testing.T) {
+	s := newShelfBooksServer(t)
+	// Book 1 has no page count; book 2 has 300 pages.
+	if _, err := s.business.CreateBook(context.Background(), db.CreateBookParams{
+		Title: "Long", Author: "A", PageCount: sql.NullInt64{Int64: 300, Valid: true},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	addShelfBooks(t, s, "1", "2")
+
+	tests := []struct {
+		name         string
+		path, body   string
+		wantStatus   int
+		wantPages    int64
+		wantPercent  int64
+		wantFinished bool
+	}{
+		{"pages computes percent rounded down", "/api/shelves/1/books/2/progress", `{"pages_read":100}`, 200, 100, 33, false},
+		{"reaching the page count finishes", "/api/shelves/1/books/2/progress", `{"pages_read":300}`, 200, 300, 100, true},
+		{"staying finished keeps it", "/api/shelves/1/books/2/progress", `{"pages_read":300}`, 200, 300, 100, true},
+		{"dropping below 100 clears", "/api/shelves/1/books/2/progress", `{"pages_read":299}`, 200, 299, 99, false},
+		{"above page count", "/api/shelves/1/books/2/progress", `{"pages_read":301}`, 400, 0, 0, false},
+		{"negative pages", "/api/shelves/1/books/2/progress", `{"pages_read":-1}`, 400, 0, 0, false},
+		{"percent for book with page count", "/api/shelves/1/books/2/progress", `{"progress_percent":40}`, 400, 0, 0, false},
+		{"percent without page count", "/api/shelves/1/books/1/progress", `{"progress_percent":40}`, 200, 0, 40, false},
+		{"percent 100 finishes", "/api/shelves/1/books/1/progress", `{"progress_percent":100}`, 200, 0, 100, true},
+		{"percent above 100", "/api/shelves/1/books/1/progress", `{"progress_percent":101}`, 400, 0, 0, false},
+		{"pages without page count", "/api/shelves/1/books/1/progress", `{"pages_read":5}`, 400, 0, 0, false},
+		{"empty body", "/api/shelves/1/books/1/progress", `{}`, 400, 0, 0, false},
+		{"unknown field", "/api/shelves/1/books/1/progress", `{"x":1}`, 400, 0, 0, false},
+		{"invalid shelf id", "/api/shelves/abc/books/1/progress", `{"pages_read":1}`, 400, 0, 0, false},
+		{"invalid book id", "/api/shelves/1/books/abc/progress", `{"pages_read":1}`, 400, 0, 0, false},
+		{"book not on shelf", "/api/shelves/1/books/99/progress", `{"pages_read":1}`, 404, 0, 0, false},
+	}
+	for _, tt := range tests {
+		rec := doRequest(s, http.MethodPut, tt.path, tt.body)
+		if rec.Code != tt.wantStatus {
+			t.Fatalf("%s: status = %d, want %d (%s)", tt.name, rec.Code, tt.wantStatus, rec.Body.String())
+		}
+		if tt.wantStatus != http.StatusOK {
+			continue
+		}
+		var got map[string]any
+		if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+			t.Fatal(err)
+		}
+		if got["pages_read"] != float64(tt.wantPages) || got["progress_percent"] != float64(tt.wantPercent) {
+			t.Errorf("%s: got %v", tt.name, got)
+		}
+		assertFinishedAt(t, tt.name, got, tt.wantFinished)
+	}
+
+	assertListFinishedAt(t, s, 1, true)
+	assertListFinishedAt(t, s, 2, false)
+}
+
+func addShelfBooks(t *testing.T, s *Server, ids ...string) {
+	t.Helper()
+	for _, id := range ids {
+		rec := doRequest(s, http.MethodPost, "/api/shelves/1/books", `{"book_id":`+id+`}`)
+		if rec.Code != http.StatusCreated {
+			t.Fatalf("add status = %d", rec.Code)
+		}
+	}
+}
+
+// assertFinishedAt checks finished_at is an RFC3339 string when finished, else JSON null.
+func assertFinishedAt(t *testing.T, name string, b map[string]any, finished bool) {
+	t.Helper()
+	v, ok := b["finished_at"]
+	if !ok {
+		t.Errorf("%s: finished_at missing: %v", name, b)
+		return
+	}
+	if !finished {
+		if v != nil {
+			t.Errorf("%s: finished_at = %v, want null", name, v)
+		}
+		return
+	}
+	str, isStr := v.(string)
+	if !isStr || str == "" {
+		t.Errorf("%s: finished_at = %v, want timestamp string", name, v)
+		return
+	}
+	if _, err := time.Parse(time.RFC3339, str); err != nil {
+		t.Errorf("%s: finished_at %q not RFC3339: %v", name, str, err)
+	}
+}
+
+// assertListFinishedAt checks finished_at in the list response for a book.
+func assertListFinishedAt(t *testing.T, s *Server, bookID int, finished bool) {
+	t.Helper()
+	rec := doRequest(s, http.MethodGet, "/api/shelves/1/books", "")
+	var list []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &list); err != nil {
+		t.Fatal(err)
+	}
+	for _, b := range list {
+		if b["book_id"] == float64(bookID) {
+			assertFinishedAt(t, "list", b, finished)
+			return
+		}
+	}
+	t.Errorf("book %d missing from list: %s", bookID, rec.Body.String())
 }

@@ -30,13 +30,14 @@ type Shelf struct {
 }
 
 type ShelfBook struct {
-	ID              int64     `json:"id"`
-	ShelfID         int64     `json:"shelf_id"`
-	BookID          int64     `json:"book_id"`
-	PagesRead       int64     `json:"pages_read"`
-	ProgressPercent int64     `json:"progress_percent"`
-	AddedAt         time.Time `json:"added_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID              int64      `json:"id"`
+	ShelfID         int64      `json:"shelf_id"`
+	BookID          int64      `json:"book_id"`
+	PagesRead       int64      `json:"pages_read"`
+	ProgressPercent int64      `json:"progress_percent"`
+	AddedAt         time.Time  `json:"added_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+	FinishedAt      *time.Time `json:"finished_at"`
 }
 
 type User struct {

@@ -12,7 +12,8 @@ get {
 
 docs {
   Lists the books on a shelf with their reading progress
-  (pages_read, progress_percent) and book details.
+  (pages_read, progress_percent, finished_at) and book details.
+  finished_at is an RFC3339 timestamp string, or null if not finished.
 
   Response: 200 OK, a JSON array
   400 invalid shelf ID, 404 unknown shelf

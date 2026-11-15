@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"goodreads-clone.com/internal/db"
@@ -77,4 +78,63 @@ func (b *Business) GetUserReadingStats(ctx context.Context, userID int64) (*db.G
 		return nil, fmt.Errorf("failed to get user reading stats: %w", err)
 	}
 	return stats, nil
+}
+
+// ErrInvalidProgress is returned when a progress update is not valid for the book.
+var ErrInvalidProgress = errors.New("invalid reading progress")
+
+func invalidProgress(format string, args ...any) error {
+	return fmt.Errorf("%w: "+format, append([]any{ErrInvalidProgress}, args...)...)
+}
+
+// computeProgress returns the pages read and percentage for a progress update.
+func computeProgress(
+	book *db.Book, current int64, pagesRead, progressPercent *int64,
+) (pages, percent int64, err error) {
+	if book.PageCount.Valid && book.PageCount.Int64 > 0 {
+		pages, percent, err = progressFromPages(book.PageCount.Int64, pagesRead, progressPercent)
+		return pages, percent, err
+	}
+	if progressPercent == nil || pagesRead != nil {
+		return 0, 0, invalidProgress("progress_percent is required for a book without a page count")
+	}
+	if *progressPercent < 0 || *progressPercent > 100 {
+		return 0, 0, invalidProgress("progress_percent must be between 0 and 100")
+	}
+	return current, *progressPercent, nil
+}
+
+func progressFromPages(total int64, pagesRead, progressPercent *int64) (pages, percent int64, err error) {
+	if pagesRead == nil || progressPercent != nil {
+		return 0, 0, invalidProgress("pages_read is required for a book with a page count")
+	}
+	if *pagesRead < 0 || *pagesRead > total {
+		return 0, 0, invalidProgress("pages_read must be between 0 and %d", total)
+	}
+	return *pagesRead, min(*pagesRead*100/total, 100), nil
+}
+
+// RecordReadingProgress records progress for a book on a shelf. For a book with
+// a page count, pagesRead is required and the percentage is computed (rounded
+// down, capped at 100). For a book without one, progressPercent is required.
+// It returns an error wrapping sql.ErrNoRows when the book is not on the shelf
+// and one wrapping ErrInvalidProgress when the input is not valid.
+func (b *Business) RecordReadingProgress(
+	ctx context.Context,
+	shelfID, bookID int64,
+	pagesRead, progressPercent *int64,
+) (*db.ShelfBook, error) {
+	shelfBook, err := b.GetShelfBook(ctx, shelfID, bookID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := b.Storage.Books.GetByID(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book for progress: %w", err)
+	}
+	pages, percent, err := computeProgress(book, shelfBook.PagesRead, pagesRead, progressPercent)
+	if err != nil {
+		return nil, err
+	}
+	return b.UpdateReadingProgress(ctx, shelfBook.ID, pages, percent)
 }
