@@ -8,6 +8,7 @@ packages:
   goodreads-clone.com/internal/storage:
     interfaces:
       BookRepository: {}
+      ChallengeRepository: {}
       ShelfBookRepository: {}
       ShelfRepository: {}
       UserRepository: {}

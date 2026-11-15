@@ -16,6 +16,7 @@ type Storage struct {
 	Books      BookRepository
 	Shelves    ShelfRepository
 	ShelfBooks ShelfBookRepository
+	Challenges ChallengeRepository
 }
 
 // New creates a new Storage instance with the given database connection.
@@ -29,6 +30,7 @@ func New(sqlDB *sql.DB) *Storage {
 	s.Books = &bookRepository{queries: queries}
 	s.Shelves = &shelfRepository{queries: queries}
 	s.ShelfBooks = &shelfBookRepository{queries: queries}
+	s.Challenges = &challengeRepository{queries: queries}
 	return s
 }
 

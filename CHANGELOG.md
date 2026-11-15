@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added yearly reading challenges (gc-19): `PUT /api/users/{id}/challenges/{year}` with `{"goal": 24}` (1 to 1000) creates or updates, `GET` returns `{year, goal, finished, expected_by_now, ahead_by}`; 404 for an unknown user or challenge. New migration `004_reading_challenges.sql`.
+
 - Added reading progress (gc-18): `PUT /api/shelves/{id}/books/{bookID}/progress` takes `pages_read` or `progress_percent`. Shelf books (that response and `GET /api/shelves/{id}/books`) now include `finished_at` (RFC3339 string, `null` until finished), set when progress first reaches 100 and cleared if it drops below. New migration `003_shelf_book_finished_at.sql`.
 - Added an optional `rating` (0 to 5 in increments of 0.25, `null` when unrated) to books (gc-12): settable via `PUT /api/books/{id}`, returned by get and list. New migration `002_book_rating.sql`.
 - Added `GET /api/books/count` (gc-6), returning the catalog size as `{"book_count": <number>}`.
