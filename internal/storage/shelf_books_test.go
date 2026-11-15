@@ -360,8 +360,30 @@ func TestShelfBookRepository_GetUserReadingStats(t *testing.T) {
 	stats, err := s.ShelfBooks.GetUserReadingStats(ctx, user.ID)
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), stats.BooksOnShelves)
-	assert.Equal(t, int64(600), stats.PagesRead)
+	assert.Equal(t, int64(500), stats.PagesRead)
 	assert.Equal(t, int64(2), stats.BooksFinished)
+}
+
+func TestShelfBookRepository_GetUserReadingStats_BookOnMultipleShelvesCountsOnce(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	user := createTestUser(t, s, "dup@example.com", "dupuser")
+	finished := createTestShelf(t, s, user.ID, "Finished", false)
+	favorites := createTestShelf(t, s, user.ID, "Favorites", false)
+	book := createTestBook(t, s, "Book", "A")
+
+	_, err := s.ShelfBooks.Add(ctx, finished.ID, book.ID, 300, 100)
+	require.NoError(t, err)
+	_, err = s.ShelfBooks.Add(ctx, favorites.ID, book.ID, 300, 100)
+	require.NoError(t, err)
+
+	stats, err := s.ShelfBooks.GetUserReadingStats(ctx, user.ID)
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), stats.BooksOnShelves)
+	assert.Equal(t, int64(1), stats.BooksFinished)
+	assert.Equal(t, int64(300), stats.PagesRead)
 }
 
 func TestShelfBookRepository_UpdateProgressFinishedAt(t *testing.T) {
