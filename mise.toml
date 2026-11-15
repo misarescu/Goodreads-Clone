@@ -16,14 +16,20 @@ description = "Install frontend dependencies from bun.lock"
 dir = "frontend"
 run = "bun install --frozen-lockfile"
 
+# go-packages.txt describes the factory's build platform (linux/amd64), not the
+# machine running the task, so deps:list and deps:check give the same result on
+# every machine. Building, testing and running the app keep the local platform.
 [tasks."deps:list"]
 description = "Regenerate go-packages.txt (third-party Go packages the module imports)"
+env = { GOOS = "linux", GOARCH = "amd64" }
 run = """
 go list -deps -test -f '{% raw %}{{if and (not .Standard) .Module (not .Module.Main)}}{{.ImportPath}}{{end}}{% endraw %}' ./... | grep -v '^$' | sort -u > go-packages.txt
 """
 
 [tasks."deps:check"]
 description = "Fail when go-packages.txt is out of date (run mise run deps:list)"
+# Same pinned platform as deps:list (linux/amd64).
+env = { GOOS = "linux", GOARCH = "amd64" }
 run = """
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
