@@ -153,48 +153,6 @@ func (q *Queries) ListBooks(ctx context.Context, arg ListBooksParams) ([]Book, e
 	return items, nil
 }
 
-const searchBooksByTitle = `-- name: SearchBooksByTitle :many
-SELECT id, title, author, page_count, isbn, release_date, language, created_at, rating FROM books WHERE title LIKE ? ORDER BY title LIMIT ?
-`
-
-type SearchBooksByTitleParams struct {
-	Title string `json:"title"`
-	Limit int64  `json:"limit"`
-}
-
-func (q *Queries) SearchBooksByTitle(ctx context.Context, arg SearchBooksByTitleParams) ([]Book, error) {
-	rows, err := q.db.QueryContext(ctx, searchBooksByTitle, arg.Title, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Book{}
-	for rows.Next() {
-		var i Book
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.Author,
-			&i.PageCount,
-			&i.Isbn,
-			&i.ReleaseDate,
-			&i.Language,
-			&i.CreatedAt,
-			&i.Rating,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const updateBook = `-- name: UpdateBook :one
 UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?, rating = ?
 WHERE id = ?

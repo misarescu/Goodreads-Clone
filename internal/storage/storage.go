@@ -27,7 +27,7 @@ func New(sqlDB *sql.DB) *Storage {
 		db:      sqlDB,
 	}
 	s.Users = &userRepository{queries: queries}
-	s.Books = &bookRepository{queries: queries}
+	s.Books = &bookRepository{queries: queries, db: sqlDB}
 	s.Shelves = &shelfRepository{queries: queries}
 	s.ShelfBooks = &shelfBookRepository{queries: queries}
 	s.Challenges = &challengeRepository{queries: queries}

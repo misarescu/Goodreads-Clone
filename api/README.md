@@ -24,7 +24,7 @@ http://localhost:8080
 - `GET /api/books/{id}` - Get book by ID
 - `GET /api/books?isbn={isbn}` - Get book by ISBN
 - `GET /api/books?limit={limit}&offset={offset}` - List books (paginated)
-- `GET /api/books/search?q={query}&limit={limit}` - Search books by title
+- `GET /api/books/search?q={query}&limit={limit}&offset={offset}` - Full-text search (FTS5) over title and author, ranked by bm25 with title weighted higher; the last word is a prefix match. Filters in `q`: `author:<word>`, `lang:<code>` (e.g. `q=hobbit author:tolkien lang:en`). Returns `{"books": [...], "total": N, "limit": N, "offset": N}`; a query with no searchable word or `author:` filter gets 400
 - `PUT /api/books/{id}` - Update book
 - `DELETE /api/books/{id}` - Delete book
 

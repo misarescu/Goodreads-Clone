@@ -61,15 +61,6 @@ func (b *Business) ListBooks(ctx context.Context, limit, offset int64) ([]db.Boo
 	return books, nil
 }
 
-// SearchBooksByTitle searches for books by title.
-func (b *Business) SearchBooksByTitle(ctx context.Context, query string, limit int64) ([]db.Book, error) {
-	books, err := b.Storage.Books.SearchByTitle(ctx, query, limit)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search books by title: %w", err)
-	}
-	return books, nil
-}
-
 // CountBooks returns how many books the catalog holds.
 func (b *Business) CountBooks(ctx context.Context) (int64, error) {
 	n, err := b.Storage.Books.Count(ctx)
