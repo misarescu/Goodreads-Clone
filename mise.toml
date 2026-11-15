@@ -4,6 +4,8 @@
 [tools]
 go = "1.25.5"
 bun = "1.4.4"
+# Node runs vitest and the Bruno CLI; vitest 5 and jsdom 31 need Node 22.12+ or 24.15+.
+node = "24.22.3"
 golangci-lint = "2.8.0"
 mockery = "3.6.1"
 sqlc = "1.30.0"

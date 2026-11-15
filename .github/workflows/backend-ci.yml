@@ -39,34 +39,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Setup Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: true
+      # Go, Bun, Node, sqlc and mockery at the versions in mise.toml, the same
+      # ones developers and the factory's gates use.
+      - name: Setup tools from mise.toml
+        uses: jdx/mise-action@v5
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Setup Node.js (for Bruno CLI)
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - run: go version && bun --version && node --version && sqlc version && mockery version
 
       - name: Install dependencies
         run: make install-deps-backend
-
-      - name: Setup Sqlc
-        uses: sqlc-dev/setup-sqlc@v4
-        with:
-          sqlc-version: '1.30.0'
-      - run: sqlc version 
-
-      - name: Setup Mockery
-        uses: brokeyourbike/go-mockery-action@v0
-        with:
-          mockery-version: '3.6.1'
-      - run: mockery version
 
       - name: Run unit tests
         run: make test
