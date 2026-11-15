@@ -330,6 +330,7 @@ func TestBusiness_UpdateShelf(t *testing.T) {
 		{
 			name: "successful update",
 			mockSetup: func(m *mocks.MockShelfRepository) {
+				m.EXPECT().GetByID(ctx, shelfID).Return(&db.Shelf{ID: shelfID}, nil).Once()
 				m.EXPECT().
 					Update(ctx, shelfID, newName).
 					Return(&db.Shelf{ID: shelfID, Name: newName}, nil).
@@ -343,6 +344,7 @@ func TestBusiness_UpdateShelf(t *testing.T) {
 		{
 			name: "shelf not found",
 			mockSetup: func(m *mocks.MockShelfRepository) {
+				m.EXPECT().GetByID(ctx, shelfID).Return(&db.Shelf{ID: shelfID}, nil).Once()
 				m.EXPECT().
 					Update(ctx, shelfID, newName).
 					Return(nil, sql.ErrNoRows).
@@ -388,6 +390,7 @@ func TestBusiness_DeleteShelf(t *testing.T) {
 		{
 			name: "successful delete",
 			mockSetup: func(m *mocks.MockShelfRepository) {
+				m.EXPECT().GetByID(ctx, shelfID).Return(&db.Shelf{ID: shelfID}, nil).Once()
 				m.EXPECT().
 					Delete(ctx, shelfID).
 					Return(nil).
@@ -398,6 +401,7 @@ func TestBusiness_DeleteShelf(t *testing.T) {
 		{
 			name: "error propagated",
 			mockSetup: func(m *mocks.MockShelfRepository) {
+				m.EXPECT().GetByID(ctx, shelfID).Return(&db.Shelf{ID: shelfID}, nil).Once()
 				m.EXPECT().
 					Delete(ctx, shelfID).
 					Return(errors.New("database error")).
@@ -458,4 +462,30 @@ func TestBusiness_GetDefaultShelvesByUser(t *testing.T) {
 	for _, shelf := range shelves {
 		assert.True(t, shelf.IsDefault)
 	}
+}
+
+func TestBusiness_DefaultShelvesProtected(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	newBiz := func(t *testing.T) (*business.Business, *mocks.MockShelfRepository) {
+		m := mocks.NewMockShelfRepository(t)
+		return &business.Business{Storage: &storage.Storage{Shelves: m}}, m
+	}
+
+	t.Run("update refused", func(t *testing.T) {
+		b, m := newBiz(t)
+		m.EXPECT().GetByID(ctx, int64(1)).Return(&db.Shelf{ID: 1, IsDefault: true}, nil).Once()
+		_, err := b.UpdateShelf(ctx, 1, "x")
+		require.ErrorIs(t, err, business.ErrDefaultShelf)
+	})
+	t.Run("delete refused", func(t *testing.T) {
+		b, m := newBiz(t)
+		m.EXPECT().GetByID(ctx, int64(1)).Return(&db.Shelf{ID: 1, IsDefault: true}, nil).Once()
+		require.ErrorIs(t, b.DeleteShelf(ctx, 1), business.ErrDefaultShelf)
+	})
+	t.Run("lookup error propagated", func(t *testing.T) {
+		b, m := newBiz(t)
+		m.EXPECT().GetByID(ctx, int64(1)).Return(nil, sql.ErrNoRows).Once()
+		require.ErrorIs(t, b.DeleteShelf(ctx, 1), sql.ErrNoRows)
+	})
 }
