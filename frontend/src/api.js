@@ -8,3 +8,9 @@ export async function fetchJSON(url, signal, options = {}) {
   if (res.status === 204) return null
   return res.json()
 }
+
+export const fetchUserShelves = (userId, signal) =>
+  fetchJSON(`/api/users/${userId}/shelves`, signal)
+
+export const fetchShelfBooks = (shelfId, signal) =>
+  fetchJSON(`/api/shelves/${shelfId}/books`, signal)

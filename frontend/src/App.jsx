@@ -5,6 +5,7 @@ import { ReadingChallenge } from './ReadingChallenge.jsx'
 import { BookReviews } from './BookReviews.jsx'
 import { BookSearch } from './BookSearch.jsx'
 import { Recommendations } from './Recommendations.jsx'
+import { Shelves } from './Shelves.jsx'
 
 
 function UserStats({ userId }) {
@@ -84,6 +85,7 @@ function App() {
           </label>
           {selected && <UserStats userId={selected} />}
           {selected && <ReadingChallenge userId={selected} />}
+          {selected && <Shelves userId={selected} />}
           {selected && <BookReviews userId={selected} />}
           {selected && <Recommendations userId={selected} />}
         </>
