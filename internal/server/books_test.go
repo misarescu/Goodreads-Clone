@@ -101,7 +101,8 @@ func TestHandleSearchBooksLimit(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			repo := mocks.NewMockBookRepository(t)
-			repo.EXPECT().SearchByTitle(mock.Anything, "a", tt.want).Return([]db.Book{}, nil)
+			wantLimit := mock.MatchedBy(func(p storage.SearchParams) bool { return p.Limit == tt.want })
+			repo.EXPECT().Search(mock.Anything, wantLimit).Return([]db.Book{}, 0, nil)
 			s := &Server{
 				business: &business.Business{Storage: &storage.Storage{Books: repo}},
 				mux:      http.NewServeMux(),
@@ -114,5 +115,47 @@ func TestHandleSearchBooksLimit(t *testing.T) {
 				t.Fatalf("status = %d, want 200", rec.Code)
 			}
 		})
+	}
+}
+
+func TestHandleSearchBooksResponse(t *testing.T) {
+	repo := mocks.NewMockBookRepository(t)
+	repo.EXPECT().
+		Search(mock.Anything, storage.SearchParams{
+			Match: `"hobbit"* author : "tolkien"`, Language: "en", Limit: 5, Offset: 10,
+		}).
+		Return([]db.Book{{ID: 1, Title: "The Hobbit"}}, int64(11), nil)
+	s := &Server{
+		business: &business.Business{Storage: &storage.Storage{Books: repo}},
+		mux:      http.NewServeMux(),
+	}
+	s.registerRoutes()
+
+	rec := httptest.NewRecorder()
+	url := "/api/books/search?q=hobbit+author:tolkien+lang:en&limit=5&offset=10"
+	s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, url, nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{`"total":11`, `"limit":5`, `"offset":10`, `"title":"The Hobbit"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("body %s lacks %s", body, want)
+		}
+	}
+}
+
+func TestHandleSearchBooksRejectsUnsearchableQuery(t *testing.T) {
+	for _, q := range []string{"", "!!!", "%22", "()*", "lang:en"} {
+		s := &Server{
+			business: &business.Business{Storage: &storage.Storage{Books: mocks.NewMockBookRepository(t)}},
+			mux:      http.NewServeMux(),
+		}
+		s.registerRoutes()
+		rec := httptest.NewRecorder()
+		s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/books/search?q="+q, nil))
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("q=%q: status = %d, want 400", q, rec.Code)
+		}
 	}
 }

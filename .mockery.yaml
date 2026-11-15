@@ -9,6 +9,7 @@ packages:
     interfaces:
       BookRepository: {}
       ChallengeRepository: {}
+      ReviewRepository: {}
       RecommendationRepository: {}
       ShelfBookRepository: {}
       ShelfRepository: {}

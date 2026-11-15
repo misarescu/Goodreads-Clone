@@ -21,11 +21,26 @@ type Book struct {
 	Rating      sql.NullFloat64 `json:"rating"`
 }
 
+type BooksFt struct {
+	Title  string `json:"title"`
+	Author string `json:"author"`
+}
+
 type ReadingChallenge struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`
 	Year      int64     `json:"year"`
 	Goal      int64     `json:"goal"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type Review struct {
+	ID        int64     `json:"id"`
+	BookID    int64     `json:"book_id"`
+	UserID    int64     `json:"user_id"`
+	Rating    int64     `json:"rating"`
+	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

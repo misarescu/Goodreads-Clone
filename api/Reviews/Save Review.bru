@@ -1,0 +1,26 @@
+meta {
+  name: Save Review
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:8080/api/books/1/reviews
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": 1,
+    "rating": 5,
+    "body": "Loved it."
+  }
+}
+
+docs {
+  Creates the user's review of the book, or replaces it if they already
+  reviewed it. Rating 1-5, body 1-5000 characters.
+  Response: 201 with the review when created, 200 when replaced.
+  400 invalid rating or body, 404 unknown book or user.
+}

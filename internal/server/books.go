@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
 )
 
@@ -112,8 +113,21 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
 		handleDBError(w, err)
 		return
 	}
+	withStats, err := s.business.WithReviewStat(r.Context(), book)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
 
-	writeJSON(w, http.StatusOK, book)
+	writeJSON(w, http.StatusOK, withStats)
+}
+
+// searchBooksResponse is a page of search results with the total number of matches.
+type searchBooksResponse struct {
+	Books  []db.Book `json:"books"`
+	Total  int64     `json:"total"`
+	Limit  int64     `json:"limit"`
+	Offset int64     `json:"offset"`
 }
 
 func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
@@ -123,15 +137,19 @@ func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit, _ := getPaginationParams(r)
+	limit, offset := getPaginationParams(r)
 
-	books, err := s.business.SearchBooksByTitle(r.Context(), query, limit)
+	books, total, err := s.business.SearchBooks(r.Context(), query, limit, offset)
+	if errors.Is(err, business.ErrInvalidSearch) {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err != nil {
 		handleDBError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, books)
+	writeJSON(w, http.StatusOK, searchBooksResponse{Books: books, Total: total, Limit: limit, Offset: offset})
 }
 
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +159,12 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
 			handleDBError(w, err)
 			return
 		}
-		writeJSON(w, http.StatusOK, book)
+		withStats, err := s.business.WithReviewStat(r.Context(), book)
+		if err != nil {
+			handleDBError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, withStats)
 		return
 	}
 
@@ -151,8 +174,13 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
 		handleDBError(w, err)
 		return
 	}
+	withStats, err := s.business.WithReviewStats(r.Context(), books)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
 
-	writeJSON(w, http.StatusOK, books)
+	writeJSON(w, http.StatusOK, withStats)
 }
 
 func (s *Server) handleUpdateBook(w http.ResponseWriter, r *http.Request) {
