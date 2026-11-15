@@ -64,6 +64,7 @@ type ShelfBookRepository interface {
 type ChallengeRepository interface {
 	Upsert(ctx context.Context, userID, year, goal int64) (*db.ReadingChallenge, error)
 	Get(ctx context.Context, userID, year int64) (*db.ReadingChallenge, error)
+	ListByUser(ctx context.Context, userID int64) ([]db.ReadingChallenge, error)
 	CountFinishedInYear(ctx context.Context, userID, year int64) (int64, error)
 	Delete(ctx context.Context, userID, year int64) error
 }

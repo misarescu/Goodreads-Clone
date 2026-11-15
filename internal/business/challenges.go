@@ -60,11 +60,37 @@ func (b *Business) GetReadingChallengeProgress(ctx context.Context, userID, year
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reading challenge: %w", err)
 	}
-	finished, err := b.Storage.Challenges.CountFinishedInYear(ctx, userID, year)
+	return b.challengeProgress(ctx, c)
+}
+
+// ListReadingChallengeProgress returns all of a user's challenges with
+// progress, newest year first. It returns an error wrapping sql.ErrNoRows when
+// the user does not exist.
+func (b *Business) ListReadingChallengeProgress(ctx context.Context, userID int64) ([]ChallengeProgress, error) {
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return nil, fmt.Errorf("failed to get user for reading challenges: %w", err)
+	}
+	challenges, err := b.Storage.Challenges.ListByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list reading challenges: %w", err)
+	}
+	out := make([]ChallengeProgress, 0, len(challenges))
+	for i := range challenges {
+		p, err := b.challengeProgress(ctx, &challenges[i])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, *p)
+	}
+	return out, nil
+}
+
+func (b *Business) challengeProgress(ctx context.Context, c *db.ReadingChallenge) (*ChallengeProgress, error) {
+	finished, err := b.Storage.Challenges.CountFinishedInYear(ctx, c.UserID, c.Year)
 	if err != nil {
 		return nil, fmt.Errorf("failed to count finished books: %w", err)
 	}
-	expected := expectedByNow(c.Goal, year, b.now())
+	expected := expectedByNow(c.Goal, c.Year, b.now())
 	return &ChallengeProgress{
 		Year:          c.Year,
 		Goal:          c.Goal,

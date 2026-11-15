@@ -40,6 +40,14 @@ func (r *challengeRepository) CountFinishedInYear(ctx context.Context, userID, y
 	return n, nil
 }
 
+func (r *challengeRepository) ListByUser(ctx context.Context, userID int64) ([]db.ReadingChallenge, error) {
+	rows, err := r.queries.ListReadingChallengesByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list reading challenges query failed: %w", err)
+	}
+	return rows, nil
+}
+
 // Delete removes a challenge; it returns an error wrapping sql.ErrNoRows when none existed.
 func (r *challengeRepository) Delete(ctx context.Context, userID, year int64) error {
 	n, err := r.queries.DeleteReadingChallenge(ctx, db.DeleteReadingChallengeParams{UserID: userID, Year: year})

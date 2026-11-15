@@ -70,6 +70,40 @@ func (q *Queries) GetReadingChallenge(ctx context.Context, arg GetReadingChallen
 	return i, err
 }
 
+const listReadingChallengesByUser = `-- name: ListReadingChallengesByUser :many
+SELECT id, user_id, year, goal, created_at, updated_at FROM reading_challenges WHERE user_id = ? ORDER BY year DESC
+`
+
+func (q *Queries) ListReadingChallengesByUser(ctx context.Context, userID int64) ([]ReadingChallenge, error) {
+	rows, err := q.db.QueryContext(ctx, listReadingChallengesByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ReadingChallenge{}
+	for rows.Next() {
+		var i ReadingChallenge
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Year,
+			&i.Goal,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertReadingChallenge = `-- name: UpsertReadingChallenge :one
 INSERT INTO reading_challenges (user_id, year, goal)
 VALUES (?, ?, ?)

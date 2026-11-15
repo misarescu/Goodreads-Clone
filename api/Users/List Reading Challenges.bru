@@ -1,0 +1,18 @@
+meta {
+  name: List Reading Challenges
+  type: http
+  seq: 11
+}
+
+get {
+  url: http://localhost:8080/api/users/1/challenges
+  body: none
+  auth: none
+}
+
+docs {
+  Lists all of the user's reading challenges, newest year first.
+  Response: 200 [{"year", "goal", "finished", "expected_by_now", "ahead_by"}]
+  (same fields as GET /api/users/{id}/challenges/{year}); [] when the user has
+  no challenges. 400 invalid user ID, 404 unknown user.
+}
