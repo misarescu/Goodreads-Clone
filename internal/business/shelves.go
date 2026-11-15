@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"goodreads-clone.com/internal/db"
@@ -14,6 +15,9 @@ var DefaultShelfNames = []string{
 	"Finished",
 	"DNF",
 }
+
+// ErrDefaultShelf is returned when renaming or deleting a default shelf.
+var ErrDefaultShelf = errors.New("default shelves cannot be renamed or deleted")
 
 // CreateShelf creates a new custom shelf for a user.
 func (b *Business) CreateShelf(ctx context.Context, userID int64, name string) (*db.Shelf, error) {
@@ -66,6 +70,9 @@ func (b *Business) ListShelvesByUser(ctx context.Context, userID int64) ([]db.Sh
 
 // UpdateShelf updates a custom shelf's name. Cannot update default shelves.
 func (b *Business) UpdateShelf(ctx context.Context, id int64, name string) (*db.Shelf, error) {
+	if err := b.ensureCustomShelf(ctx, id); err != nil {
+		return nil, err
+	}
 	shelf, err := b.Storage.Shelves.Update(ctx, id, name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update shelf: %w", err)
@@ -75,6 +82,9 @@ func (b *Business) UpdateShelf(ctx context.Context, id int64, name string) (*db.
 
 // DeleteShelf deletes a custom shelf. Cannot delete default shelves.
 func (b *Business) DeleteShelf(ctx context.Context, id int64) error {
+	if err := b.ensureCustomShelf(ctx, id); err != nil {
+		return err
+	}
 	if err := b.Storage.Shelves.Delete(ctx, id); err != nil {
 		return fmt.Errorf("failed to delete shelf: %w", err)
 	}
@@ -88,4 +98,16 @@ func (b *Business) GetDefaultShelvesByUser(ctx context.Context, userID int64) ([
 		return nil, fmt.Errorf("failed to get default shelves by user: %w", err)
 	}
 	return shelves, nil
+}
+
+// ensureCustomShelf returns ErrDefaultShelf if the shelf is a default shelf.
+func (b *Business) ensureCustomShelf(ctx context.Context, id int64) error {
+	shelf, err := b.Storage.Shelves.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to get shelf: %w", err)
+	}
+	if shelf.IsDefault {
+		return ErrDefaultShelf
+	}
+	return nil
 }
