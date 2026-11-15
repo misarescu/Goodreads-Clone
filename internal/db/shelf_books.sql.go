@@ -14,7 +14,7 @@ import (
 const addBookToShelf = `-- name: AddBookToShelf :one
 INSERT INTO shelf_books (shelf_id, book_id, pages_read, progress_percent)
 VALUES (?, ?, ?, ?)
-RETURNING id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at
+RETURNING id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at, finished_at
 `
 
 type AddBookToShelfParams struct {
@@ -40,12 +40,13 @@ func (q *Queries) AddBookToShelf(ctx context.Context, arg AddBookToShelfParams) 
 		&i.ProgressPercent,
 		&i.AddedAt,
 		&i.UpdatedAt,
+		&i.FinishedAt,
 	)
 	return i, err
 }
 
 const getShelfBook = `-- name: GetShelfBook :one
-SELECT id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at FROM shelf_books WHERE shelf_id = ? AND book_id = ?
+SELECT id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at, finished_at FROM shelf_books WHERE shelf_id = ? AND book_id = ?
 `
 
 type GetShelfBookParams struct {
@@ -64,6 +65,7 @@ func (q *Queries) GetShelfBook(ctx context.Context, arg GetShelfBookParams) (She
 		&i.ProgressPercent,
 		&i.AddedAt,
 		&i.UpdatedAt,
+		&i.FinishedAt,
 	)
 	return i, err
 }
@@ -132,7 +134,7 @@ func (q *Queries) GetUserReadingStats(ctx context.Context, userID int64) (GetUse
 }
 
 const listBooksOnShelf = `-- name: ListBooksOnShelf :many
-SELECT sb.id, sb.shelf_id, sb.book_id, sb.pages_read, sb.progress_percent, sb.added_at, sb.updated_at, b.title, b.author, b.page_count
+SELECT sb.id, sb.shelf_id, sb.book_id, sb.pages_read, sb.progress_percent, sb.added_at, sb.updated_at, sb.finished_at, b.title, b.author, b.page_count
 FROM shelf_books sb
 JOIN books b ON sb.book_id = b.id
 WHERE sb.shelf_id = ?
@@ -147,6 +149,7 @@ type ListBooksOnShelfRow struct {
 	ProgressPercent int64         `json:"progress_percent"`
 	AddedAt         time.Time     `json:"added_at"`
 	UpdatedAt       time.Time     `json:"updated_at"`
+	FinishedAt      sql.NullTime  `json:"finished_at"`
 	Title           string        `json:"title"`
 	Author          string        `json:"author"`
 	PageCount       sql.NullInt64 `json:"page_count"`
@@ -169,6 +172,7 @@ func (q *Queries) ListBooksOnShelf(ctx context.Context, shelfID int64) ([]ListBo
 			&i.ProgressPercent,
 			&i.AddedAt,
 			&i.UpdatedAt,
+			&i.FinishedAt,
 			&i.Title,
 			&i.Author,
 			&i.PageCount,
@@ -201,9 +205,16 @@ func (q *Queries) RemoveBookFromShelf(ctx context.Context, arg RemoveBookFromShe
 }
 
 const updateShelfBookProgress = `-- name: UpdateShelfBookProgress :one
-UPDATE shelf_books SET pages_read = ?, progress_percent = ?, updated_at = CURRENT_TIMESTAMP
-WHERE id = ?
-RETURNING id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at
+UPDATE shelf_books SET
+    pages_read = ?1,
+    progress_percent = ?2,
+    finished_at = CASE
+        WHEN ?2 >= 100 THEN COALESCE(finished_at, CURRENT_TIMESTAMP)
+        ELSE NULL
+    END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = ?3
+RETURNING id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at, finished_at
 `
 
 type UpdateShelfBookProgressParams struct {
@@ -223,6 +234,7 @@ func (q *Queries) UpdateShelfBookProgress(ctx context.Context, arg UpdateShelfBo
 		&i.ProgressPercent,
 		&i.AddedAt,
 		&i.UpdatedAt,
+		&i.FinishedAt,
 	)
 	return i, err
 }

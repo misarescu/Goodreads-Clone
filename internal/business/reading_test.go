@@ -506,3 +506,49 @@ func TestBusiness_GetUserReadingStats(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestBusiness_RecordReadingProgress(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	i := func(v int64) *int64 { return &v }
+	paged := sql.NullInt64{Int64: 300, Valid: true}
+
+	tests := []struct {
+		name        string
+		pageCount   sql.NullInt64
+		pages, pct  *int64
+		wantPages   int64
+		wantPercent int64
+		wantInvalid bool
+	}{
+		{name: "rounds down", pageCount: paged, pages: i(100), wantPages: 100, wantPercent: 33},
+		{name: "complete", pageCount: paged, pages: i(300), wantPages: 300, wantPercent: 100},
+		{name: "above page count", pageCount: paged, pages: i(301), wantInvalid: true},
+		{name: "missing pages", pageCount: paged, wantInvalid: true},
+		{name: "percent without page count", pct: i(40), wantPages: 7, wantPercent: 40},
+		{name: "percent out of range", pct: i(101), wantInvalid: true},
+		{name: "pages without page count", pages: i(5), wantInvalid: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			sbRepo := mocks.NewMockShelfBookRepository(t)
+			bookRepo := mocks.NewMockBookRepository(t)
+			sbRepo.EXPECT().Get(ctx, int64(1), int64(2)).
+				Return(&db.ShelfBook{ID: 9, PagesRead: 7}, nil).Once()
+			bookRepo.EXPECT().GetByID(ctx, int64(2)).Return(&db.Book{ID: 2, PageCount: tt.pageCount}, nil).Once()
+			if !tt.wantInvalid {
+				sbRepo.EXPECT().UpdateProgress(ctx, int64(9), tt.wantPages, tt.wantPercent).
+					Return(&db.ShelfBook{ID: 9}, nil).Once()
+			}
+			b := &business.Business{Storage: &storage.Storage{ShelfBooks: sbRepo, Books: bookRepo}}
+
+			_, err := b.RecordReadingProgress(ctx, 1, 2, tt.pages, tt.pct)
+			if tt.wantInvalid {
+				require.ErrorIs(t, err, business.ErrInvalidProgress)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}

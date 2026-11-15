@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
 	"modernc.org/sqlite"
 	sqlitelib "modernc.org/sqlite/lib"
@@ -119,4 +120,40 @@ func (s *Server) handleListShelfBooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, books)
+}
+
+type updateProgressRequest struct {
+	PagesRead       *int64 `json:"pages_read"`
+	ProgressPercent *int64 `json:"progress_percent"`
+}
+
+func (s *Server) handleUpdateShelfBookProgress(w http.ResponseWriter, r *http.Request) {
+	shelfID, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid shelf ID")
+		return
+	}
+	bookID, err := parseID(r, "bookID")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid book ID")
+		return
+	}
+
+	var req updateProgressRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	shelfBook, err := s.business.RecordReadingProgress(r.Context(), shelfID, bookID, req.PagesRead, req.ProgressPercent)
+	if err != nil {
+		if errors.Is(err, business.ErrInvalidProgress) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, shelfBook)
 }

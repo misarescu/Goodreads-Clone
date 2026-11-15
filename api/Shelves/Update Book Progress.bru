@@ -1,0 +1,29 @@
+meta {
+  name: Update Book Progress
+  type: http
+  seq: 10
+}
+
+put {
+  url: http://localhost:8080/api/shelves/1/books/1/progress
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "pages_read": 120
+  }
+}
+
+docs {
+  Records reading progress for a book on a shelf. progress_percent is
+  computed from the book's page_count (rounded down, capped at 100).
+  A book without a page count takes {"progress_percent": 40} instead.
+  finished_at is set the first time progress reaches 100 and cleared if
+  progress drops below 100 again.
+
+  Response: 200 OK with the shelf book
+  400 invalid IDs or body, or pages_read above the page count,
+  404 unknown shelf or book not on the shelf
+}

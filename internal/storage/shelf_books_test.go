@@ -363,3 +363,31 @@ func TestShelfBookRepository_GetUserReadingStats(t *testing.T) {
 	assert.Equal(t, int64(600), stats.PagesRead)
 	assert.Equal(t, int64(2), stats.BooksFinished)
 }
+
+func TestShelfBookRepository_UpdateProgressFinishedAt(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	user := createTestUser(t, s, "fin@example.com", "finuser")
+	shelf := createTestShelf(t, s, user.ID, "Currently Reading", false)
+	book := createTestBook(t, s, "Finishing Book", "Author")
+	added, err := s.ShelfBooks.Add(ctx, shelf.ID, book.ID, 0, 0)
+	require.NoError(t, err)
+	assert.False(t, added.FinishedAt.Valid)
+
+	finished, err := s.ShelfBooks.UpdateProgress(ctx, added.ID, 400, 100)
+	require.NoError(t, err)
+	require.True(t, finished.FinishedAt.Valid)
+
+	// Re-saving 100 keeps the original finish time.
+	_, err = s.ShelfBooks.UpdateProgress(ctx, added.ID, 400, 100)
+	require.NoError(t, err)
+	again, err := s.ShelfBooks.Get(ctx, shelf.ID, book.ID)
+	require.NoError(t, err)
+	assert.Equal(t, finished.FinishedAt.Time, again.FinishedAt.Time)
+
+	reopened, err := s.ShelfBooks.UpdateProgress(ctx, added.ID, 399, 99)
+	require.NoError(t, err)
+	assert.False(t, reopened.FinishedAt.Valid)
+}

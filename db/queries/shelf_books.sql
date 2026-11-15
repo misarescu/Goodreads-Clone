@@ -7,8 +7,15 @@ RETURNING *;
 SELECT * FROM shelf_books WHERE shelf_id = ? AND book_id = ?;
 
 -- name: UpdateShelfBookProgress :one
-UPDATE shelf_books SET pages_read = ?, progress_percent = ?, updated_at = CURRENT_TIMESTAMP
-WHERE id = ?
+UPDATE shelf_books SET
+    pages_read = sqlc.arg(pages_read),
+    progress_percent = sqlc.arg(progress_percent),
+    finished_at = CASE
+        WHEN sqlc.arg(progress_percent) >= 100 THEN COALESCE(finished_at, CURRENT_TIMESTAMP)
+        ELSE NULL
+    END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: RemoveBookFromShelf :exec
