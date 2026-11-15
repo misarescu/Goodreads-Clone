@@ -10,6 +10,9 @@ export default defineConfig({
       },
     }),
   ],
+  test: {
+    environment: 'jsdom',
+  },
   build: {
     outDir: '../static/dist',
     emptyOutDir: true,

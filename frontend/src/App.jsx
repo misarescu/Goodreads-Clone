@@ -1,11 +1,8 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import { fetchJSON } from './api.js'
+import { ReadingChallenge } from './ReadingChallenge.jsx'
 
-async function fetchJSON(url, signal) {
-  const res = await fetch(url, { signal })
-  if (!res.ok) throw new Error(`Request failed (${res.status})`)
-  return res.json()
-}
 
 function UserStats({ userId }) {
   const [state, setState] = useState({ userId, status: 'loading' })
@@ -82,6 +79,7 @@ function App() {
             </select>
           </label>
           {selected && <UserStats userId={selected} />}
+          {selected && <ReadingChallenge userId={selected} />}
         </>
       )}
     </>
