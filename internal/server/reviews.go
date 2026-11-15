@@ -79,3 +79,20 @@ func (s *Server) handleDeleteReview(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (s *Server) handleListUserReviews(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	limit, offset := getPaginationParams(r)
+	reviews, err := s.business.ListUserReviews(r.Context(), userID, limit, offset)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, reviews)
+}

@@ -155,3 +155,29 @@ func TestBusiness_WithReviewStats(t *testing.T) {
 	assert.InDelta(t, 4.3, *got[1].AverageRating, 1e-9)
 	assert.Equal(t, int64(3), got[1].ReviewCount)
 }
+
+func TestBusiness_ListUserReviews(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	b, m := newReviewBusiness(t)
+	m.users.EXPECT().GetByID(ctx, int64(1)).Return(&db.User{ID: 1}, nil)
+	m.reviews.EXPECT().ListByUser(ctx, int64(1), int64(20), int64(5)).
+		Return([]db.ListReviewsByUserRow{{ID: 1, BookTitle: "T"}}, nil)
+	rows, err := b.ListUserReviews(ctx, 1, 20, 5)
+	require.NoError(t, err)
+	require.Len(t, rows, 1)
+	assert.Equal(t, "T", rows[0].BookTitle)
+
+	b, m = newReviewBusiness(t)
+	m.users.EXPECT().GetByID(ctx, int64(9)).Return(nil, sql.ErrNoRows)
+	_, err = b.ListUserReviews(ctx, 9, 20, 0)
+	require.ErrorIs(t, err, sql.ErrNoRows)
+
+	b, m = newReviewBusiness(t)
+	boom := errors.New("boom")
+	m.users.EXPECT().GetByID(ctx, int64(1)).Return(&db.User{ID: 1}, nil)
+	m.reviews.EXPECT().ListByUser(ctx, int64(1), int64(20), int64(0)).Return(nil, boom)
+	_, err = b.ListUserReviews(ctx, 1, 20, 0)
+	require.ErrorIs(t, err, boom)
+}

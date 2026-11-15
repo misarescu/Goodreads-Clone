@@ -62,3 +62,13 @@ func (r *reviewRepository) Stats(ctx context.Context, bookIDs []int64) ([]db.Get
 	}
 	return rows, nil
 }
+
+func (r *reviewRepository) ListByUser(
+	ctx context.Context, userID, limit, offset int64,
+) ([]db.ListReviewsByUserRow, error) {
+	rows, err := r.queries.ListReviewsByUser(ctx, db.ListReviewsByUserParams{UserID: userID, Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, fmt.Errorf("list user reviews query failed: %w", err)
+	}
+	return rows, nil
+}

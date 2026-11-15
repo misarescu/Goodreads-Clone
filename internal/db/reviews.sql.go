@@ -156,6 +156,64 @@ func (q *Queries) ListReviewsByBook(ctx context.Context, arg ListReviewsByBookPa
 	return items, nil
 }
 
+const listReviewsByUser = `-- name: ListReviewsByUser :many
+SELECT r.id, r.book_id, b.title AS book_title, r.user_id, r.rating, r.body, r.created_at, r.updated_at
+FROM reviews r
+JOIN books b ON b.id = r.book_id
+WHERE r.user_id = ?
+ORDER BY r.created_at DESC, r.id DESC
+LIMIT ? OFFSET ?
+`
+
+type ListReviewsByUserParams struct {
+	UserID int64 `json:"user_id"`
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+}
+
+type ListReviewsByUserRow struct {
+	ID        int64     `json:"id"`
+	BookID    int64     `json:"book_id"`
+	BookTitle string    `json:"book_title"`
+	UserID    int64     `json:"user_id"`
+	Rating    int64     `json:"rating"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (q *Queries) ListReviewsByUser(ctx context.Context, arg ListReviewsByUserParams) ([]ListReviewsByUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, listReviewsByUser, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReviewsByUserRow{}
+	for rows.Next() {
+		var i ListReviewsByUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BookID,
+			&i.BookTitle,
+			&i.UserID,
+			&i.Rating,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const upsertReview = `-- name: UpsertReview :one
 INSERT INTO reviews (book_id, user_id, rating, body)
 VALUES (?, ?, ?, ?)

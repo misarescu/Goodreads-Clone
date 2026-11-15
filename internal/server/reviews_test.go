@@ -255,3 +255,49 @@ func TestBookReviewStatsRounds(t *testing.T) {
 	getJSON(t, s, "/api/books/1", &b)
 	checkStats(t, b, 4.3, 3)
 }
+
+type userReviewItem struct {
+	BookTitle string `json:"book_title"`
+	Body      string `json:"body"`
+}
+
+func getUserReviews(s *Server, path string) (int, []userReviewItem) {
+	rec := doRequest(s, http.MethodGet, path, "")
+	var rows []userReviewItem
+	_ = json.Unmarshal(rec.Body.Bytes(), &rows)
+	return rec.Code, rows
+}
+
+func TestUserReviewList(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewRows(t, s)
+	// user 1 also reviews book 2, most recently.
+	if _, err := s.business.Storage.DB().Exec(`INSERT INTO reviews (book_id, user_id, rating, body, created_at)
+		VALUES (2, 1, 4, 'latest', '2026-03-01 10:00:00')`); err != nil {
+		t.Fatal(err)
+	}
+
+	code, rows := getUserReviews(s, "/api/users/1/reviews")
+	want := []userReviewItem{{"B2", "latest"}, {"Title", "older"}}
+	if code != http.StatusOK || !reflect.DeepEqual(rows, want) {
+		t.Errorf("list = %d %+v", code, rows)
+	}
+	if _, rows = getUserReviews(s, "/api/users/1/reviews?limit=1&offset=1"); !reflect.DeepEqual(rows, want[1:]) {
+		t.Errorf("page = %+v", rows)
+	}
+}
+
+func TestUserReviewListEdges(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewRows(t, s)
+
+	for path, want := range map[string]int{
+		"/api/users/2/reviews":  http.StatusOK,
+		"/api/users/99/reviews": http.StatusNotFound,
+		"/api/users/x/reviews":  http.StatusBadRequest,
+	} {
+		if code, _ := getUserReviews(s, path); code != want {
+			t.Errorf("%s = %d, want %d", path, code, want)
+		}
+	}
+}

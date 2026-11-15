@@ -26,3 +26,11 @@ SELECT book_id, COUNT(*) AS review_count, CAST(AVG(rating) AS REAL) AS average_r
 FROM reviews
 WHERE book_id IN (sqlc.slice('book_ids'))
 GROUP BY book_id;
+
+-- name: ListReviewsByUser :many
+SELECT r.id, r.book_id, b.title AS book_title, r.user_id, r.rating, r.body, r.created_at, r.updated_at
+FROM reviews r
+JOIN books b ON b.id = r.book_id
+WHERE r.user_id = ?
+ORDER BY r.created_at DESC, r.id DESC
+LIMIT ? OFFSET ?;
