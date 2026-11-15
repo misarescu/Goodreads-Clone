@@ -16,9 +16,34 @@ description = "Install frontend dependencies from bun.lock"
 dir = "frontend"
 run = "bun install --frozen-lockfile"
 
+[tasks."deps:list"]
+description = "Regenerate go-packages.txt (third-party Go packages the module imports)"
+run = """
+go list -deps -test -f '{% raw %}{{if and (not .Standard) .Module (not .Module.Main)}}{{.ImportPath}}{{end}}{% endraw %}' ./... | grep -v '^$' | sort -u > go-packages.txt
+"""
+
+[tasks."deps:check"]
+description = "Fail when go-packages.txt is out of date (run mise run deps:list)"
+run = """
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+go list -deps -test -f '{% raw %}{{if and (not .Standard) .Module (not .Module.Main)}}{{.ImportPath}}{{end}}{% endraw %}' ./... | grep -v '^$' | sort -u > "$tmp"
+diff -u go-packages.txt "$tmp" || { echo "go-packages.txt is out of date: run 'mise run deps:list'" >&2; exit 1; }
+"""
+
+# Run by the factory in a directory holding only the files declared in
+# .factory/config.yaml, so it must not need the repo's code.
+[tasks."deps:warm"]
+description = "Download and pre-compile Go and Bun dependencies"
+depends = ["deps:frontend"]
+run = """
+go mod download
+grep -v '^$' go-packages.txt | xargs go build
+"""
+
 [tasks.lint]
 description = "Lint backend and frontend (make lint)"
-depends = ["deps:frontend"]
+depends = ["deps:frontend", "deps:check"]
 run = "make lint"
 
 [tasks.test]
