@@ -101,3 +101,37 @@ func TestChallengeGet(t *testing.T) {
 		})
 	}
 }
+
+func TestChallengeList(t *testing.T) {
+	s := newShelfBooksServer(t)
+	s.business.Now = func() time.Time { return time.Date(2026, 7, 2, 12, 0, 0, 0, time.UTC) }
+
+	rec := doRequest(s, http.MethodGet, "/api/users/1/challenges", "")
+	if rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != `[]` {
+		t.Fatalf("empty: status = %d, body = %s", rec.Code, rec.Body)
+	}
+
+	if _, err := s.business.Storage.DB().Exec(
+		`INSERT INTO shelf_books (shelf_id, book_id, finished_at) VALUES (1, 1, '2025-03-01 10:00:00')`,
+	); err != nil {
+		t.Fatal(err)
+	}
+	doRequest(s, http.MethodPut, "/api/users/1/challenges/2025", `{"goal":10}`)
+	doRequest(s, http.MethodPut, "/api/users/1/challenges/2027", `{"goal":10}`)
+	doRequest(s, http.MethodPut, "/api/users/1/challenges/2026", `{"goal":25}`)
+
+	rec = doRequest(s, http.MethodGet, "/api/users/1/challenges", "")
+	want := `[{"year":2027,"goal":10,"finished":0,"expected_by_now":0,"ahead_by":0},` +
+		`{"year":2026,"goal":25,"finished":0,"expected_by_now":12,"ahead_by":-12},` +
+		`{"year":2025,"goal":10,"finished":1,"expected_by_now":10,"ahead_by":-9}]`
+	if rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != want {
+		t.Errorf("status = %d, body = %s, want %s", rec.Code, rec.Body, want)
+	}
+
+	if rec := doRequest(s, http.MethodGet, "/api/users/99/challenges", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("unknown user: status = %d", rec.Code)
+	}
+	if rec := doRequest(s, http.MethodGet, "/api/users/x/challenges", ""); rec.Code != http.StatusBadRequest {
+		t.Errorf("bad user: status = %d", rec.Code)
+	}
+}
