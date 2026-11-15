@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"strconv"
 	"time"
 
 	"goodreads-clone.com/internal/db"
@@ -124,12 +123,7 @@ func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit := int64(20)
-	if l := r.URL.Query().Get("limit"); l != "" {
-		if parsed, err := strconv.ParseInt(l, 10, 64); err == nil && parsed > 0 {
-			limit = parsed
-		}
-	}
+	limit, _ := getPaginationParams(r)
 
 	books, err := s.business.SearchBooksByTitle(r.Context(), query, limit)
 	if err != nil {
