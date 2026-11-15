@@ -35,9 +35,16 @@ WHERE s.user_id = ? AND sb.book_id = ?;
 
 -- name: GetUserReadingStats :one
 SELECT
-    COUNT(DISTINCT sb.book_id) AS books_on_shelves,
-    CAST(COALESCE(SUM(sb.pages_read), 0) AS INTEGER) AS pages_read,
-    CAST(COALESCE(SUM(CASE WHEN sb.progress_percent = 100 THEN 1 ELSE 0 END), 0) AS INTEGER) AS books_finished
-FROM shelf_books sb
-JOIN shelves s ON s.id = sb.shelf_id
-WHERE s.user_id = ?;
+    COUNT(*) AS books_on_shelves,
+    CAST(COALESCE(SUM(per_book.pages_read), 0) AS INTEGER) AS pages_read,
+    CAST(COALESCE(SUM(CASE WHEN per_book.progress_percent = 100 THEN 1 ELSE 0 END), 0) AS INTEGER) AS books_finished
+FROM (
+    SELECT
+        sb.book_id,
+        MAX(sb.pages_read) AS pages_read,
+        MAX(sb.progress_percent) AS progress_percent
+    FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    WHERE s.user_id = ?
+    GROUP BY sb.book_id
+) AS per_book;
