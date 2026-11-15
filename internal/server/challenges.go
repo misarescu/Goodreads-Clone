@@ -69,3 +69,17 @@ func (s *Server) handleGetChallenge(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, p)
 }
+
+func (s *Server) handleDeleteChallenge(w http.ResponseWriter, r *http.Request) {
+	userID, year, ok := parseChallengePath(w, r)
+	if !ok {
+		return
+	}
+
+	if err := s.business.DeleteReadingChallenge(r.Context(), userID, year); err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

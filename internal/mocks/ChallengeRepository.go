@@ -110,6 +110,69 @@ func (_c *MockChallengeRepository_CountFinishedInYear_Call) RunAndReturn(run fun
 	return _c
 }
 
+// Delete provides a mock function for the type MockChallengeRepository
+func (_mock *MockChallengeRepository) Delete(ctx context.Context, userID int64, year int64) error {
+	ret := _mock.Called(ctx, userID, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Delete")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64) error); ok {
+		r0 = returnFunc(ctx, userID, year)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockChallengeRepository_Delete_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Delete'
+type MockChallengeRepository_Delete_Call struct {
+	*mock.Call
+}
+
+// Delete is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+//   - year int64
+func (_e *MockChallengeRepository_Expecter) Delete(ctx interface{}, userID interface{}, year interface{}) *MockChallengeRepository_Delete_Call {
+	return &MockChallengeRepository_Delete_Call{Call: _e.mock.On("Delete", ctx, userID, year)}
+}
+
+func (_c *MockChallengeRepository_Delete_Call) Run(run func(ctx context.Context, userID int64, year int64)) *MockChallengeRepository_Delete_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockChallengeRepository_Delete_Call) Return(err error) *MockChallengeRepository_Delete_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockChallengeRepository_Delete_Call) RunAndReturn(run func(ctx context.Context, userID int64, year int64) error) *MockChallengeRepository_Delete_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Get provides a mock function for the type MockChallengeRepository
 func (_mock *MockChallengeRepository) Get(ctx context.Context, userID int64, year int64) (*db.ReadingChallenge, error) {
 	ret := _mock.Called(ctx, userID, year)

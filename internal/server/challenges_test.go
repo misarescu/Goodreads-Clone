@@ -101,3 +101,43 @@ func TestChallengeGet(t *testing.T) {
 		})
 	}
 }
+
+func TestChallengeDelete(t *testing.T) {
+	tests := []struct {
+		name       string
+		path       string
+		wantStatus int
+	}{
+		{"existing", "/api/users/1/challenges/2026", http.StatusNoContent},
+		{"no challenge for year", "/api/users/1/challenges/2025", http.StatusNotFound},
+		{"unknown user", "/api/users/99/challenges/2026", http.StatusNotFound},
+		{"bad year", "/api/users/1/challenges/abc", http.StatusBadRequest},
+		{"bad user", "/api/users/x/challenges/2026", http.StatusBadRequest},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := newShelfBooksServer(t)
+			doRequest(s, http.MethodPut, "/api/users/1/challenges/2026", `{"goal":24}`)
+			rec := doRequest(s, http.MethodDelete, tt.path, "")
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d: %s", rec.Code, tt.wantStatus, rec.Body)
+			}
+		})
+	}
+}
+
+func TestChallengeDeleteRemoves(t *testing.T) {
+	s := newShelfBooksServer(t)
+	doRequest(s, http.MethodPut, "/api/users/1/challenges/2026", `{"goal":24}`)
+	doRequest(s, http.MethodPut, "/api/users/1/challenges/2027", `{"goal":10}`)
+	doRequest(s, http.MethodDelete, "/api/users/1/challenges/2026", "")
+	if rec := doRequest(s, http.MethodGet, "/api/users/1/challenges/2026", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("deleted challenge GET = %d", rec.Code)
+	}
+	if rec := doRequest(s, http.MethodGet, "/api/users/1/challenges/2027", ""); rec.Code != http.StatusOK {
+		t.Errorf("other year GET = %d", rec.Code)
+	}
+	if rec := doRequest(s, http.MethodDelete, "/api/users/1/challenges/2026", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("second delete = %d", rec.Code)
+	}
+}

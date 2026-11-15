@@ -25,6 +25,7 @@ func (s *Server) registerRoutes() {
 	// Reading challenges API
 	s.mux.HandleFunc("PUT /api/users/{id}/challenges/{year}", s.handleSetChallenge)
 	s.mux.HandleFunc("GET /api/users/{id}/challenges/{year}", s.handleGetChallenge)
+	s.mux.HandleFunc("DELETE /api/users/{id}/challenges/{year}", s.handleDeleteChallenge)
 
 	// Books API
 	s.mux.HandleFunc("POST /api/books", s.handleCreateBook)

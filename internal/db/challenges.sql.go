@@ -30,6 +30,23 @@ func (q *Queries) CountBooksFinishedInYear(ctx context.Context, arg CountBooksFi
 	return count, err
 }
 
+const deleteReadingChallenge = `-- name: DeleteReadingChallenge :execrows
+DELETE FROM reading_challenges WHERE user_id = ? AND year = ?
+`
+
+type DeleteReadingChallengeParams struct {
+	UserID int64 `json:"user_id"`
+	Year   int64 `json:"year"`
+}
+
+func (q *Queries) DeleteReadingChallenge(ctx context.Context, arg DeleteReadingChallengeParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteReadingChallenge, arg.UserID, arg.Year)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const getReadingChallenge = `-- name: GetReadingChallenge :one
 SELECT id, user_id, year, goal, created_at, updated_at FROM reading_challenges WHERE user_id = ? AND year = ?
 `

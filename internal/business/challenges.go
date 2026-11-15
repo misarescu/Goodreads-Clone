@@ -74,6 +74,18 @@ func (b *Business) GetReadingChallengeProgress(ctx context.Context, userID, year
 	}, nil
 }
 
+// DeleteReadingChallenge removes a user's challenge for a year. It returns an
+// error wrapping sql.ErrNoRows when the user or the challenge does not exist.
+func (b *Business) DeleteReadingChallenge(ctx context.Context, userID, year int64) error {
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return fmt.Errorf("failed to get user for reading challenge: %w", err)
+	}
+	if err := b.Storage.Challenges.Delete(ctx, userID, year); err != nil {
+		return fmt.Errorf("failed to delete reading challenge: %w", err)
+	}
+	return nil
+}
+
 // expectedByNow is goal times the fraction of the (UTC) year elapsed at now,
 // rounded down: the whole goal for a past year, 0 for a future one.
 func expectedByNow(goal, year int64, now time.Time) int64 {

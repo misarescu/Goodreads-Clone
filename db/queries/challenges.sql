@@ -16,3 +16,6 @@ JOIN shelves s ON s.id = sb.shelf_id
 WHERE s.user_id = sqlc.arg(user_id)
   AND sb.finished_at IS NOT NULL
   AND CAST(strftime('%Y', sb.finished_at) AS INTEGER) = CAST(sqlc.arg(year) AS INTEGER);
+
+-- name: DeleteReadingChallenge :execrows
+DELETE FROM reading_challenges WHERE user_id = ? AND year = ?;
