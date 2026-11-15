@@ -4,6 +4,7 @@ import { fetchJSON } from './api.js'
 import { ReadingChallenge } from './ReadingChallenge.jsx'
 import { BookReviews } from './BookReviews.jsx'
 import { BookSearch } from './BookSearch.jsx'
+import { Recommendations } from './Recommendations.jsx'
 
 
 function UserStats({ userId }) {
@@ -84,6 +85,7 @@ function App() {
           {selected && <UserStats userId={selected} />}
           {selected && <ReadingChallenge userId={selected} />}
           {selected && <BookReviews userId={selected} />}
+          {selected && <Recommendations userId={selected} />}
         </>
       )}
     </>
