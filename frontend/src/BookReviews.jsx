@@ -151,6 +151,7 @@ export function BookReviews({ userId }) {
 
   useEffect(() => {
     const controller = new AbortController()
+    // Simple select: only the first 100 books (server cap) are selectable.
     fetchJSON('/api/books?limit=100', controller.signal)
       .then((list) => {
         setBooks({ status: 'ok', list })

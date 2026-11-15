@@ -4,6 +4,13 @@ import { BookReviews } from './BookReviews.jsx'
 
 const json = (body, status = 200) =>
   Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(body) })
+// Real server: 204 with an empty body, so json() rejects.
+const noContent = () =>
+  Promise.resolve({
+    ok: true,
+    status: 204,
+    json: () => Promise.reject(new SyntaxError('Unexpected end of JSON input')),
+  })
 const books = [{ id: 7, title: 'Dune' }, { id: 8, title: 'Emma' }]
 const stats = (o = {}) => ({ id: 7, average_rating: 4.5, review_count: 2, ...o })
 const review = (id, o = {}) => ({
@@ -98,7 +105,7 @@ describe('BookReviews', () => {
     let deleted = false
     route([
       ['GET /api/books?', json(books)],
-      ['DELETE /api/books/7/reviews/9', () => { deleted = true; return json({}) }],
+      ['DELETE /api/books/7/reviews/9', () => { deleted = true; return noContent() }],
       ['GET /api/books/7/reviews', () => json(deleted ? [] : [review(9)])],
       ['GET /api/books/7', json(stats())],
     ])
@@ -107,6 +114,7 @@ describe('BookReviews', () => {
     fireEvent.click(screen.getByText('Delete my review'))
     expect(await screen.findByText('No reviews yet.')).toBeTruthy()
     expect(screen.getByLabelText('Review').value).toBe('')
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('shows an alert when saving fails', async () => {
