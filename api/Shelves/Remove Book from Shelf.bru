@@ -1,0 +1,18 @@
+meta {
+  name: Remove Book from Shelf
+  type: http
+  seq: 8
+}
+
+delete {
+  url: http://localhost:8080/api/shelves/1/books/1
+  body: none
+  auth: none
+}
+
+docs {
+  Removes a book from a shelf.
+
+  Response: 204 No Content
+  400 invalid shelf or book ID, 404 unknown shelf or book not on the shelf
+}

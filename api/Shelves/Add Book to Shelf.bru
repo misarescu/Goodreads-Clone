@@ -1,0 +1,28 @@
+meta {
+  name: Add Book to Shelf
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/api/shelves/1/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "book_id": 1
+  }
+}
+
+docs {
+  Adds a book to a shelf. Pages read and progress start at 0.
+
+  Required fields:
+  - book_id (integer)
+
+  Response: 201 Created with the shelf book
+  400 invalid shelf ID or body, 404 unknown shelf or book,
+  409 book is already on the shelf
+}
