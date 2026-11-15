@@ -40,3 +40,12 @@
 .read-the-docs {
   color: #888;
 }
+
+.reading-challenge {
+  margin-top: 1.5em;
+}
+
+.reading-challenge progress {
+  width: 100%;
+  max-width: 20em;
+}

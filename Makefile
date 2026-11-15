@@ -1,4 +1,4 @@
-.PHONY: all build backend-build frontend-install frontend-build frontend-dev frontend-lint gen-db gen-mocks test test-storage test-business test-coverage migrate run-local run-docker install-deps install-deps-backend install-deps-frontend
+.PHONY: all build backend-build frontend-install frontend-build frontend-dev frontend-lint frontend-test gen-db gen-mocks test test-storage test-business test-coverage migrate run-local run-docker install-deps install-deps-backend install-deps-frontend
 
 # Default: build everything
 all: build
@@ -68,7 +68,10 @@ migrate:
 gen-mocks:
 	mockery
 
-test: 
+frontend-test: frontend-install
+	cd frontend && bun run test
+
+test: frontend-test
 	go test -race ./...
 
 coverage: 
