@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import { fetchJSON } from './api.js'
 import { ReadingChallenge } from './ReadingChallenge.jsx'
+import { BookReviews } from './BookReviews.jsx'
 
 
 function UserStats({ userId }) {
@@ -80,6 +81,7 @@ function App() {
           </label>
           {selected && <UserStats userId={selected} />}
           {selected && <ReadingChallenge userId={selected} />}
+          {selected && <BookReviews userId={selected} />}
         </>
       )}
     </>
