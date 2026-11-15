@@ -1,0 +1,19 @@
+meta {
+  name: List Shelf Books
+  type: http
+  seq: 9
+}
+
+get {
+  url: http://localhost:8080/api/shelves/1/books
+  body: none
+  auth: none
+}
+
+docs {
+  Lists the books on a shelf with their reading progress
+  (pages_read, progress_percent) and book details.
+
+  Response: 200 OK, a JSON array
+  400 invalid shelf ID, 404 unknown shelf
+}
