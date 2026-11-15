@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"goodreads-clone.com/internal/db"
@@ -45,4 +46,16 @@ func (r *challengeRepository) ListByUser(ctx context.Context, userID int64) ([]d
 		return nil, fmt.Errorf("list reading challenges query failed: %w", err)
 	}
 	return rows, nil
+}
+
+// Delete removes a challenge; it returns an error wrapping sql.ErrNoRows when none existed.
+func (r *challengeRepository) Delete(ctx context.Context, userID, year int64) error {
+	n, err := r.queries.DeleteReadingChallenge(ctx, db.DeleteReadingChallengeParams{UserID: userID, Year: year})
+	if err != nil {
+		return fmt.Errorf("delete reading challenge query failed: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("reading challenge not found: %w", sql.ErrNoRows)
+	}
+	return nil
 }

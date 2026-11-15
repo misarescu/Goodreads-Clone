@@ -19,3 +19,6 @@ WHERE s.user_id = sqlc.arg(user_id)
 
 -- name: ListReadingChallengesByUser :many
 SELECT * FROM reading_challenges WHERE user_id = ? ORDER BY year DESC;
+
+-- name: DeleteReadingChallenge :execrows
+DELETE FROM reading_challenges WHERE user_id = ? AND year = ?;
