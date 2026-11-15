@@ -57,3 +57,8 @@ type ChallengeRepository interface {
 	Get(ctx context.Context, userID, year int64) (*db.ReadingChallenge, error)
 	CountFinishedInYear(ctx context.Context, userID, year int64) (int64, error)
 }
+
+// RecommendationRepository defines operations for book recommendations.
+type RecommendationRepository interface {
+	ForUser(ctx context.Context, userID, limit int64) ([]db.GetRecommendationsRow, error)
+}

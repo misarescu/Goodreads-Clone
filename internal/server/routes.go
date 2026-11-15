@@ -20,6 +20,8 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("PUT /api/users/{id}", s.handleUpdateUser)
 	s.mux.HandleFunc("DELETE /api/users/{id}", s.handleDeleteUser)
 
+	s.mux.HandleFunc("GET /api/users/{id}/recommendations", s.handleGetRecommendations)
+
 	// Reading challenges API
 	s.mux.HandleFunc("PUT /api/users/{id}/challenges/{year}", s.handleSetChallenge)
 	s.mux.HandleFunc("GET /api/users/{id}/challenges/{year}", s.handleGetChallenge)
