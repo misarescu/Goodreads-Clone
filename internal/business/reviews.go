@@ -19,10 +19,18 @@ const (
 	MaxReviewBody = 5000
 )
 
+// Review list orders.
+const (
+	SortRecent = "recent"
+	SortRating = "rating"
+)
+
 // Review validation errors.
 var (
-	ErrInvalidRating = errors.New("rating must be between 1 and 5")
-	ErrInvalidBody   = errors.New("body must be between 1 and 5000 characters")
+	ErrInvalidRating    = errors.New("rating must be between 1 and 5")
+	ErrInvalidBody      = errors.New("body must be between 1 and 5000 characters")
+	ErrInvalidSort      = errors.New("sort must be recent or rating")
+	ErrInvalidMinRating = errors.New("min_rating must be an integer from 1 to 5")
 )
 
 // BookWithStats is a book with its review statistics.
@@ -65,13 +73,23 @@ func (b *Business) SaveReview(
 	return rev, created, nil
 }
 
-// ListReviews returns a book's reviews, newest first. It returns an error
-// wrapping sql.ErrNoRows when the book does not exist.
-func (b *Business) ListReviews(ctx context.Context, bookID, limit, offset int64) ([]db.ListReviewsByBookRow, error) {
+// ListReviews returns a book's reviews ordered by sort (SortRecent or SortRating)
+// and rated at least minRating (0 means any). It returns ErrInvalidSort or
+// ErrInvalidMinRating for bad options, and an error wrapping sql.ErrNoRows
+// when the book does not exist.
+func (b *Business) ListReviews(
+	ctx context.Context, bookID, minRating int64, sort string, limit, offset int64,
+) ([]db.ListReviewsByBookRow, error) {
+	if sort != SortRecent && sort != SortRating {
+		return nil, ErrInvalidSort
+	}
+	if minRating != 0 && (minRating < MinRating || minRating > MaxRating) {
+		return nil, ErrInvalidMinRating
+	}
 	if _, err := b.Storage.Books.GetByID(ctx, bookID); err != nil {
 		return nil, fmt.Errorf("failed to get book for reviews: %w", err)
 	}
-	rows, err := b.Storage.Reviews.ListByBook(ctx, bookID, limit, offset)
+	rows, err := b.Storage.Reviews.ListByBook(ctx, bookID, minRating, sort, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list reviews: %w", err)
 	}

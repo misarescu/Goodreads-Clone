@@ -68,25 +68,63 @@ function ReviewList({ bookId, userId }) {
   const [version, setVersion] = useState(0)
   const [state, setState] = useState({ key: '', status: 'loading' })
   const [extra, setExtra] = useState({ key: '', items: [], done: false, error: '' })
-  const key = `${bookId}:${version}`
+  const [sort, setSort] = useState('recent')
+  const [minRating, setMinRating] = useState('')
+  const key = `${bookId}:${version}:${sort}:${minRating}`
+  const query = `sort=${sort}${minRating ? `&min_rating=${minRating}` : ''}`
 
   useEffect(() => {
     const controller = new AbortController()
     Promise.all([
       fetchJSON(`/api/books/${bookId}`, controller.signal),
-      fetchJSON(`/api/books/${bookId}/reviews?limit=${PAGE_SIZE}&offset=0`, controller.signal),
+      fetchJSON(`/api/books/${bookId}/reviews?limit=${PAGE_SIZE}&offset=0&${query}`, controller.signal),
     ])
       .then(([book, reviews]) => setState({ key, status: 'ok', book, reviews }))
       .catch((err) => {
         if (err.name !== 'AbortError') setState({ key, status: 'error', message: err.message })
       })
     return () => controller.abort()
-  }, [bookId, key])
+  }, [bookId, key, query])
+
+  const filters = (
+    <>
+      <label>
+        Sort{' '}
+        <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <option value="recent">Newest</option>
+          <option value="rating">Highest rated</option>
+        </select>
+      </label>{' '}
+      <label>
+        Minimum rating{' '}
+        <select value={minRating} onChange={(e) => setMinRating(e.target.value)}>
+          <option value="">Any</option>
+          {[1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n} {n === 1 ? 'star' : 'stars'}
+            </option>
+          ))}
+        </select>
+      </label>
+    </>
+  )
 
   // Stale state from a previous book or version counts as loading.
-  if (state.key !== key || state.status === 'loading') return <p>Loading reviews…</p>
+  if (state.key !== key || state.status === 'loading') {
+    return (
+      <>
+        {filters}
+        <p>Loading reviews…</p>
+      </>
+    )
+  }
   if (state.status === 'error') {
-    return <p role="alert">Could not load reviews: {state.message}</p>
+    return (
+      <>
+        {filters}
+        <p role="alert">Could not load reviews: {state.message}</p>
+      </>
+    )
   }
 
   const more = extra.key === key ? extra : { items: [], done: false, error: '' }
@@ -96,7 +134,7 @@ function ReviewList({ bookId, userId }) {
   const mine = reviews.find((r) => String(r.user_id) === String(userId))
 
   function loadMore() {
-    fetchJSON(`/api/books/${bookId}/reviews?limit=${PAGE_SIZE}&offset=${reviews.length}`)
+    fetchJSON(`/api/books/${bookId}/reviews?limit=${PAGE_SIZE}&offset=${reviews.length}&${query}`)
       .then((page) =>
         setExtra({
           key,
@@ -110,6 +148,7 @@ function ReviewList({ bookId, userId }) {
 
   return (
     <>
+      {filters}
       <p>
         Average rating:{' '}
         {book.average_rating == null ? 'No ratings yet' : book.average_rating.toFixed(1)}
