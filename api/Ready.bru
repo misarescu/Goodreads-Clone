@@ -1,0 +1,25 @@
+meta {
+  name: Readiness
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:8080/api/ready
+  body: none
+  auth: none
+}
+
+docs {
+  Readiness probe. Pings the database (unlike /api/health, which does not).
+
+  Response: 200 OK
+  ```json
+  {"status":"ready"}
+  ```
+
+  Response: 503 Service Unavailable (database does not answer)
+  ```json
+  {"status":"unavailable"}
+  ```
+}
