@@ -207,4 +207,39 @@ describe('BookReviews', () => {
       )
     })
   })
+
+  describe('book header', () => {
+    const open = async (o) => {
+      route([
+        ['GET /api/books?', json(books)],
+        ['GET /api/books/7/reviews', json([])],
+        ['GET /api/books/7', json(stats({ title: 'Dune', author: 'Frank Herbert', ...o }))],
+      ])
+      render(<BookReviews userId="9" />)
+      await screen.findByText('Frank Herbert', { exact: false })
+    }
+
+    it('shows the cover, title and author', async () => {
+      await open({ cover_url: 'http://x/7.jpg' })
+      const img = screen.getByAltText('Cover of Dune')
+      expect(img.getAttribute('src')).toBe('http://x/7.jpg')
+      expect(img.getAttribute('loading')).toBe('lazy')
+      expect(img.getAttribute('width')).toBe('48')
+      expect(img.getAttribute('height')).toBe('72')
+      expect(screen.queryByTestId('cover-placeholder')).toBeNull()
+    })
+
+    it('shows a placeholder without a cover', async () => {
+      await open({ cover_url: null })
+      expect(screen.getByTestId('cover-placeholder')).toBeTruthy()
+      expect(screen.queryByAltText('Cover of Dune')).toBeNull()
+    })
+
+    it('shows a placeholder when the image fails', async () => {
+      await open({ cover_url: 'http://x/7.jpg' })
+      fireEvent.error(screen.getByAltText('Cover of Dune'))
+      expect(screen.getByTestId('cover-placeholder')).toBeTruthy()
+      expect(screen.queryByAltText('Cover of Dune')).toBeNull()
+    })
+  })
 })
