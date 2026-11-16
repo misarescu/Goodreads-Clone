@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 const contentTypeJSON = "application/" + "json"
@@ -45,5 +46,32 @@ func TestExistingAPIRouteStillWorks(t *testing.T) {
 	}
 	if !strings.Contains(rec.Body.String(), `"version"`) {
 		t.Errorf("body = %q", rec.Body.String())
+	}
+}
+
+func TestServesEmbeddedFrontend(t *testing.T) {
+	const index = "<html>hi</html>"
+	s := &Server{mux: http.NewServeMux(), staticFS: fstest.MapFS{
+		"dist/index.html":    {Data: []byte(index)},
+		"dist/assets/app.js": {Data: []byte("console.log(1)")},
+	}}
+	s.registerRoutes()
+
+	rec := httptest.NewRecorder()
+	s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /: status = %d, want 200", rec.Code)
+	}
+	if ct := rec.Header().Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
+		t.Errorf("GET /: Content-Type = %q", ct)
+	}
+	if rec.Body.String() != index {
+		t.Errorf("GET /: body = %q", rec.Body.String())
+	}
+
+	rec = httptest.NewRecorder()
+	s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/assets/app.js", nil))
+	if rec.Code != http.StatusOK || rec.Body.String() != "console.log(1)" {
+		t.Errorf("GET /assets/app.js: status = %d, body = %q", rec.Code, rec.Body.String())
 	}
 }
