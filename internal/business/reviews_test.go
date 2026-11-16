@@ -120,16 +120,24 @@ func TestBusiness_ListAndDeleteReviews(t *testing.T) {
 	books, reviews := m.books, m.reviews
 	books.EXPECT().GetByID(ctx, int64(1)).Return(&db.Book{ID: 1}, nil)
 	rows0 := []db.ListReviewsByBookRow{{ID: 1, Username: "u"}}
-	reviews.EXPECT().ListByBook(ctx, int64(1), int64(20), int64(0)).Return(rows0, nil)
-	rows, err := b.ListReviews(ctx, 1, 20, 0)
+	reviews.EXPECT().ListByBook(ctx, int64(1), int64(3), "rating", int64(20), int64(0)).Return(rows0, nil)
+	rows, err := b.ListReviews(ctx, 1, 3, business.SortRating, 20, 0)
 	require.NoError(t, err)
 	assert.Len(t, rows, 1)
 
 	b, m = newReviewBusiness(t)
 	books = m.books
 	books.EXPECT().GetByID(ctx, int64(9)).Return(nil, sql.ErrNoRows)
-	_, err = b.ListReviews(ctx, 9, 20, 0)
+	_, err = b.ListReviews(ctx, 9, 0, business.SortRecent, 20, 0)
 	require.ErrorIs(t, err, sql.ErrNoRows)
+
+	b, _ = newReviewBusiness(t)
+	_, err = b.ListReviews(ctx, 1, 0, "best", 20, 0)
+	require.ErrorIs(t, err, business.ErrInvalidSort)
+	for _, bad := range []int64{-1, 6} {
+		_, err = b.ListReviews(ctx, 1, bad, business.SortRecent, 20, 0)
+		require.ErrorIs(t, err, business.ErrInvalidMinRating)
+	}
 
 	b, m = newReviewBusiness(t)
 	reviews = m.reviews

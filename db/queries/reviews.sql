@@ -17,9 +17,17 @@ DELETE FROM reviews WHERE book_id = ? AND user_id = ?;
 SELECT r.id, r.book_id, r.user_id, u.username, r.rating, r.body, r.created_at, r.updated_at
 FROM reviews r
 JOIN users u ON u.id = r.user_id
-WHERE r.book_id = ?
+WHERE r.book_id = sqlc.arg('book_id') AND r.rating >= sqlc.arg('min_rating')
 ORDER BY r.created_at DESC, r.id DESC
-LIMIT ? OFFSET ?;
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: ListReviewsByBookRating :many
+SELECT r.id, r.book_id, r.user_id, u.username, r.rating, r.body, r.created_at, r.updated_at
+FROM reviews r
+JOIN users u ON u.id = r.user_id
+WHERE r.book_id = sqlc.arg('book_id') AND r.rating >= sqlc.arg('min_rating')
+ORDER BY r.rating DESC, r.created_at DESC, r.id DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: GetReviewStats :many
 SELECT book_id, COUNT(*) AS review_count, CAST(AVG(rating) AS REAL) AS average_rating

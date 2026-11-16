@@ -5,13 +5,15 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/api/books/1/reviews?limit=20&offset=0
+  url: http://localhost:8080/api/books/1/reviews?limit=20&offset=0&sort=recent&min_rating=3
   body: none
   auth: none
 }
 
 docs {
-  Lists a book's reviews, newest first, each with the reviewer's username.
+  Lists a book's reviews, each with the reviewer's username.
+  Query: limit, offset (pagination); sort=recent (default, newest first) | rating (highest rating first, newest first among equals); min_rating=1..5 (only reviews rated at least that).
+  400 for an unknown sort or a min_rating that is not an integer from 1 to 5.
   Response: 200 [{"id", "book_id", "user_id", "username", "rating", "body", "created_at", "updated_at"}]
   404 unknown book.
 }
