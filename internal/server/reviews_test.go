@@ -301,3 +301,98 @@ func TestUserReviewListEdges(t *testing.T) {
 		}
 	}
 }
+
+func seedSortRows(t *testing.T, s *Server) {
+	t.Helper()
+	seedReviewUsers(t, s)
+	const addUser = `INSERT INTO users (email, username, password_hash) VALUES ('c@c.c', 'cat', 'x')`
+	if _, err := s.business.Storage.DB().Exec(addUser); err != nil {
+		t.Fatal(err)
+	}
+	_, err := s.business.Storage.DB().Exec(`INSERT INTO reviews (book_id, user_id, rating, body, created_at) VALUES
+		(1, 1, 3, 'three', '2026-01-01 10:00:00'),
+		(1, 2, 5, 'five-old', '2026-02-01 10:00:00'),
+		(1, 3, 5, 'five-new', '2026-03-01 10:00:00')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func bodies(rows []listedReview) []string {
+	out := make([]string, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, r.Body)
+	}
+	return out
+}
+
+func TestReviewListSortAndFilter(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedSortRows(t, s)
+
+	for _, tc := range []struct {
+		query string
+		want  []string
+	}{
+		{"", []string{"five-new", "five-old", "three"}},
+		{"?sort=recent", []string{"five-new", "five-old", "three"}},
+		{"?sort=rating", []string{"five-new", "five-old", "three"}},
+		{"?min_rating=4", []string{"five-new", "five-old"}},
+		{"?min_rating=1", []string{"five-new", "five-old", "three"}},
+		{"?min_rating=5&sort=rating", []string{"five-new", "five-old"}},
+		{"?sort=rating&limit=2", []string{"five-new", "five-old"}},
+		{"?sort=rating&limit=2&offset=2", []string{"three"}},
+		{"?sort=rating&min_rating=3&limit=1&offset=1", []string{"five-old"}},
+		{"?sort=recent&min_rating=4&limit=1&offset=1", []string{"five-old"}},
+	} {
+		code, rows := listReviews(s, "/api/books/1/reviews"+tc.query)
+		if code != http.StatusOK || !reflect.DeepEqual(bodies(rows), tc.want) {
+			t.Errorf("%q = %d %v, want %v", tc.query, code, bodies(rows), tc.want)
+		}
+	}
+}
+
+func TestReviewListSortByRatingOrdersByRatingFirst(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewUsers(t, s)
+	_, err := s.business.Storage.DB().Exec(`INSERT INTO reviews (book_id, user_id, rating, body, created_at) VALUES
+		(1, 1, 5, 'high-old', '2026-01-01 10:00:00'),
+		(1, 2, 2, 'low-new', '2026-02-01 10:00:00')`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, rows := listReviews(s, "/api/books/1/reviews?sort=rating")
+	if want := []string{"high-old", "low-new"}; !reflect.DeepEqual(bodies(rows), want) {
+		t.Errorf("rating order = %v", bodies(rows))
+	}
+	_, rows = listReviews(s, "/api/books/1/reviews")
+	if want := []string{"low-new", "high-old"}; !reflect.DeepEqual(bodies(rows), want) {
+		t.Errorf("recent order = %v", bodies(rows))
+	}
+}
+
+func TestReviewListBadParams(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedSortRows(t, s)
+
+	for _, tc := range []struct{ query, param string }{
+		{"?sort=best", "sort"},
+		{"?sort=", ""},
+		{"?min_rating=0", "min_rating"},
+		{"?min_rating=6", "min_rating"},
+		{"?min_rating=-1", "min_rating"},
+		{"?min_rating=abc", "min_rating"},
+		{"?min_rating=2.5", "min_rating"},
+	} {
+		rec := doRequest(s, http.MethodGet, "/api/books/1/reviews"+tc.query, "")
+		if tc.param == "" {
+			if rec.Code != http.StatusOK {
+				t.Errorf("%q = %d", tc.query, rec.Code)
+			}
+			continue
+		}
+		if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), tc.param) {
+			t.Errorf("%q = %d %s", tc.query, rec.Code, rec.Body)
+		}
+	}
+}

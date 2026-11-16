@@ -102,15 +102,16 @@ const listReviewsByBook = `-- name: ListReviewsByBook :many
 SELECT r.id, r.book_id, r.user_id, u.username, r.rating, r.body, r.created_at, r.updated_at
 FROM reviews r
 JOIN users u ON u.id = r.user_id
-WHERE r.book_id = ?
+WHERE r.book_id = ?1 AND r.rating >= ?2
 ORDER BY r.created_at DESC, r.id DESC
-LIMIT ? OFFSET ?
+LIMIT ?4 OFFSET ?3
 `
 
 type ListReviewsByBookParams struct {
-	BookID int64 `json:"book_id"`
-	Limit  int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	BookID    int64 `json:"book_id"`
+	MinRating int64 `json:"min_rating"`
+	Offset    int64 `json:"offset"`
+	Limit     int64 `json:"limit"`
 }
 
 type ListReviewsByBookRow struct {
@@ -125,7 +126,12 @@ type ListReviewsByBookRow struct {
 }
 
 func (q *Queries) ListReviewsByBook(ctx context.Context, arg ListReviewsByBookParams) ([]ListReviewsByBookRow, error) {
-	rows, err := q.db.QueryContext(ctx, listReviewsByBook, arg.BookID, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listReviewsByBook,
+		arg.BookID,
+		arg.MinRating,
+		arg.Offset,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +139,70 @@ func (q *Queries) ListReviewsByBook(ctx context.Context, arg ListReviewsByBookPa
 	items := []ListReviewsByBookRow{}
 	for rows.Next() {
 		var i ListReviewsByBookRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.BookID,
+			&i.UserID,
+			&i.Username,
+			&i.Rating,
+			&i.Body,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listReviewsByBookRating = `-- name: ListReviewsByBookRating :many
+SELECT r.id, r.book_id, r.user_id, u.username, r.rating, r.body, r.created_at, r.updated_at
+FROM reviews r
+JOIN users u ON u.id = r.user_id
+WHERE r.book_id = ?1 AND r.rating >= ?2
+ORDER BY r.rating DESC, r.created_at DESC, r.id DESC
+LIMIT ?4 OFFSET ?3
+`
+
+type ListReviewsByBookRatingParams struct {
+	BookID    int64 `json:"book_id"`
+	MinRating int64 `json:"min_rating"`
+	Offset    int64 `json:"offset"`
+	Limit     int64 `json:"limit"`
+}
+
+type ListReviewsByBookRatingRow struct {
+	ID        int64     `json:"id"`
+	BookID    int64     `json:"book_id"`
+	UserID    int64     `json:"user_id"`
+	Username  string    `json:"username"`
+	Rating    int64     `json:"rating"`
+	Body      string    `json:"body"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (q *Queries) ListReviewsByBookRating(ctx context.Context, arg ListReviewsByBookRatingParams) ([]ListReviewsByBookRatingRow, error) {
+	rows, err := q.db.QueryContext(ctx, listReviewsByBookRating,
+		arg.BookID,
+		arg.MinRating,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListReviewsByBookRatingRow{}
+	for rows.Next() {
+		var i ListReviewsByBookRatingRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.BookID,

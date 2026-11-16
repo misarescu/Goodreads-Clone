@@ -176,8 +176,8 @@ func (_c *MockReviewRepository_Get_Call) RunAndReturn(run func(ctx context.Conte
 }
 
 // ListByBook provides a mock function for the type MockReviewRepository
-func (_mock *MockReviewRepository) ListByBook(ctx context.Context, bookID int64, limit int64, offset int64) ([]db.ListReviewsByBookRow, error) {
-	ret := _mock.Called(ctx, bookID, limit, offset)
+func (_mock *MockReviewRepository) ListByBook(ctx context.Context, bookID int64, minRating int64, sort string, limit int64, offset int64) ([]db.ListReviewsByBookRow, error) {
+	ret := _mock.Called(ctx, bookID, minRating, sort, limit, offset)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ListByBook")
@@ -185,18 +185,18 @@ func (_mock *MockReviewRepository) ListByBook(ctx context.Context, bookID int64,
 
 	var r0 []db.ListReviewsByBookRow
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) ([]db.ListReviewsByBookRow, error)); ok {
-		return returnFunc(ctx, bookID, limit, offset)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, string, int64, int64) ([]db.ListReviewsByBookRow, error)); ok {
+		return returnFunc(ctx, bookID, minRating, sort, limit, offset)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) []db.ListReviewsByBookRow); ok {
-		r0 = returnFunc(ctx, bookID, limit, offset)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, string, int64, int64) []db.ListReviewsByBookRow); ok {
+		r0 = returnFunc(ctx, bookID, minRating, sort, limit, offset)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]db.ListReviewsByBookRow)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64, int64) error); ok {
-		r1 = returnFunc(ctx, bookID, limit, offset)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64, string, int64, int64) error); ok {
+		r1 = returnFunc(ctx, bookID, minRating, sort, limit, offset)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -211,13 +211,15 @@ type MockReviewRepository_ListByBook_Call struct {
 // ListByBook is a helper method to define mock.On call
 //   - ctx context.Context
 //   - bookID int64
+//   - minRating int64
+//   - sort string
 //   - limit int64
 //   - offset int64
-func (_e *MockReviewRepository_Expecter) ListByBook(ctx interface{}, bookID interface{}, limit interface{}, offset interface{}) *MockReviewRepository_ListByBook_Call {
-	return &MockReviewRepository_ListByBook_Call{Call: _e.mock.On("ListByBook", ctx, bookID, limit, offset)}
+func (_e *MockReviewRepository_Expecter) ListByBook(ctx interface{}, bookID interface{}, minRating interface{}, sort interface{}, limit interface{}, offset interface{}) *MockReviewRepository_ListByBook_Call {
+	return &MockReviewRepository_ListByBook_Call{Call: _e.mock.On("ListByBook", ctx, bookID, minRating, sort, limit, offset)}
 }
 
-func (_c *MockReviewRepository_ListByBook_Call) Run(run func(ctx context.Context, bookID int64, limit int64, offset int64)) *MockReviewRepository_ListByBook_Call {
+func (_c *MockReviewRepository_ListByBook_Call) Run(run func(ctx context.Context, bookID int64, minRating int64, sort string, limit int64, offset int64)) *MockReviewRepository_ListByBook_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -231,15 +233,25 @@ func (_c *MockReviewRepository_ListByBook_Call) Run(run func(ctx context.Context
 		if args[2] != nil {
 			arg2 = args[2].(int64)
 		}
-		var arg3 int64
+		var arg3 string
 		if args[3] != nil {
-			arg3 = args[3].(int64)
+			arg3 = args[3].(string)
+		}
+		var arg4 int64
+		if args[4] != nil {
+			arg4 = args[4].(int64)
+		}
+		var arg5 int64
+		if args[5] != nil {
+			arg5 = args[5].(int64)
 		}
 		run(
 			arg0,
 			arg1,
 			arg2,
 			arg3,
+			arg4,
+			arg5,
 		)
 	})
 	return _c
@@ -250,7 +262,7 @@ func (_c *MockReviewRepository_ListByBook_Call) Return(listReviewsByBookRows []d
 	return _c
 }
 
-func (_c *MockReviewRepository_ListByBook_Call) RunAndReturn(run func(ctx context.Context, bookID int64, limit int64, offset int64) ([]db.ListReviewsByBookRow, error)) *MockReviewRepository_ListByBook_Call {
+func (_c *MockReviewRepository_ListByBook_Call) RunAndReturn(run func(ctx context.Context, bookID int64, minRating int64, sort string, limit int64, offset int64) ([]db.ListReviewsByBookRow, error)) *MockReviewRepository_ListByBook_Call {
 	_c.Call.Return(run)
 	return _c
 }

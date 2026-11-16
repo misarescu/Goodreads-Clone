@@ -43,9 +43,25 @@ func (r *reviewRepository) Delete(ctx context.Context, bookID, userID int64) err
 }
 
 func (r *reviewRepository) ListByBook(
-	ctx context.Context, bookID, limit, offset int64,
+	ctx context.Context, bookID, minRating int64, sort string, limit, offset int64,
 ) ([]db.ListReviewsByBookRow, error) {
-	rows, err := r.queries.ListReviewsByBook(ctx, db.ListReviewsByBookParams{BookID: bookID, Limit: limit, Offset: offset})
+	var rows []db.ListReviewsByBookRow
+	if sort == "rating" {
+		byRating, err := r.queries.ListReviewsByBookRating(ctx, db.ListReviewsByBookRatingParams{
+			BookID: bookID, MinRating: minRating, Limit: limit, Offset: offset,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("list reviews by rating query failed: %w", err)
+		}
+		rows = make([]db.ListReviewsByBookRow, len(byRating))
+		for i, row := range byRating {
+			rows[i] = db.ListReviewsByBookRow(row)
+		}
+		return rows, nil
+	}
+	rows, err := r.queries.ListReviewsByBook(ctx, db.ListReviewsByBookParams{
+		BookID: bookID, MinRating: minRating, Limit: limit, Offset: offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list reviews query failed: %w", err)
 	}
