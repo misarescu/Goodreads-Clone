@@ -1,0 +1,46 @@
+meta {
+  name: Get Monthly Reading Stats
+  type: http
+  seq: 12
+}
+
+get {
+  url: http://localhost:8080/api/users/1/stats/monthly?year=2026
+  body: none
+  auth: none
+}
+
+params:query {
+  year: 2026
+}
+
+docs {
+  Books and pages a user finished in each month of a year. `year` is optional
+  and defaults to the current year; it must be between 1900 and next year.
+  A book counts once, in the month of its earliest `finished_at` that year,
+  like the reading challenge. Books without a page count add no pages.
+
+  Response: 200 OK (twelve entries, January to December)
+  ```json
+  [
+    { "month": 1, "books_finished": 2, "pages_finished": 640 },
+    { "month": 2, "books_finished": 0, "pages_finished": 0 },
+    ...
+    { "month": 12, "books_finished": 1, "pages_finished": 310 }
+  ]
+  ```
+
+  Response: 400 Bad Request (invalid user ID, or non-numeric / out-of-range year)
+  ```json
+  {
+    "Error": "invalid year"
+  }
+  ```
+
+  Response: 404 Not Found (unknown user)
+  ```json
+  {
+    "Error": "resource not found"
+  }
+  ```
+}

@@ -477,6 +477,80 @@ func (_c *MockShelfBookRepository_ListForExport_Call) RunAndReturn(run func(ctx 
 	return _c
 }
 
+// ListMonthlyFinished provides a mock function for the type MockShelfBookRepository
+func (_mock *MockShelfBookRepository) ListMonthlyFinished(ctx context.Context, userID int64, year int64) ([]db.ListMonthlyFinishedBooksRow, error) {
+	ret := _mock.Called(ctx, userID, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListMonthlyFinished")
+	}
+
+	var r0 []db.ListMonthlyFinishedBooksRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64) ([]db.ListMonthlyFinishedBooksRow, error)); ok {
+		return returnFunc(ctx, userID, year)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64) []db.ListMonthlyFinishedBooksRow); ok {
+		r0 = returnFunc(ctx, userID, year)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]db.ListMonthlyFinishedBooksRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = returnFunc(ctx, userID, year)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockShelfBookRepository_ListMonthlyFinished_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListMonthlyFinished'
+type MockShelfBookRepository_ListMonthlyFinished_Call struct {
+	*mock.Call
+}
+
+// ListMonthlyFinished is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+//   - year int64
+func (_e *MockShelfBookRepository_Expecter) ListMonthlyFinished(ctx interface{}, userID interface{}, year interface{}) *MockShelfBookRepository_ListMonthlyFinished_Call {
+	return &MockShelfBookRepository_ListMonthlyFinished_Call{Call: _e.mock.On("ListMonthlyFinished", ctx, userID, year)}
+}
+
+func (_c *MockShelfBookRepository_ListMonthlyFinished_Call) Run(run func(ctx context.Context, userID int64, year int64)) *MockShelfBookRepository_ListMonthlyFinished_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockShelfBookRepository_ListMonthlyFinished_Call) Return(listMonthlyFinishedBooksRows []db.ListMonthlyFinishedBooksRow, err error) *MockShelfBookRepository_ListMonthlyFinished_Call {
+	_c.Call.Return(listMonthlyFinishedBooksRows, err)
+	return _c
+}
+
+func (_c *MockShelfBookRepository_ListMonthlyFinished_Call) RunAndReturn(run func(ctx context.Context, userID int64, year int64) ([]db.ListMonthlyFinishedBooksRow, error)) *MockShelfBookRepository_ListMonthlyFinished_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Move provides a mock function for the type MockShelfBookRepository
 func (_mock *MockShelfBookRepository) Move(ctx context.Context, fromShelfID int64, bookID int64, toShelfID int64) (*db.ListBooksOnShelfRow, error) {
 	ret := _mock.Called(ctx, fromShelfID, bookID, toShelfID)

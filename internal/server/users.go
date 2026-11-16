@@ -1,9 +1,12 @@
 package server
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
+	"goodreads-clone.com/internal/business"
 	"goodreads-clone.com/internal/db"
 )
 
@@ -175,4 +178,33 @@ func (s *Server) handleGetUserStats(w http.ResponseWriter, r *http.Request) {
 		PagesRead:      stats.PagesRead,
 		BooksFinished:  stats.BooksFinished,
 	})
+}
+
+func (s *Server) handleGetUserMonthlyStats(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	var year *int64
+	if v := r.URL.Query().Get("year"); v != "" {
+		y, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid year")
+			return
+		}
+		year = &y
+	}
+
+	months, err := s.business.GetMonthlyReadingStats(r.Context(), id, year)
+	if errors.Is(err, business.ErrInvalidYear) {
+		writeError(w, http.StatusBadRequest, "invalid year")
+		return
+	}
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, months)
 }
