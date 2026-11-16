@@ -4,17 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"time"
 
 	"goodreads-clone.com/internal/business"
+	"goodreads-clone.com/static"
 )
 
 // Server handles HTTP requests and routes them to the appropriate business logic.
 type Server struct {
 	business *business.Business
 	mux      *http.ServeMux
+	// staticFS holds the built frontend under dist/. Defaults to static.Files.
+	staticFS fs.FS
 }
 
 // New creates a new Server instance with the given business layer.
@@ -22,6 +26,7 @@ func New(b *business.Business) (*Server, error) {
 	s := &Server{
 		business: b,
 		mux:      http.NewServeMux(),
+		staticFS: static.Files,
 	}
 
 	s.registerRoutes()

@@ -68,7 +68,11 @@ func (s *Server) handleAPINotFound(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) registerStaticFiles() {
-	dist, err := fs.Sub(static.Files, "dist")
+	root := s.staticFS
+	if root == nil {
+		root = static.Files
+	}
+	dist, err := fs.Sub(root, "dist")
 	if err != nil {
 		panic(err)
 	}
