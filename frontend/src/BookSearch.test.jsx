@@ -108,3 +108,51 @@ describe('BookSearch', () => {
     expect(screen.getByAltText('Cover of Book 1')).toBeTruthy()
   })
 })
+
+describe('BookSearch tags', () => {
+  const tagged = (id, tags) => book(id, { tags })
+  const searchWith = async (books) => {
+    fetch.mockReturnValue(json({ books, total: books.length }))
+    render(<BookSearch />)
+    await type('x')
+  }
+
+  it('shows tag chips on results and none for an untagged book', async () => {
+    await searchWith([tagged(1, ['scifi', 'classic']), tagged(2, []), book(3)])
+    const items = screen.getAllByRole('listitem')
+    expect(items[0].querySelectorAll('button.tag-chip')).toHaveLength(2)
+    expect(items[1].querySelectorAll('button')).toHaveLength(0)
+    expect(items[2].querySelectorAll('button')).toHaveLength(0)
+  })
+
+  it('lists books with a tag, loads more, and goes back', async () => {
+    await searchWith([tagged(1, ['scifi'])])
+    const page = (from, n) => Array.from({ length: n }, (_, i) => tagged(from + i, ['scifi']))
+    fetch.mockImplementation((url) => {
+      const offset = Number(new URL(url, 'http://x').searchParams.get('offset'))
+      return json(offset === 0 ? page(1, 20) : page(21, 3))
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'scifi' }))
+    await act(() => vi.advanceTimersByTimeAsync(0))
+    expect(fetch.mock.calls.at(-1)[0]).toBe('/api/books?tag=scifi&limit=20&offset=0')
+    expect(screen.getByRole('heading', { name: /scifi/ })).toBeTruthy()
+    expect(screen.getAllByRole('listitem')).toHaveLength(20)
+    fireEvent.click(screen.getByText('Load more'))
+    await act(() => vi.advanceTimersByTimeAsync(0))
+    expect(fetch.mock.calls.at(-1)[0]).toBe('/api/books?tag=scifi&limit=20&offset=20')
+    expect(screen.getAllByRole('listitem')).toHaveLength(23)
+    expect(screen.queryByText('Load more')).toBeNull()
+    fireEvent.click(screen.getByText('Back to search results'))
+    expect(screen.getByText('1 result')).toBeTruthy()
+    expect(screen.getByLabelText('Search books').value).toBe('x')
+  })
+
+  it('shows loading, then an error when the tag request fails', async () => {
+    await searchWith([tagged(1, ['scifi'])])
+    fetch.mockReturnValue(json({}, 500))
+    fireEvent.click(screen.getByRole('button', { name: 'scifi' }))
+    expect(screen.getByText('Loading…')).toBeTruthy()
+    await act(() => vi.advanceTimersByTimeAsync(0))
+    expect(screen.getByRole('alert').textContent).toContain('Request failed (500)')
+  })
+})
