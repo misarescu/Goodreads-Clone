@@ -88,3 +88,9 @@ export async function createBook(book, signal) {
   }
   return res.json()
 }
+
+// Lists one page of the books carrying a tag (a plain array of books).
+export const fetchBooksByTag = (tag, limit, offset, signal) => {
+  const params = new URLSearchParams({ tag, limit, offset })
+  return fetchJSON(`/api/books?${params}`, signal)
+}
