@@ -2,9 +2,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	_ "modernc.org/sqlite"
 
@@ -30,6 +34,15 @@ func run() error {
 		addr = ":8080"
 	}
 
+	shutdownTimeout := 20 * time.Second
+	if v := os.Getenv("SHUTDOWN_TIMEOUT"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil || d <= 0 {
+			return fmt.Errorf("invalid SHUTDOWN_TIMEOUT %q: want a positive Go duration such as 20s", v)
+		}
+		shutdownTimeout = d
+	}
+
 	b, err := business.New(business.Config{
 		DatabasePath: dbPath,
 	})
@@ -43,9 +56,13 @@ func run() error {
 		return fmt.Errorf("failed to initialize server: %w", err)
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+
 	slog.Info("Server starting", "address", addr)
-	if err := srv.ListenAndServe(addr); err != nil {
+	if err := srv.ListenAndServe(ctx, addr, shutdownTimeout); err != nil {
 		return fmt.Errorf("server error: %w", err)
 	}
+	slog.Info("Server stopped")
 	return nil
 }
