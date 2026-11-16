@@ -40,7 +40,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Handler returns the HTTP handler with middleware applied.
 func (s *Server) Handler() http.Handler {
-	return recoveryMiddleware(loggingMiddleware(s))
+	// Recovery sits inside logging so a panic is logged as a 500.
+	return requestIDMiddleware(loggingMiddleware(recoveryMiddleware(s)))
 }
 
 // ListenAndServe listens on addr and serves until ctx is cancelled, then shuts
