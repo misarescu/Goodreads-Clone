@@ -44,19 +44,7 @@ func TestServeGracefulShutdown(t *testing.T) {
 
 	cancel() // begin shutdown while the request is in flight
 
-	// New connections must be refused once the listener is closed.
-	deadline := time.Now().Add(3 * time.Second)
-	for {
-		c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
-		if err != nil {
-			break
-		}
-		_ = c.Close()
-		if time.Now().After(deadline) {
-			t.Fatal("new connections still accepted after shutdown started")
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+	waitRefused(t, addr)
 
 	select {
 	case <-serveDone:
@@ -66,6 +54,37 @@ func TestServeGracefulShutdown(t *testing.T) {
 
 	close(release)
 
+	awaitResponse(t, respCh, errCh)
+
+	select {
+	case err := <-serveDone:
+		if err != nil {
+			t.Errorf("Serve returned %v, want nil", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Serve did not return")
+	}
+}
+
+// waitRefused fails unless new connections are refused once the listener is closed.
+func waitRefused(t *testing.T, addr string) {
+	t.Helper()
+	deadline := time.Now().Add(3 * time.Second)
+	for {
+		c, err := net.DialTimeout("tcp", addr, 200*time.Millisecond)
+		if err != nil {
+			return
+		}
+		_ = c.Close()
+		if time.Now().After(deadline) {
+			t.Fatal("new connections still accepted after shutdown started")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func awaitResponse(t *testing.T, respCh <-chan *http.Response, errCh <-chan error) {
+	t.Helper()
 	select {
 	case resp := <-respCh:
 		_ = resp.Body.Close()
@@ -76,14 +95,5 @@ func TestServeGracefulShutdown(t *testing.T) {
 		t.Fatalf("in-flight request failed: %v", err)
 	case <-time.After(5 * time.Second):
 		t.Fatal("in-flight request did not complete")
-	}
-
-	select {
-	case err := <-serveDone:
-		if err != nil {
-			t.Errorf("Serve returned %v, want nil", err)
-		}
-	case <-time.After(5 * time.Second):
-		t.Fatal("Serve did not return")
 	}
 }
