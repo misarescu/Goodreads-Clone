@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -49,4 +50,12 @@ func (s *Storage) Close() error {
 // DB returns the underlying database connection.
 func (s *Storage) DB() *sql.DB {
 	return s.db
+}
+
+// Ping reports whether the database answers.
+func (s *Storage) Ping(ctx context.Context) error {
+	if err := s.db.PingContext(ctx); err != nil {
+		return fmt.Errorf("pinging database: %w", err)
+	}
+	return nil
 }

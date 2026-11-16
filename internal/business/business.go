@@ -53,3 +53,11 @@ func (b *Business) Close() error {
 	}
 	return nil
 }
+
+// Ready reports whether the database answers a ping.
+func (b *Business) Ready(ctx context.Context) error {
+	if err := b.Storage.Ping(ctx); err != nil {
+		return fmt.Errorf("readiness check: %w", err)
+	}
+	return nil
+}
