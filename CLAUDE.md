@@ -20,7 +20,7 @@ make frontend-lint     # Run ESLint
 make run-local         # Build everything and run the server
 make run-docker        # Build and run with Docker Compose
 
-make migrate           # Run database migrations
+make migrate           # Apply pending migrations (runs cmd/migrate, same migrator as the server)
 make gen-db            # Generate Go code from SQL using sqlc
 make gen-mocks         # Generate test mocks using mockery
 
