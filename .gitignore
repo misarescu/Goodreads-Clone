@@ -48,7 +48,9 @@ node_modules
 
 # Build output
 bin/
-dist/*
+dist/
+!static/dist/
+static/dist/*
 !static/dist/.gitkeep
 data/
 dist-ssr/
