@@ -36,3 +36,31 @@ export async function updateShelfBookProgress(shelfId, bookId, progress, signal)
   }
   return res.json()
 }
+
+// Sends a JSON shelf mutation. Failures carry the API's message (the server's
+// {"Error": "..."} body) in err.apiMessage for 400 and 409 responses.
+async function mutateShelf(url, method, body) {
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = new Error(`Request failed (${res.status})`)
+    err.status = res.status
+    if (res.status === 400 || res.status === 409) {
+      const parsed = await res.json().catch(() => null)
+      if (typeof parsed?.Error === 'string') err.apiMessage = parsed.Error
+    }
+    throw err
+  }
+  return res.status === 204 ? null : res.json()
+}
+
+export const createShelf = (userId, name) =>
+  mutateShelf('/api/shelves', 'POST', { user_id: Number(userId), name })
+
+export const renameShelf = (shelfId, name) =>
+  mutateShelf(`/api/shelves/${shelfId}`, 'PUT', { name })
+
+export const deleteShelf = (shelfId) => mutateShelf(`/api/shelves/${shelfId}`, 'DELETE')

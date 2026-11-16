@@ -190,3 +190,111 @@ describe('Shelves', () => {
     })
   })
 })
+
+describe('Shelves management', () => {
+  const mixed = [
+    { id: 10, name: 'Read', is_default: true },
+    { id: 20, name: 'Favourites', is_default: false },
+  ]
+  const lastCall = () => fetch.mock.calls[fetch.mock.calls.length - 1]
+
+  it('creates a shelf and shows it without reloading', async () => {
+    fetch
+      .mockReturnValueOnce(json(mixed))
+      .mockReturnValueOnce(json({ id: 30, name: 'Sci-fi', is_default: false }, 201))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.change(screen.getByLabelText('New shelf'), { target: { value: '  Sci-fi ' } })
+    fireEvent.click(screen.getByText('Create shelf'))
+    expect(await screen.findByText('Sci-fi')).toBeTruthy()
+    const [url, opts] = lastCall()
+    expect(url).toBe('/api/shelves')
+    expect(opts.method).toBe('POST')
+    expect(JSON.parse(opts.body)).toEqual({ user_id: 1, name: 'Sci-fi' })
+    expect(screen.getByLabelText('New shelf').value).toBe('')
+  })
+
+  it('does not send an empty name', async () => {
+    fetch.mockReturnValueOnce(json(mixed))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.change(screen.getByLabelText('New shelf'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByText('Create shelf'))
+    fireEvent.click(screen.getByText('Rename'))
+    fireEvent.change(screen.getByLabelText('New name for Favourites'), { target: { value: ' ' } })
+    fireEvent.click(screen.getByText('Save name'))
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('renames a custom shelf in place', async () => {
+    fetch
+      .mockReturnValueOnce(json(mixed))
+      .mockReturnValueOnce(json({ id: 20, name: 'Best', is_default: false }))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.click(screen.getByText('Rename'))
+    fireEvent.change(screen.getByLabelText('New name for Favourites'), { target: { value: 'Best' } })
+    fireEvent.click(screen.getByText('Save name'))
+    expect(await screen.findByText('Best')).toBeTruthy()
+    expect(screen.queryByText('Favourites')).toBeNull()
+    const [url, opts] = lastCall()
+    expect(url).toBe('/api/shelves/20')
+    expect(opts.method).toBe('PUT')
+    expect(JSON.parse(opts.body)).toEqual({ name: 'Best' })
+  })
+
+  it('deletes a shelf after confirmation naming it', async () => {
+    const confirm = vi.fn(() => true)
+    vi.stubGlobal('confirm', confirm)
+    fetch.mockReturnValueOnce(json(mixed)).mockReturnValueOnce(json(null, 204))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.click(screen.getByText('Delete'))
+    expect(confirm.mock.calls[0][0]).toContain('"Favourites"')
+    expect(confirm.mock.calls[0][0]).toContain('books will leave')
+    await waitFor(() => expect(screen.queryByText('Favourites')).toBeNull())
+    expect(lastCall()[0]).toBe('/api/shelves/20')
+    expect(lastCall()[1].method).toBe('DELETE')
+  })
+
+  it('keeps the shelf when the deletion is cancelled', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => false))
+    fetch.mockReturnValueOnce(json(mixed))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.click(screen.getByText('Delete'))
+    expect(fetch).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('Favourites')).toBeTruthy()
+  })
+
+  it('shows no actions on default shelves', async () => {
+    fetch.mockReturnValueOnce(json([{ id: 10, name: 'Read', is_default: true }]))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Read')
+    expect(screen.queryByText('Rename')).toBeNull()
+    expect(screen.queryByText('Delete')).toBeNull()
+  })
+
+  it('shows the API message for a 409 and stays usable', async () => {
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    fetch
+      .mockReturnValueOnce(json(mixed))
+      .mockReturnValueOnce(json({ Error: 'default shelves cannot be changed' }, 409))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.click(screen.getByText('Delete'))
+    expect((await screen.findByRole('alert')).textContent).toBe('default shelves cannot be changed')
+    expect(screen.getByText('Favourites')).toBeTruthy()
+    expect(screen.getByText('Delete').disabled).toBe(false)
+  })
+
+  it('shows a create error next to the form and keeps the input', async () => {
+    fetch.mockReturnValueOnce(json(mixed)).mockReturnValueOnce(json({}, 500))
+    render(<Shelves userId="1" />)
+    await screen.findByText('Favourites')
+    fireEvent.change(screen.getByLabelText('New shelf'), { target: { value: 'X' } })
+    fireEvent.click(screen.getByText('Create shelf'))
+    expect((await screen.findByRole('alert')).textContent).toMatch(/Could not create/)
+    expect(screen.getByLabelText('New shelf').value).toBe('X')
+  })
+})
