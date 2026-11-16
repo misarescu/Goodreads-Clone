@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	dbmigrations "goodreads-clone.com/db"
+	"goodreads-clone.com/internal/migrate"
 	"goodreads-clone.com/internal/storage"
 )
 
@@ -32,6 +34,11 @@ func New(cfg Config) (*Business, error) {
 	// Enable foreign keys for SQLite
 	if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
 		return nil, fmt.Errorf("enabling foreign keys: %w", err)
+	}
+
+	if err := migrate.Apply(context.Background(), db, dbmigrations.FS, "migrations"); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("applying migrations: %w", err)
 	}
 
 	return &Business{

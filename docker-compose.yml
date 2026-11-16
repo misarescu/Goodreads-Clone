@@ -1,20 +1,4 @@
 services:
-  migrate:
-    image: alpine:latest
-    volumes:
-      - sqlite_data:/data
-      - ./db/migrations:/migrations:ro
-    command: >
-      sh -c "
-        apk add --no-cache sqlite &&
-        echo 'Running migrations...' &&
-        for file in /migrations/*.sql; do
-          echo \"Applying \$$file...\";
-          sqlite3 /data/goodreads.db < \$$file;
-        done &&
-        echo 'Migrations complete'
-      "
-
   app:
     build: .
     ports:
@@ -23,9 +7,6 @@ services:
       - DATABASE_PATH=/data/goodreads.db
     volumes:
       - sqlite_data:/data
-    depends_on:
-      migrate:
-        condition: service_completed_successfully
 
 volumes:
   sqlite_data:
