@@ -1,5 +1,56 @@
 import { useEffect, useState } from 'react'
-import { fetchShelfBooks, fetchUserShelves } from './api.js'
+import { fetchShelfBooks, fetchUserShelves, updateShelfBookProgress } from './api.js'
+
+function BookProgress({ shelfId, book, onSaved }) {
+  const hasPages = Boolean(book.page_count?.Valid) && book.page_count.Int64 > 0
+  const [value, setValue] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  const save = async (progress) => {
+    setSaving(true)
+    setError(null)
+    try {
+      const updated = await updateShelfBookProgress(shelfId, book.book_id, progress)
+      onSaved(updated)
+      setValue('')
+    } catch (err) {
+      setError(err.apiMessage ?? 'Could not save progress. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const field = hasPages ? 'pages_read' : 'progress_percent'
+  const label = hasPages ? 'Pages read' : 'Percent read'
+  const submit = (e) => {
+    e.preventDefault()
+    if (value.trim() === '') return
+    save({ [field]: Number(value) })
+  }
+  // A book with a page count takes pages, so finishing means reading them all.
+  const finish = () =>
+    save(hasPages ? { pages_read: book.page_count.Int64 } : { progress_percent: 100 })
+
+  return (
+    <form onSubmit={submit} noValidate>
+      <label>
+        {label}{' '}
+        <input
+          type="number"
+          min="0"
+          max={hasPages ? book.page_count.Int64 : 100}
+          value={value}
+          disabled={saving}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      </label>{' '}
+      <button type="submit" disabled={saving}>Save progress</button>{' '}
+      <button type="button" disabled={saving} onClick={finish}>Mark as finished</button>
+      {error && <p role="alert">{error}</p>}
+    </form>
+  )
+}
 
 function ShelfBooks({ shelfId }) {
   const [state, setState] = useState({ shelfId, status: 'loading' })
@@ -35,6 +86,29 @@ function ShelfBooks({ shelfId }) {
               ? ` (${b.pages_read} of ${b.page_count.Int64} pages)`
               : ` (${b.pages_read} pages read)`}
           </div>
+          <BookProgress
+            shelfId={shelfId}
+            book={b}
+            onSaved={(updated) =>
+              setState((cur) =>
+                cur.shelfId === shelfId && cur.status === 'ok'
+                  ? {
+                      ...cur,
+                      books: cur.books.map((x) =>
+                        x.id === b.id
+                          ? {
+                              ...x,
+                              pages_read: updated.pages_read,
+                              progress_percent: updated.progress_percent,
+                              finished_at: updated.finished_at,
+                            }
+                          : x,
+                      ),
+                    }
+                  : cur,
+              )
+            }
+          />
         </li>
       ))}
     </ul>
