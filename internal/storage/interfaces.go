@@ -67,6 +67,10 @@ type ShelfBookRepository interface {
 	ListBooksOnShelf(ctx context.Context, shelfID int64) ([]db.ListBooksOnShelfRow, error)
 	GetUserBookShelves(ctx context.Context, userID, bookID int64) ([]db.Shelf, error)
 	GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)
+	// ListMonthlyFinished returns, for each month of the year with finished books, the books
+	// finished and their summed page counts. A book counts once, in the month of its earliest
+	// finished_at that year. Months without finished books are omitted.
+	ListMonthlyFinished(ctx context.Context, userID, year int64) ([]db.ListMonthlyFinishedBooksRow, error)
 	// ListForExport returns every shelved book of the user, ordered by shelf name then book title.
 	ListForExport(ctx context.Context, userID int64) ([]ShelfExportRow, error)
 }

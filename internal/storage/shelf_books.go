@@ -156,3 +156,14 @@ func (r *shelfBookRepository) ListForExport(ctx context.Context, userID int64) (
 	}
 	return out, nil
 }
+
+func (r *shelfBookRepository) ListMonthlyFinished(
+	ctx context.Context,
+	userID, year int64,
+) ([]db.ListMonthlyFinishedBooksRow, error) {
+	rows, err := r.queries.ListMonthlyFinishedBooks(ctx, db.ListMonthlyFinishedBooksParams{UserID: userID, Year: year})
+	if err != nil {
+		return nil, fmt.Errorf("list monthly finished books query failed: %w", err)
+	}
+	return rows, nil
+}
