@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -551,4 +552,82 @@ func TestBusiness_RecordReadingProgress(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestBusiness_GetMonthlyReadingStats(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	userID := int64(7)
+	clock := func() time.Time { return time.Date(2026, 11, 16, 12, 0, 0, 0, time.UTC) }
+	newBiz := func(t *testing.T) (*business.Business, *mocks.MockUserRepository, *mocks.MockShelfBookRepository) {
+		users := mocks.NewMockUserRepository(t)
+		sbs := mocks.NewMockShelfBookRepository(t)
+		return &business.Business{Storage: &storage.Storage{Users: users, ShelfBooks: sbs}, Now: clock}, users, sbs
+	}
+	ptr := func(v int64) *int64 { return &v }
+
+	t.Run("fills twelve months", func(t *testing.T) {
+		t.Parallel()
+		b, users, sbs := newBiz(t)
+		users.EXPECT().GetByID(ctx, userID).Return(&db.User{ID: userID}, nil).Once()
+		sbs.EXPECT().ListMonthlyFinished(ctx, userID, int64(2025)).Return([]db.ListMonthlyFinishedBooksRow{
+			{Month: 2, BooksFinished: 3, PagesFinished: 150},
+			{Month: 12, BooksFinished: 1, PagesFinished: 0},
+		}, nil).Once()
+
+		got, err := b.GetMonthlyReadingStats(ctx, userID, ptr(2025))
+		require.NoError(t, err)
+		require.Len(t, got, 12)
+		for i, m := range got {
+			assert.Equal(t, i+1, m.Month)
+		}
+		assert.Equal(t, business.MonthlyReading{Month: 2, BooksFinished: 3, PagesFinished: 150}, got[1])
+		assert.Equal(t, business.MonthlyReading{Month: 12, BooksFinished: 1}, got[11])
+		assert.Equal(t, business.MonthlyReading{Month: 1}, got[0])
+	})
+
+	t.Run("defaults to the current year", func(t *testing.T) {
+		t.Parallel()
+		b, users, sbs := newBiz(t)
+		users.EXPECT().GetByID(ctx, userID).Return(&db.User{ID: userID}, nil).Once()
+		sbs.EXPECT().ListMonthlyFinished(ctx, userID, int64(2026)).Return(nil, nil).Once()
+
+		got, err := b.GetMonthlyReadingStats(ctx, userID, nil)
+		require.NoError(t, err)
+		assert.Len(t, got, 12)
+	})
+
+	t.Run("year bounds", func(t *testing.T) {
+		t.Parallel()
+		for year, ok := range map[int64]bool{1899: false, 1900: true, 2027: true, 2028: false, -1: false} {
+			b, users, sbs := newBiz(t)
+			if ok {
+				users.EXPECT().GetByID(ctx, userID).Return(&db.User{ID: userID}, nil).Once()
+				sbs.EXPECT().ListMonthlyFinished(ctx, userID, year).Return(nil, nil).Once()
+			}
+			_, err := b.GetMonthlyReadingStats(ctx, userID, ptr(year))
+			if ok {
+				require.NoError(t, err, year)
+			} else {
+				require.ErrorIs(t, err, business.ErrInvalidYear, year)
+			}
+		}
+	})
+
+	t.Run("unknown user", func(t *testing.T) {
+		t.Parallel()
+		b, users, _ := newBiz(t)
+		users.EXPECT().GetByID(ctx, userID).Return(nil, sql.ErrNoRows).Once()
+		_, err := b.GetMonthlyReadingStats(ctx, userID, nil)
+		require.ErrorIs(t, err, sql.ErrNoRows)
+	})
+
+	t.Run("storage error", func(t *testing.T) {
+		t.Parallel()
+		b, users, sbs := newBiz(t)
+		users.EXPECT().GetByID(ctx, userID).Return(&db.User{ID: userID}, nil).Once()
+		sbs.EXPECT().ListMonthlyFinished(ctx, userID, int64(2026)).Return(nil, errors.New("boom")).Once()
+		_, err := b.GetMonthlyReadingStats(ctx, userID, nil)
+		require.Error(t, err)
+	})
 }

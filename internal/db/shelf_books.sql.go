@@ -242,6 +242,59 @@ func (q *Queries) ListBooksOnShelf(ctx context.Context, shelfID int64) ([]ListBo
 	return items, nil
 }
 
+const listMonthlyFinishedBooks = `-- name: ListMonthlyFinishedBooks :many
+SELECT
+    CAST(strftime('%m', first_finished) AS INTEGER) AS month,
+    COUNT(*) AS books_finished,
+    CAST(COALESCE(SUM(page_count), 0) AS INTEGER) AS pages_finished
+FROM (
+    SELECT MIN(sb.finished_at) AS first_finished, b.page_count AS page_count
+    FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    JOIN books b ON b.id = sb.book_id
+    WHERE s.user_id = ?1
+      AND sb.finished_at IS NOT NULL
+      AND CAST(strftime('%Y', sb.finished_at) AS INTEGER) = CAST(?2 AS INTEGER)
+    GROUP BY b.id
+) AS per_book
+GROUP BY month
+ORDER BY month
+`
+
+type ListMonthlyFinishedBooksParams struct {
+	UserID int64 `json:"user_id"`
+	Year   int64 `json:"year"`
+}
+
+type ListMonthlyFinishedBooksRow struct {
+	Month         int64 `json:"month"`
+	BooksFinished int64 `json:"books_finished"`
+	PagesFinished int64 `json:"pages_finished"`
+}
+
+func (q *Queries) ListMonthlyFinishedBooks(ctx context.Context, arg ListMonthlyFinishedBooksParams) ([]ListMonthlyFinishedBooksRow, error) {
+	rows, err := q.db.QueryContext(ctx, listMonthlyFinishedBooks, arg.UserID, arg.Year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMonthlyFinishedBooksRow{}
+	for rows.Next() {
+		var i ListMonthlyFinishedBooksRow
+		if err := rows.Scan(&i.Month, &i.BooksFinished, &i.PagesFinished); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUserShelfBooksForExport = `-- name: ListUserShelfBooksForExport :many
 SELECT
     s.name AS shelf,
