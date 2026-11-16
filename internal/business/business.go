@@ -1,10 +1,13 @@
 package business
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
 
+	dbmigrations "goodreads-clone.com/db"
+	"goodreads-clone.com/internal/migrate"
 	"goodreads-clone.com/internal/storage"
 )
 
@@ -33,6 +36,11 @@ func New(cfg Config) (*Business, error) {
 		return nil, fmt.Errorf("enabling foreign keys: %w", err)
 	}
 
+	if err := migrate.Apply(context.Background(), db, dbmigrations.FS, "migrations"); err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("applying migrations: %w", err)
+	}
+
 	return &Business{
 		Storage: storage.New(db),
 	}, nil
@@ -42,6 +50,14 @@ func New(cfg Config) (*Business, error) {
 func (b *Business) Close() error {
 	if err := b.Storage.Close(); err != nil {
 		return fmt.Errorf("closing storage: %w", err)
+	}
+	return nil
+}
+
+// Ready reports whether the database answers a ping.
+func (b *Business) Ready(ctx context.Context) error {
+	if err := b.Storage.Ping(ctx); err != nil {
+		return fmt.Errorf("readiness check: %w", err)
 	}
 	return nil
 }

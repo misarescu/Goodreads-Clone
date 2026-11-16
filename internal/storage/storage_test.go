@@ -92,3 +92,16 @@ func createTestShelf(t *testing.T, s *Storage, userID int64, name string, isDefa
 	}
 	return shelf
 }
+
+func TestPing(t *testing.T) {
+	s := newTestStorage(t)
+	if err := s.Ping(context.Background()); err != nil {
+		t.Fatalf("Ping: %v", err)
+	}
+	if err := s.DB().Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Ping(context.Background()); err == nil {
+		t.Fatal("Ping on closed database succeeded")
+	}
+}
