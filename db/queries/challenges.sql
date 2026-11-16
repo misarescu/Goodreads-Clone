@@ -22,3 +22,14 @@ SELECT * FROM reading_challenges WHERE user_id = ? ORDER BY year DESC;
 
 -- name: DeleteReadingChallenge :execrows
 DELETE FROM reading_challenges WHERE user_id = ? AND year = ?;
+
+-- name: ListBooksFinishedInYear :many
+SELECT b.id, b.title, b.author, CAST(MIN(sb.finished_at) AS TEXT) AS finished_at
+FROM shelf_books sb
+JOIN shelves s ON s.id = sb.shelf_id
+JOIN books b ON b.id = sb.book_id
+WHERE s.user_id = sqlc.arg(user_id)
+  AND sb.finished_at IS NOT NULL
+  AND CAST(strftime('%Y', sb.finished_at) AS INTEGER) = CAST(sqlc.arg(year) AS INTEGER)
+GROUP BY b.id
+ORDER BY MIN(sb.finished_at) DESC, b.id DESC;

@@ -89,3 +89,34 @@ func TestBusiness_ListReadingChallengeProgress_Errors(t *testing.T) {
 		assert.ErrorIs(t, err, boom)
 	})
 }
+
+func TestBusiness_GetReadingChallengeProgress_Books(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	b, users, ch := newChallengeBusiness(t)
+	users.EXPECT().GetByID(ctx, int64(1)).Return(&db.User{ID: 1}, nil)
+	ch.EXPECT().Get(ctx, int64(1), int64(2026)).Return(&db.ReadingChallenge{UserID: 1, Year: 2026, Goal: 25}, nil)
+	books := []storage.FinishedBook{
+		{ID: 2, Title: "B", Author: "Y", FinishedAt: time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)},
+		{ID: 1, Title: "A", Author: "X", FinishedAt: time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)},
+	}
+	ch.EXPECT().ListFinishedInYear(ctx, int64(1), int64(2026)).Return(books, nil)
+
+	got, err := b.GetReadingChallengeProgress(ctx, 1, 2026)
+	require.NoError(t, err)
+	assert.Equal(t, books, got.Books)
+	assert.Equal(t, int64(len(got.Books)), got.Finished)
+	assert.Equal(t, int64(-10), got.AheadBy)
+}
+
+func TestBusiness_GetReadingChallengeProgress_BooksError(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	b, users, ch := newChallengeBusiness(t)
+	users.EXPECT().GetByID(ctx, int64(1)).Return(&db.User{ID: 1}, nil)
+	ch.EXPECT().Get(ctx, int64(1), int64(2026)).Return(&db.ReadingChallenge{UserID: 1, Year: 2026, Goal: 25}, nil)
+	ch.EXPECT().ListFinishedInYear(ctx, int64(1), int64(2026)).Return(nil, errors.New("boom"))
+
+	_, err := b.GetReadingChallengeProgress(ctx, 1, 2026)
+	require.Error(t, err)
+}

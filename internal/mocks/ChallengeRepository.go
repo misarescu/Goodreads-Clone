@@ -9,6 +9,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/storage"
 )
 
 // NewMockChallengeRepository creates a new instance of MockChallengeRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -311,6 +312,80 @@ func (_c *MockChallengeRepository_ListByUser_Call) Return(readingChallenges []db
 }
 
 func (_c *MockChallengeRepository_ListByUser_Call) RunAndReturn(run func(ctx context.Context, userID int64) ([]db.ReadingChallenge, error)) *MockChallengeRepository_ListByUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListFinishedInYear provides a mock function for the type MockChallengeRepository
+func (_mock *MockChallengeRepository) ListFinishedInYear(ctx context.Context, userID int64, year int64) ([]storage.FinishedBook, error) {
+	ret := _mock.Called(ctx, userID, year)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListFinishedInYear")
+	}
+
+	var r0 []storage.FinishedBook
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64) ([]storage.FinishedBook, error)); ok {
+		return returnFunc(ctx, userID, year)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64) []storage.FinishedBook); ok {
+		r0 = returnFunc(ctx, userID, year)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]storage.FinishedBook)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64) error); ok {
+		r1 = returnFunc(ctx, userID, year)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockChallengeRepository_ListFinishedInYear_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListFinishedInYear'
+type MockChallengeRepository_ListFinishedInYear_Call struct {
+	*mock.Call
+}
+
+// ListFinishedInYear is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+//   - year int64
+func (_e *MockChallengeRepository_Expecter) ListFinishedInYear(ctx interface{}, userID interface{}, year interface{}) *MockChallengeRepository_ListFinishedInYear_Call {
+	return &MockChallengeRepository_ListFinishedInYear_Call{Call: _e.mock.On("ListFinishedInYear", ctx, userID, year)}
+}
+
+func (_c *MockChallengeRepository_ListFinishedInYear_Call) Run(run func(ctx context.Context, userID int64, year int64)) *MockChallengeRepository_ListFinishedInYear_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockChallengeRepository_ListFinishedInYear_Call) Return(finishedBooks []storage.FinishedBook, err error) *MockChallengeRepository_ListFinishedInYear_Call {
+	_c.Call.Return(finishedBooks, err)
+	return _c
+}
+
+func (_c *MockChallengeRepository_ListFinishedInYear_Call) RunAndReturn(run func(ctx context.Context, userID int64, year int64) ([]storage.FinishedBook, error)) *MockChallengeRepository_ListFinishedInYear_Call {
 	_c.Call.Return(run)
 	return _c
 }

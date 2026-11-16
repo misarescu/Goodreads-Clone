@@ -92,7 +92,7 @@ export function ReadingChallenge({ userId }) {
       </section>
     )
   }
-  const { goal, finished, ahead_by: aheadBy } = state.challenge
+  const { goal, finished, ahead_by: aheadBy, books = [] } = state.challenge
   return (
     <section className="reading-challenge">
       <h2>{year} reading challenge</h2>
@@ -104,6 +104,21 @@ export function ReadingChallenge({ userId }) {
       <p>
         {plural(finished)} finished in {year}
       </p>
+      <h3>Finished this year</h3>
+      {books.length === 0 ? (
+        <p>No books finished yet this year.</p>
+      ) : (
+        <ul>
+          {books.map((book) => (
+            <li key={book.id}>
+              {book.title} by {book.author}{' '}
+              <time dateTime={book.finished_at}>
+                {new Date(book.finished_at).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+              </time>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

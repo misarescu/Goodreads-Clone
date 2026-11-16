@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/storage"
 )
 
 // Reading challenge goal bounds.
@@ -25,6 +26,13 @@ type ChallengeProgress struct {
 	Finished      int64 `json:"finished"`
 	ExpectedByNow int64 `json:"expected_by_now"`
 	AheadBy       int64 `json:"ahead_by"`
+}
+
+// ChallengeDetail is a challenge's progress with the books it counts.
+type ChallengeDetail struct {
+	ChallengeProgress
+
+	Books []storage.FinishedBook `json:"books"`
 }
 
 func (b *Business) now() time.Time {
@@ -50,9 +58,9 @@ func (b *Business) SetReadingChallenge(ctx context.Context, userID, year, goal i
 	return c, nil
 }
 
-// GetReadingChallengeProgress returns a challenge with progress. It returns an
+// GetReadingChallengeProgress returns a challenge with progress and the books it counts. It returns an
 // error wrapping sql.ErrNoRows when the user or the challenge does not exist.
-func (b *Business) GetReadingChallengeProgress(ctx context.Context, userID, year int64) (*ChallengeProgress, error) {
+func (b *Business) GetReadingChallengeProgress(ctx context.Context, userID, year int64) (*ChallengeDetail, error) {
 	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
 		return nil, fmt.Errorf("failed to get user for reading challenge: %w", err)
 	}
@@ -60,7 +68,15 @@ func (b *Business) GetReadingChallengeProgress(ctx context.Context, userID, year
 	if err != nil {
 		return nil, fmt.Errorf("failed to get reading challenge: %w", err)
 	}
-	return b.challengeProgress(ctx, c)
+	books, err := b.Storage.Challenges.ListFinishedInYear(ctx, userID, year)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list finished books: %w", err)
+	}
+	// Finished comes from the same list, so len(Books) == Finished.
+	return &ChallengeDetail{
+		ChallengeProgress: b.progressFor(c, int64(len(books))),
+		Books:             books,
+	}, nil
 }
 
 // ListReadingChallengeProgress returns all of a user's challenges with
@@ -90,14 +106,19 @@ func (b *Business) challengeProgress(ctx context.Context, c *db.ReadingChallenge
 	if err != nil {
 		return nil, fmt.Errorf("failed to count finished books: %w", err)
 	}
+	p := b.progressFor(c, finished)
+	return &p, nil
+}
+
+func (b *Business) progressFor(c *db.ReadingChallenge, finished int64) ChallengeProgress {
 	expected := expectedByNow(c.Goal, c.Year, b.now())
-	return &ChallengeProgress{
+	return ChallengeProgress{
 		Year:          c.Year,
 		Goal:          c.Goal,
 		Finished:      finished,
 		ExpectedByNow: expected,
 		AheadBy:       finished - expected,
-	}, nil
+	}
 }
 
 // DeleteReadingChallenge removes a user's challenge for a year. It returns an
