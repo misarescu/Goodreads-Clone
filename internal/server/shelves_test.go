@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -293,5 +294,79 @@ func TestHandleDefaultShelfProtected(t *testing.T) {
 				t.Errorf("body = %q", rec.Body.String())
 			}
 		})
+	}
+}
+
+func TestExportShelves(t *testing.T) {
+	s := newShelfBooksServer(t)
+	for _, q := range []string{
+		`INSERT INTO shelves (user_id, name) VALUES (1, 'Alpha')`,
+		`INSERT INTO books (title, author, isbn) VALUES ('Dune, "Part" One', 'Herbert', '123')`,
+		`INSERT INTO books (title, author) VALUES ('Aardvark', 'Zed')`,
+		`INSERT INTO shelf_books (shelf_id, book_id, pages_read, progress_percent, finished_at, added_at)
+		 VALUES (1, 1, 412, 100, '2024-03-01 10:00:00', '2024-01-01 00:00:00')`,
+		`INSERT INTO shelf_books (shelf_id, book_id, added_at) VALUES (2, 3, '2024-02-02 00:00:00')`,
+		`INSERT INTO shelf_books (shelf_id, book_id, added_at) VALUES (2, 2, '2024-02-03 00:00:00')`,
+	} {
+		if _, err := s.business.Storage.DB().Exec(q); err != nil {
+			t.Fatalf("%q: %v", q, err)
+		}
+	}
+
+	rec := doRequest(s, http.MethodGet, "/api/users/1/shelves/export.csv", "")
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d: %s", rec.Code, rec.Body)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "text/csv; charset=utf-8" {
+		t.Errorf("Content-Type = %q", got)
+	}
+	if got := rec.Header().Get("Content-Disposition"); got != `attachment; filename="shelves-1.csv"` {
+		t.Errorf("Content-Disposition = %q", got)
+	}
+	want := "shelf,title,author,isbn,pages_read,progress_percent,finished_at,added_at\n" +
+		"Alpha,Aardvark,Zed,,0,0,,2024-02-02T00:00:00Z\n" +
+		"Alpha,\"Dune, \"\"Part\"\" One\",Herbert,123,0,0,,2024-02-03T00:00:00Z\n" +
+		"Shelf,Title,Author,,412,100,2024-03-01T10:00:00Z,2024-01-01T00:00:00Z\n"
+	if got := rec.Body.String(); got != want {
+		t.Errorf("body =\n%s\nwant\n%s", got, want)
+	}
+
+	records, err := csv.NewReader(strings.NewReader(rec.Body.String())).ReadAll()
+	if err != nil || len(records) != 4 || records[2][1] != `Dune, "Part" One` {
+		t.Errorf("round trip: %v %v", records, err)
+	}
+}
+
+func TestExportShelvesQuotesNewline(t *testing.T) {
+	s := newShelfBooksServer(t)
+	if _, err := s.business.Storage.DB().Exec(`UPDATE books SET title = 'Two' || char(10) || 'Lines'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.business.Storage.DB().Exec(
+		`INSERT INTO shelf_books (shelf_id, book_id, added_at) VALUES (1, 1, '2024-01-01 00:00:00')`); err != nil {
+		t.Fatal(err)
+	}
+	rec := doRequest(s, http.MethodGet, "/api/users/1/shelves/export.csv", "")
+	if !strings.Contains(rec.Body.String(), "\"Two\nLines\"") {
+		t.Errorf("body = %q", rec.Body)
+	}
+}
+
+func TestExportShelvesNoBooks(t *testing.T) {
+	s := newShelfBooksServer(t)
+	rec := doRequest(s, http.MethodGet, "/api/users/1/shelves/export.csv", "")
+	want := "shelf,title,author,isbn,pages_read,progress_percent,finished_at,added_at\n"
+	if rec.Code != http.StatusOK || rec.Body.String() != want {
+		t.Errorf("status = %d body = %q", rec.Code, rec.Body)
+	}
+}
+
+func TestExportShelvesErrors(t *testing.T) {
+	s := newShelfBooksServer(t)
+	if rec := doRequest(s, http.MethodGet, "/api/users/99/shelves/export.csv", ""); rec.Code != http.StatusNotFound {
+		t.Errorf("unknown user status = %d", rec.Code)
+	}
+	if rec := doRequest(s, http.MethodGet, "/api/users/x/shelves/export.csv", ""); rec.Code != http.StatusBadRequest {
+		t.Errorf("bad id status = %d", rec.Code)
 	}
 }

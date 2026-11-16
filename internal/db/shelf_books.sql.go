@@ -242,6 +242,66 @@ func (q *Queries) ListBooksOnShelf(ctx context.Context, shelfID int64) ([]ListBo
 	return items, nil
 }
 
+const listUserShelfBooksForExport = `-- name: ListUserShelfBooksForExport :many
+SELECT
+    s.name AS shelf,
+    b.title,
+    b.author,
+    b.isbn,
+    sb.pages_read,
+    sb.progress_percent,
+    CAST(COALESCE(CAST(sb.finished_at AS TEXT), '') AS TEXT) AS finished_at,
+    sb.added_at
+FROM shelf_books sb
+JOIN shelves s ON s.id = sb.shelf_id
+JOIN books b ON b.id = sb.book_id
+WHERE s.user_id = ?
+ORDER BY s.name, b.title, b.id
+`
+
+type ListUserShelfBooksForExportRow struct {
+	Shelf           string         `json:"shelf"`
+	Title           string         `json:"title"`
+	Author          string         `json:"author"`
+	Isbn            sql.NullString `json:"isbn"`
+	PagesRead       int64          `json:"pages_read"`
+	ProgressPercent int64          `json:"progress_percent"`
+	FinishedAt      string         `json:"finished_at"`
+	AddedAt         time.Time      `json:"added_at"`
+}
+
+func (q *Queries) ListUserShelfBooksForExport(ctx context.Context, userID int64) ([]ListUserShelfBooksForExportRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserShelfBooksForExport, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUserShelfBooksForExportRow{}
+	for rows.Next() {
+		var i ListUserShelfBooksForExportRow
+		if err := rows.Scan(
+			&i.Shelf,
+			&i.Title,
+			&i.Author,
+			&i.Isbn,
+			&i.PagesRead,
+			&i.ProgressPercent,
+			&i.FinishedAt,
+			&i.AddedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const moveShelfBook = `-- name: MoveShelfBook :execrows
 UPDATE shelf_books SET
     shelf_id = ?1,
