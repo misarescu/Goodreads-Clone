@@ -434,6 +434,86 @@ func (_c *MockBookRepository_List_Call) RunAndReturn(run func(ctx context.Contex
 	return _c
 }
 
+// ListByTag provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) ListByTag(ctx context.Context, tag string, limit int64, offset int64) ([]db.Book, error) {
+	ret := _mock.Called(ctx, tag, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListByTag")
+	}
+
+	var r0 []db.Book
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64) ([]db.Book, error)); ok {
+		return returnFunc(ctx, tag, limit, offset)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64) []db.Book); ok {
+		r0 = returnFunc(ctx, tag, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]db.Book)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int64, int64) error); ok {
+		r1 = returnFunc(ctx, tag, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockBookRepository_ListByTag_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByTag'
+type MockBookRepository_ListByTag_Call struct {
+	*mock.Call
+}
+
+// ListByTag is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tag string
+//   - limit int64
+//   - offset int64
+func (_e *MockBookRepository_Expecter) ListByTag(ctx interface{}, tag interface{}, limit interface{}, offset interface{}) *MockBookRepository_ListByTag_Call {
+	return &MockBookRepository_ListByTag_Call{Call: _e.mock.On("ListByTag", ctx, tag, limit, offset)}
+}
+
+func (_c *MockBookRepository_ListByTag_Call) Run(run func(ctx context.Context, tag string, limit int64, offset int64)) *MockBookRepository_ListByTag_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		var arg3 int64
+		if args[3] != nil {
+			arg3 = args[3].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockBookRepository_ListByTag_Call) Return(books []db.Book, err error) *MockBookRepository_ListByTag_Call {
+	_c.Call.Return(books, err)
+	return _c
+}
+
+func (_c *MockBookRepository_ListByTag_Call) RunAndReturn(run func(ctx context.Context, tag string, limit int64, offset int64) ([]db.Book, error)) *MockBookRepository_ListByTag_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Search provides a mock function for the type MockBookRepository
 func (_mock *MockBookRepository) Search(ctx context.Context, params storage.SearchParams) ([]db.Book, int64, error) {
 	ret := _mock.Called(ctx, params)
@@ -504,6 +584,137 @@ func (_c *MockBookRepository_Search_Call) Return(books []db.Book, n int64, err e
 }
 
 func (_c *MockBookRepository_Search_Call) RunAndReturn(run func(ctx context.Context, params storage.SearchParams) ([]db.Book, int64, error)) *MockBookRepository_Search_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetTags provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) SetTags(ctx context.Context, bookID int64, tags []string) error {
+	ret := _mock.Called(ctx, bookID, tags)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetTags")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, []string) error); ok {
+		r0 = returnFunc(ctx, bookID, tags)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockBookRepository_SetTags_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetTags'
+type MockBookRepository_SetTags_Call struct {
+	*mock.Call
+}
+
+// SetTags is a helper method to define mock.On call
+//   - ctx context.Context
+//   - bookID int64
+//   - tags []string
+func (_e *MockBookRepository_Expecter) SetTags(ctx interface{}, bookID interface{}, tags interface{}) *MockBookRepository_SetTags_Call {
+	return &MockBookRepository_SetTags_Call{Call: _e.mock.On("SetTags", ctx, bookID, tags)}
+}
+
+func (_c *MockBookRepository_SetTags_Call) Run(run func(ctx context.Context, bookID int64, tags []string)) *MockBookRepository_SetTags_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 []string
+		if args[2] != nil {
+			arg2 = args[2].([]string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockBookRepository_SetTags_Call) Return(err error) *MockBookRepository_SetTags_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockBookRepository_SetTags_Call) RunAndReturn(run func(ctx context.Context, bookID int64, tags []string) error) *MockBookRepository_SetTags_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// TagsFor provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) TagsFor(ctx context.Context, bookIDs []int64) (map[int64][]string, error) {
+	ret := _mock.Called(ctx, bookIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for TagsFor")
+	}
+
+	var r0 map[int64][]string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) (map[int64][]string, error)); ok {
+		return returnFunc(ctx, bookIDs)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []int64) map[int64][]string); ok {
+		r0 = returnFunc(ctx, bookIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[int64][]string)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []int64) error); ok {
+		r1 = returnFunc(ctx, bookIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockBookRepository_TagsFor_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'TagsFor'
+type MockBookRepository_TagsFor_Call struct {
+	*mock.Call
+}
+
+// TagsFor is a helper method to define mock.On call
+//   - ctx context.Context
+//   - bookIDs []int64
+func (_e *MockBookRepository_Expecter) TagsFor(ctx interface{}, bookIDs interface{}) *MockBookRepository_TagsFor_Call {
+	return &MockBookRepository_TagsFor_Call{Call: _e.mock.On("TagsFor", ctx, bookIDs)}
+}
+
+func (_c *MockBookRepository_TagsFor_Call) Run(run func(ctx context.Context, bookIDs []int64)) *MockBookRepository_TagsFor_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 []int64
+		if args[1] != nil {
+			arg1 = args[1].([]int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockBookRepository_TagsFor_Call) Return(int64ToStrings map[int64][]string, err error) *MockBookRepository_TagsFor_Call {
+	_c.Call.Return(int64ToStrings, err)
+	return _c
+}
+
+func (_c *MockBookRepository_TagsFor_Call) RunAndReturn(run func(ctx context.Context, bookIDs []int64) (map[int64][]string, error)) *MockBookRepository_TagsFor_Call {
 	_c.Call.Return(run)
 	return _c
 }

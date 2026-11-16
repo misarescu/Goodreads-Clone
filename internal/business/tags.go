@@ -1,0 +1,131 @@
+package business
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"regexp"
+	"sort"
+	"strings"
+
+	"goodreads-clone.com/internal/db"
+)
+
+// MaxTagsPerBook is the most tags a book can have.
+const MaxTagsPerBook = 10
+
+// ErrInvalidTag is returned for a tag that is not 1 to 32 characters of a-z, 0-9 and "-",
+// or for a tag list longer than MaxTagsPerBook.
+var ErrInvalidTag = errors.New("invalid tag")
+
+var tagPattern = regexp.MustCompile(`^[a-z0-9-]{1,32}$`)
+
+// BookWithTags is a book with its sorted tags ([] when none).
+type BookWithTags struct {
+	db.Book
+
+	Tags []string `json:"tags"`
+}
+
+// NormalizeTag trims and lowercases tag and checks it is a valid tag.
+func NormalizeTag(tag string) (string, error) {
+	t := strings.ToLower(strings.TrimSpace(tag))
+	if !tagPattern.MatchString(t) {
+		return "", fmt.Errorf("%w %q: must be 1 to 32 characters from a-z, 0-9 and -", ErrInvalidTag, tag)
+	}
+	return t, nil
+}
+
+// normalizeTags normalizes every tag, collapses duplicates and enforces the per-book limit.
+// The result is sorted.
+func normalizeTags(tags []string) ([]string, error) {
+	seen := make(map[string]bool, len(tags))
+	out := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		t, err := NormalizeTag(tag)
+		if err != nil {
+			return nil, err
+		}
+		if !seen[t] {
+			seen[t] = true
+			out = append(out, t)
+		}
+	}
+	if len(out) > MaxTagsPerBook {
+		return nil, fmt.Errorf("%w: a book has at most %d tags", ErrInvalidTag, MaxTagsPerBook)
+	}
+	sort.Strings(out)
+	return out, nil
+}
+
+// SetBookTags replaces a book's tags and returns the book. It returns an error wrapping
+// sql.ErrNoRows when the book does not exist and one wrapping ErrInvalidTag for bad tags.
+func (b *Business) SetBookTags(ctx context.Context, id int64, tags []string) (*BookWithTags, error) {
+	norm, err := normalizeTags(tags)
+	if err != nil {
+		return nil, err
+	}
+	book, err := b.Storage.Books.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book for tags: %w", err)
+	}
+	if err := b.Storage.Books.SetTags(ctx, id, norm); err != nil {
+		return nil, fmt.Errorf("failed to set book tags: %w", err)
+	}
+	return &BookWithTags{Book: *book, Tags: norm}, nil
+}
+
+// ListBooksByTag lists one page of the books carrying tag (normalized first).
+func (b *Business) ListBooksByTag(ctx context.Context, tag string, limit, offset int64) ([]db.Book, error) {
+	t, err := NormalizeTag(tag)
+	if err != nil {
+		return nil, err
+	}
+	books, err := b.Storage.Books.ListByTag(ctx, t, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list books by tag: %w", err)
+	}
+	return books, nil
+}
+
+// tagsByBook loads the tags of books, returning a non-nil slice for every book.
+func (b *Business) tagsByBook(ctx context.Context, books []db.Book) (map[int64][]string, error) {
+	ids := make([]int64, len(books))
+	for i, bk := range books {
+		ids[i] = bk.ID
+	}
+	tags, err := b.Storage.Books.TagsFor(ctx, ids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get book tags: %w", err)
+	}
+	return tags, nil
+}
+
+// WithTags attaches each book's tags.
+func (b *Business) WithTags(ctx context.Context, books []db.Book) ([]BookWithTags, error) {
+	tags, err := b.tagsByBook(ctx, books)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]BookWithTags, len(books))
+	for i, bk := range books {
+		out[i] = BookWithTags{Book: bk, Tags: orEmpty(tags[bk.ID])}
+	}
+	return out, nil
+}
+
+// WithTag is WithTags for a single book.
+func (b *Business) WithTag(ctx context.Context, book *db.Book) (*BookWithTags, error) {
+	out, err := b.WithTags(ctx, []db.Book{*book})
+	if err != nil {
+		return nil, err
+	}
+	return &out[0], nil
+}
+
+func orEmpty(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
+}

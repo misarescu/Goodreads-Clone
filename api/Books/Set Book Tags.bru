@@ -1,0 +1,36 @@
+meta {
+  name: Set Book Tags
+  type: http
+  seq: 8
+}
+
+put {
+  url: http://localhost:8080/api/books/1/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tags": ["sci-fi", "classic"]
+  }
+}
+
+docs {
+  Replaces the book's tags and returns the book.
+
+  A tag is 1 to 32 characters from a-z, 0-9 and "-". Input is trimmed and lowercased first.
+  Duplicates collapse; an empty list clears the tags. A book has at most 10 tags.
+
+  Response: 200 OK (tags are sorted)
+  ```json
+  {
+    "id": 1,
+    "title": "Dune",
+    "author": "Frank Herbert",
+    "tags": ["classic", "sci-fi"]
+  }
+  ```
+
+  Errors: 400 for an invalid tag (names it) or more than 10 tags, 404 for an unknown book.
+}

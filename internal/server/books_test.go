@@ -19,6 +19,7 @@ func TestHandleCountBooks(t *testing.T) {
 	for name, n := range map[string]int64{"empty catalog": 0, "catalog with books": 3} {
 		t.Run(name, func(t *testing.T) {
 			repo := mocks.NewMockBookRepository(t)
+			repo.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil).Maybe()
 			repo.EXPECT().Count(mock.Anything).Return(n, nil)
 			s := &Server{
 				business: &business.Business{Storage: &storage.Storage{Books: repo}},
@@ -64,6 +65,7 @@ func TestHandleUpdateBookRating(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := mocks.NewMockBookRepository(t)
+			repo.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil).Maybe()
 			if tt.wantStatus == http.StatusOK {
 				repo.EXPECT().Update(mock.Anything, mock.MatchedBy(func(p db.UpdateBookParams) bool {
 					if tt.wantRating == nil {
@@ -102,6 +104,7 @@ func TestHandleSearchBooksLimit(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			repo := mocks.NewMockBookRepository(t)
+			repo.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil).Maybe()
 			wantLimit := mock.MatchedBy(func(p storage.SearchParams) bool { return p.Limit == tt.want })
 			repo.EXPECT().Search(mock.Anything, wantLimit).Return([]db.Book{}, 0, nil)
 			s := &Server{
@@ -121,6 +124,7 @@ func TestHandleSearchBooksLimit(t *testing.T) {
 
 func TestHandleSearchBooksResponse(t *testing.T) {
 	repo := mocks.NewMockBookRepository(t)
+	repo.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil).Maybe()
 	repo.EXPECT().
 		Search(mock.Anything, storage.SearchParams{
 			Match: `"hobbit"* author : "tolkien"`, Language: "en", Limit: 5, Offset: 10,
@@ -168,6 +172,7 @@ func coverRequest(t *testing.T, method, cover string) (*httptest.ResponseRecorde
 	t.Helper()
 	var received *string
 	repo := mocks.NewMockBookRepository(t)
+	repo.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil).Maybe()
 	repo.EXPECT().Create(mock.Anything, mock.Anything).
 		RunAndReturn(func(_ context.Context, p db.CreateBookParams) (*db.Book, error) {
 			received = p.CoverUrl
@@ -237,6 +242,7 @@ func TestHandleBookCoverURL(t *testing.T) {
 
 func TestHandleBookCoverURLOmitted(t *testing.T) {
 	repo := mocks.NewMockBookRepository(t)
+	repo.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil).Maybe()
 	repo.EXPECT().Update(mock.Anything, mock.MatchedBy(func(p db.UpdateBookParams) bool {
 		return p.CoverUrl == nil
 	})).Return(&db.Book{ID: 1}, nil)

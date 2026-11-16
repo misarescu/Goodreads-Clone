@@ -150,6 +150,7 @@ func TestBusiness_WithReviewStats(t *testing.T) {
 	ctx := context.Background()
 	b, m := newReviewBusiness(t)
 	reviews := m.reviews
+	m.books.EXPECT().TagsFor(ctx, []int64{1, 2}).Return(map[int64][]string{2: {"a", "b"}}, nil)
 	reviews.EXPECT().Stats(ctx, []int64{1, 2}).Return([]db.GetReviewStatsRow{
 		{BookID: 2, ReviewCount: 3, AverageRating: 13.0 / 3},
 	}, nil)
@@ -162,6 +163,8 @@ func TestBusiness_WithReviewStats(t *testing.T) {
 	require.NotNil(t, got[1].AverageRating)
 	assert.InDelta(t, 4.3, *got[1].AverageRating, 1e-9)
 	assert.Equal(t, int64(3), got[1].ReviewCount)
+	assert.Equal(t, []string{}, got[0].Tags)
+	assert.Equal(t, []string{"a", "b"}, got[1].Tags)
 }
 
 func TestBusiness_ListUserReviews(t *testing.T) {

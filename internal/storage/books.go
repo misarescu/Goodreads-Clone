@@ -11,7 +11,7 @@ import (
 
 type bookRepository struct {
 	queries *db.Queries
-	db      db.DBTX
+	db      *sql.DB
 }
 
 func (r *bookRepository) Create(ctx context.Context, params db.CreateBookParams) (*db.Book, error) {
@@ -108,4 +108,52 @@ WHERE (?2 = '' OR lower(b.language) = lower(?2))`
 		return nil, 0, fmt.Errorf("search books rows failed: %w", err)
 	}
 	return books, total, nil
+}
+
+// ListByTag returns one page of the books carrying tag, newest first.
+func (r *bookRepository) ListByTag(ctx context.Context, tag string, limit, offset int64) ([]db.Book, error) {
+	books, err := r.queries.ListBooksByTag(ctx, db.ListBooksByTagParams{Tag: tag, Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, fmt.Errorf("list books by tag query failed: %w", err)
+	}
+	return books, nil
+}
+
+// SetTags replaces all of a book's tags with tags (already validated and unique) in one transaction.
+func (r *bookRepository) SetTags(ctx context.Context, bookID int64, tags []string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin set tags transaction failed: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	q := r.queries.WithTx(tx)
+	if err := q.DeleteBookTags(ctx, bookID); err != nil {
+		return fmt.Errorf("delete book tags query failed: %w", err)
+	}
+	for _, tag := range tags {
+		if err := q.InsertBookTag(ctx, db.InsertBookTagParams{BookID: bookID, Tag: tag}); err != nil {
+			return fmt.Errorf("insert book tag query failed: %w", err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit set tags failed: %w", err)
+	}
+	return nil
+}
+
+// TagsFor returns the sorted tags of each of the given books; books without tags are absent.
+func (r *bookRepository) TagsFor(ctx context.Context, bookIDs []int64) (map[int64][]string, error) {
+	out := map[int64][]string{}
+	if len(bookIDs) == 0 {
+		return out, nil
+	}
+	rows, err := r.queries.ListBookTags(ctx, bookIDs)
+	if err != nil {
+		return nil, fmt.Errorf("list book tags query failed: %w", err)
+	}
+	for _, row := range rows {
+		out[row.BookID] = append(out[row.BookID], row.Tag)
+	}
+	return out, nil
 }

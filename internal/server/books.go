@@ -130,7 +130,7 @@ func (s *Server) handleCreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, book)
+	s.writeBookWithTags(w, r, http.StatusCreated, book)
 }
 
 func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
@@ -156,10 +156,10 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
 
 // searchBooksResponse is a page of search results with the total number of matches.
 type searchBooksResponse struct {
-	Books  []db.Book `json:"books"`
-	Total  int64     `json:"total"`
-	Limit  int64     `json:"limit"`
-	Offset int64     `json:"offset"`
+	Books  []business.BookWithTags `json:"books"`
+	Total  int64                   `json:"total"`
+	Limit  int64                   `json:"limit"`
+	Offset int64                   `json:"offset"`
 }
 
 func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
@@ -181,7 +181,13 @@ func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, searchBooksResponse{Books: books, Total: total, Limit: limit, Offset: offset})
+	withTags, err := s.business.WithTags(r.Context(), books)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, searchBooksResponse{Books: withTags, Total: total, Limit: limit, Offset: offset})
 }
 
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
@@ -201,7 +207,17 @@ func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	limit, offset := getPaginationParams(r)
-	books, err := s.business.ListBooks(r.Context(), limit, offset)
+	var books []db.Book
+	var err error
+	if r.URL.Query().Has("tag") {
+		books, err = s.business.ListBooksByTag(r.Context(), r.URL.Query().Get("tag"), limit, offset)
+	} else {
+		books, err = s.business.ListBooks(r.Context(), limit, offset)
+	}
+	if errors.Is(err, business.ErrInvalidTag) {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	if err != nil {
 		handleDBError(w, err)
 		return
@@ -266,6 +282,36 @@ func (s *Server) handleUpdateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.writeBookWithTags(w, r, http.StatusOK, book)
+}
+
+type setTagsRequest struct {
+	Tags []string `json:"tags"`
+}
+
+func (s *Server) handleSetBookTags(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid book ID")
+		return
+	}
+
+	var req setTagsRequest
+	if err := decodeJSON(r, &req); err != nil || req.Tags == nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	book, err := s.business.SetBookTags(r.Context(), id, req.Tags)
+	if errors.Is(err, business.ErrInvalidTag) {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
 	writeJSON(w, http.StatusOK, book)
 }
 
@@ -294,4 +340,14 @@ func (s *Server) handleCountBooks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	// Field name book_count chosen by a human via ask_human (gc-6).
 	writeJSON(w, http.StatusOK, map[string]int64{"book_count": n})
+}
+
+// writeBookWithTags responds with the book and its tags.
+func (s *Server) writeBookWithTags(w http.ResponseWriter, r *http.Request, status int, book *db.Book) {
+	withTags, err := s.business.WithTag(r.Context(), book)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+	writeJSON(w, status, withTags)
 }
