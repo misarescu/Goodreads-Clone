@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchJSON } from './api.js'
+import { Cover } from './Cover.jsx'
 
 export const DEBOUNCE_MS = 300
 const PAGE_SIZE = 10
@@ -11,6 +12,7 @@ function languageOf(book) {
   return l || ''
 }
 
+<<<<<<< HEAD
 // "4.2 (12 reviews)", or "No reviews yet" when there are none.
 function ratingSummary(book) {
   const n = book.review_count
@@ -48,6 +50,8 @@ function Cover({ title, url }) {
   )
 }
 
+=======
+>>>>>>> origin/main
 export function BookSearch() {
   const [input, setInput] = useState('')
   const [search, setSearch] = useState({ q: '', offset: 0 })

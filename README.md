@@ -105,7 +105,7 @@ make run-local             # Build and run locally
 make run-docker            # Run with Docker Compose
 
 # Database
-make migrate               # Run database migrations
+make migrate               # Apply pending migrations (runs cmd/migrate, same migrator as the server)
 make gen-db                # Generate Go code from SQL (after query changes)
 
 # Testing

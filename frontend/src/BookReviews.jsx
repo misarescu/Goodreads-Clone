@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchJSON } from './api.js'
+import { Cover } from './Cover.jsx'
 
 const PAGE_SIZE = 20
 const JSON_HEADERS = { 'Content-Type': 'application/json' }
@@ -148,6 +149,10 @@ function ReviewList({ bookId, userId }) {
 
   return (
     <>
+      <div className="book-summary">
+        <Cover title={book.title} url={book.cover_url} />
+        <strong>{book.title}</strong> by {book.author}
+      </div>
       {filters}
       <p>
         Average rating:{' '}
