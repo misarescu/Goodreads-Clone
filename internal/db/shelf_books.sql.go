@@ -45,6 +45,51 @@ func (q *Queries) AddBookToShelf(ctx context.Context, arg AddBookToShelfParams) 
 	return i, err
 }
 
+const getBookOnShelf = `-- name: GetBookOnShelf :one
+SELECT sb.id, sb.shelf_id, sb.book_id, sb.pages_read, sb.progress_percent, sb.added_at, sb.updated_at, sb.finished_at, b.title, b.author, b.page_count
+FROM shelf_books sb
+JOIN books b ON sb.book_id = b.id
+WHERE sb.shelf_id = ? AND sb.book_id = ?
+`
+
+type GetBookOnShelfParams struct {
+	ShelfID int64 `json:"shelf_id"`
+	BookID  int64 `json:"book_id"`
+}
+
+type GetBookOnShelfRow struct {
+	ID              int64         `json:"id"`
+	ShelfID         int64         `json:"shelf_id"`
+	BookID          int64         `json:"book_id"`
+	PagesRead       int64         `json:"pages_read"`
+	ProgressPercent int64         `json:"progress_percent"`
+	AddedAt         time.Time     `json:"added_at"`
+	UpdatedAt       time.Time     `json:"updated_at"`
+	FinishedAt      *time.Time    `json:"finished_at"`
+	Title           string        `json:"title"`
+	Author          string        `json:"author"`
+	PageCount       sql.NullInt64 `json:"page_count"`
+}
+
+func (q *Queries) GetBookOnShelf(ctx context.Context, arg GetBookOnShelfParams) (GetBookOnShelfRow, error) {
+	row := q.db.QueryRowContext(ctx, getBookOnShelf, arg.ShelfID, arg.BookID)
+	var i GetBookOnShelfRow
+	err := row.Scan(
+		&i.ID,
+		&i.ShelfID,
+		&i.BookID,
+		&i.PagesRead,
+		&i.ProgressPercent,
+		&i.AddedAt,
+		&i.UpdatedAt,
+		&i.FinishedAt,
+		&i.Title,
+		&i.Author,
+		&i.PageCount,
+	)
+	return i, err
+}
+
 const getShelfBook = `-- name: GetShelfBook :one
 SELECT id, shelf_id, book_id, pages_read, progress_percent, added_at, updated_at, finished_at FROM shelf_books WHERE shelf_id = ? AND book_id = ?
 `
@@ -195,6 +240,27 @@ func (q *Queries) ListBooksOnShelf(ctx context.Context, shelfID int64) ([]ListBo
 		return nil, err
 	}
 	return items, nil
+}
+
+const moveShelfBook = `-- name: MoveShelfBook :execrows
+UPDATE shelf_books SET
+    shelf_id = ?1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE shelf_id = ?2 AND book_id = ?3
+`
+
+type MoveShelfBookParams struct {
+	ToShelfID   int64 `json:"to_shelf_id"`
+	FromShelfID int64 `json:"from_shelf_id"`
+	BookID      int64 `json:"book_id"`
+}
+
+func (q *Queries) MoveShelfBook(ctx context.Context, arg MoveShelfBookParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, moveShelfBook, arg.ToShelfID, arg.FromShelfID, arg.BookID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const removeBookFromShelf = `-- name: RemoveBookFromShelf :exec

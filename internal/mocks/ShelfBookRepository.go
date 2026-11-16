@@ -408,6 +408,86 @@ func (_c *MockShelfBookRepository_ListBooksOnShelf_Call) RunAndReturn(run func(c
 	return _c
 }
 
+// Move provides a mock function for the type MockShelfBookRepository
+func (_mock *MockShelfBookRepository) Move(ctx context.Context, fromShelfID int64, bookID int64, toShelfID int64) (*db.ListBooksOnShelfRow, error) {
+	ret := _mock.Called(ctx, fromShelfID, bookID, toShelfID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Move")
+	}
+
+	var r0 *db.ListBooksOnShelfRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) (*db.ListBooksOnShelfRow, error)); ok {
+		return returnFunc(ctx, fromShelfID, bookID, toShelfID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) *db.ListBooksOnShelfRow); ok {
+		r0 = returnFunc(ctx, fromShelfID, bookID, toShelfID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*db.ListBooksOnShelfRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64, int64) error); ok {
+		r1 = returnFunc(ctx, fromShelfID, bookID, toShelfID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockShelfBookRepository_Move_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Move'
+type MockShelfBookRepository_Move_Call struct {
+	*mock.Call
+}
+
+// Move is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fromShelfID int64
+//   - bookID int64
+//   - toShelfID int64
+func (_e *MockShelfBookRepository_Expecter) Move(ctx interface{}, fromShelfID interface{}, bookID interface{}, toShelfID interface{}) *MockShelfBookRepository_Move_Call {
+	return &MockShelfBookRepository_Move_Call{Call: _e.mock.On("Move", ctx, fromShelfID, bookID, toShelfID)}
+}
+
+func (_c *MockShelfBookRepository_Move_Call) Run(run func(ctx context.Context, fromShelfID int64, bookID int64, toShelfID int64)) *MockShelfBookRepository_Move_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		var arg3 int64
+		if args[3] != nil {
+			arg3 = args[3].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockShelfBookRepository_Move_Call) Return(listBooksOnShelfRow *db.ListBooksOnShelfRow, err error) *MockShelfBookRepository_Move_Call {
+	_c.Call.Return(listBooksOnShelfRow, err)
+	return _c
+}
+
+func (_c *MockShelfBookRepository_Move_Call) RunAndReturn(run func(ctx context.Context, fromShelfID int64, bookID int64, toShelfID int64) (*db.ListBooksOnShelfRow, error)) *MockShelfBookRepository_Move_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Remove provides a mock function for the type MockShelfBookRepository
 func (_mock *MockShelfBookRepository) Remove(ctx context.Context, shelfID int64, bookID int64) error {
 	ret := _mock.Called(ctx, shelfID, bookID)

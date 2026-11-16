@@ -2,12 +2,14 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"goodreads-clone.com/internal/db"
 )
 
 type shelfBookRepository struct {
+	db      *sql.DB
 	queries *db.Queries
 }
 
@@ -91,4 +93,37 @@ func (r *shelfBookRepository) GetUserReadingStats(
 		return nil, fmt.Errorf("get user reading stats query failed: %w", err)
 	}
 	return &stats, nil
+}
+
+func (r *shelfBookRepository) Move(
+	ctx context.Context,
+	fromShelfID, bookID, toShelfID int64,
+) (*db.ListBooksOnShelfRow, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin move transaction failed: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	q := r.queries.WithTx(tx)
+	n, err := q.MoveShelfBook(ctx, db.MoveShelfBookParams{
+		ToShelfID:   toShelfID,
+		FromShelfID: fromShelfID,
+		BookID:      bookID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("move shelf book query failed: %w", err)
+	}
+	if n == 0 {
+		return nil, fmt.Errorf("move shelf book: %w", sql.ErrNoRows)
+	}
+	row, err := q.GetBookOnShelf(ctx, db.GetBookOnShelfParams{ShelfID: toShelfID, BookID: bookID})
+	if err != nil {
+		return nil, fmt.Errorf("get moved shelf book query failed: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit move transaction failed: %w", err)
+	}
+	result := db.ListBooksOnShelfRow(row)
+	return &result, nil
 }

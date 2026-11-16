@@ -55,6 +55,8 @@ type ShelfBookRepository interface {
 	Get(ctx context.Context, shelfID, bookID int64) (*db.ShelfBook, error)
 	UpdateProgress(ctx context.Context, id, pagesRead, progressPercent int64) (*db.ShelfBook, error)
 	Remove(ctx context.Context, shelfID, bookID int64) error
+	// Move re-homes a book's entry to another shelf in one transaction, keeping its progress.
+	Move(ctx context.Context, fromShelfID, bookID, toShelfID int64) (*db.ListBooksOnShelfRow, error)
 	ListBooksOnShelf(ctx context.Context, shelfID int64) ([]db.ListBooksOnShelfRow, error)
 	GetUserBookShelves(ctx context.Context, userID, bookID int64) ([]db.Shelf, error)
 	GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)

@@ -413,3 +413,51 @@ func TestShelfBookRepository_UpdateProgressFinishedAt(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, reopened.FinishedAt)
 }
+
+func TestShelfBookRepository_Move(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	user := createTestUser(t, s, "move@example.com", "mover")
+	from := createTestShelf(t, s, user.ID, "From", false)
+	to := createTestShelf(t, s, user.ID, "To", false)
+	book := createTestBook(t, s, "Moved", "Author")
+
+	t.Run("failed move leaves the book where it was", func(t *testing.T) {
+		_, err := s.ShelfBooks.Add(ctx, from.ID, book.ID, 10, 5)
+		require.NoError(t, err)
+		_, err = s.ShelfBooks.Add(ctx, to.ID, book.ID, 0, 0)
+		require.NoError(t, err)
+
+		moved, err := s.ShelfBooks.Move(ctx, from.ID, book.ID, to.ID)
+		require.Error(t, err)
+		assert.Nil(t, moved)
+
+		kept, err := s.ShelfBooks.Get(ctx, from.ID, book.ID)
+		require.NoError(t, err)
+		assert.Equal(t, int64(10), kept.PagesRead)
+		require.NoError(t, s.ShelfBooks.Remove(ctx, to.ID, book.ID))
+	})
+
+	t.Run("moves the entry keeping its id and progress", func(t *testing.T) {
+		before, err := s.ShelfBooks.Get(ctx, from.ID, book.ID)
+		require.NoError(t, err)
+
+		moved, err := s.ShelfBooks.Move(ctx, from.ID, book.ID, to.ID)
+		require.NoError(t, err)
+		assert.Equal(t, before.ID, moved.ID)
+		assert.Equal(t, to.ID, moved.ShelfID)
+		assert.Equal(t, int64(10), moved.PagesRead)
+		assert.Equal(t, int64(5), moved.ProgressPercent)
+		assert.Equal(t, "Moved", moved.Title)
+
+		_, err = s.ShelfBooks.Get(ctx, from.ID, book.ID)
+		assert.ErrorIs(t, err, sql.ErrNoRows)
+	})
+
+	t.Run("missing entry returns no rows", func(t *testing.T) {
+		_, err := s.ShelfBooks.Move(ctx, from.ID, book.ID, to.ID)
+		assert.ErrorIs(t, err, sql.ErrNoRows)
+	})
+}
