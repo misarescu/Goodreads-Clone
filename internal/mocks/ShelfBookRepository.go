@@ -9,6 +9,7 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/storage"
 )
 
 // NewMockShelfBookRepository creates a new instance of MockShelfBookRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -404,6 +405,74 @@ func (_c *MockShelfBookRepository_ListBooksOnShelf_Call) Return(listBooksOnShelf
 }
 
 func (_c *MockShelfBookRepository_ListBooksOnShelf_Call) RunAndReturn(run func(ctx context.Context, shelfID int64) ([]db.ListBooksOnShelfRow, error)) *MockShelfBookRepository_ListBooksOnShelf_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ListForExport provides a mock function for the type MockShelfBookRepository
+func (_mock *MockShelfBookRepository) ListForExport(ctx context.Context, userID int64) ([]storage.ShelfExportRow, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListForExport")
+	}
+
+	var r0 []storage.ShelfExportRow
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) ([]storage.ShelfExportRow, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64) []storage.ShelfExportRow); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]storage.ShelfExportRow)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockShelfBookRepository_ListForExport_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListForExport'
+type MockShelfBookRepository_ListForExport_Call struct {
+	*mock.Call
+}
+
+// ListForExport is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+func (_e *MockShelfBookRepository_Expecter) ListForExport(ctx interface{}, userID interface{}) *MockShelfBookRepository_ListForExport_Call {
+	return &MockShelfBookRepository_ListForExport_Call{Call: _e.mock.On("ListForExport", ctx, userID)}
+}
+
+func (_c *MockShelfBookRepository_ListForExport_Call) Run(run func(ctx context.Context, userID int64)) *MockShelfBookRepository_ListForExport_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockShelfBookRepository_ListForExport_Call) Return(shelfExportRows []storage.ShelfExportRow, err error) *MockShelfBookRepository_ListForExport_Call {
+	_c.Call.Return(shelfExportRows, err)
+	return _c
+}
+
+func (_c *MockShelfBookRepository_ListForExport_Call) RunAndReturn(run func(ctx context.Context, userID int64) ([]storage.ShelfExportRow, error)) *MockShelfBookRepository_ListForExport_Call {
 	_c.Call.Return(run)
 	return _c
 }

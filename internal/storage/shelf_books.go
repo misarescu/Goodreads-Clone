@@ -127,3 +127,32 @@ func (r *shelfBookRepository) Move(
 	result := db.ListBooksOnShelfRow(row)
 	return &result, nil
 }
+
+// ListForExport returns every book on the user's shelves, ordered by shelf name then book title.
+func (r *shelfBookRepository) ListForExport(ctx context.Context, userID int64) ([]ShelfExportRow, error) {
+	rows, err := r.queries.ListUserShelfBooksForExport(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list shelf books for export query failed: %w", err)
+	}
+	out := make([]ShelfExportRow, 0, len(rows))
+	for _, row := range rows {
+		e := ShelfExportRow{
+			Shelf:           row.Shelf,
+			Title:           row.Title,
+			Author:          row.Author,
+			ISBN:            row.Isbn.String,
+			PagesRead:       row.PagesRead,
+			ProgressPercent: row.ProgressPercent,
+			AddedAt:         row.AddedAt.UTC(),
+		}
+		if row.FinishedAt != "" {
+			at, err := parseFinishedAt(row.FinishedAt)
+			if err != nil {
+				return nil, fmt.Errorf("list shelf books for export: %w", err)
+			}
+			e.FinishedAt = &at
+		}
+		out = append(out, e)
+	}
+	return out, nil
+}

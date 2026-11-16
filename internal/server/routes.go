@@ -22,6 +22,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("DELETE /api/users/{id}", s.handleDeleteUser)
 
 	s.mux.HandleFunc("GET /api/users/{id}/recommendations", s.handleGetRecommendations)
+	s.mux.HandleFunc("GET /api/users/{id}/shelves/export.csv", s.handleExportShelves)
 
 	// Reading challenges API
 	s.mux.HandleFunc("GET /api/users/{id}/challenges", s.handleListChallenges)

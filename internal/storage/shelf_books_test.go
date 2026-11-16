@@ -461,3 +461,49 @@ func TestShelfBookRepository_Move(t *testing.T) {
 		assert.ErrorIs(t, err, sql.ErrNoRows)
 	})
 }
+
+func TestShelfBookRepository_ListForExport(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	user := createTestUser(t, s, "a@example.com", "alice")
+	other := createTestUser(t, s, "b@example.com", "bob")
+	zed := createTestShelf(t, s, user.ID, "Zed", false)
+	alpha := createTestShelf(t, s, user.ID, "Alpha", false)
+	otherShelf := createTestShelf(t, s, other.ID, "Alpha", false)
+	b1 := createTestBook(t, s, "Beta", "Author")
+	b2 := createTestBook(t, s, "Alpha", "Author")
+
+	pairs := []struct{ shelf, book int64 }{
+		{zed.ID, b2.ID}, {alpha.ID, b1.ID}, {alpha.ID, b2.ID}, {otherShelf.ID, b1.ID},
+	}
+	for _, c := range pairs {
+		_, err := s.ShelfBooks.Add(ctx, c.shelf, c.book, 0, 0)
+		require.NoError(t, err)
+	}
+	_, err := s.ShelfBooks.UpdateProgress(ctx, mustGetID(t, s, alpha.ID, b1.ID), 100, 100)
+	require.NoError(t, err)
+
+	rows, err := s.ShelfBooks.ListForExport(ctx, user.ID)
+	require.NoError(t, err)
+	require.Len(t, rows, 3)
+	assert.Equal(t, "Alpha", rows[0].Shelf)
+	assert.Equal(t, "Alpha", rows[0].Title)
+	assert.Nil(t, rows[0].FinishedAt)
+	assert.Equal(t, "Beta", rows[1].Title)
+	require.NotNil(t, rows[1].FinishedAt)
+	assert.Equal(t, int64(100), rows[1].PagesRead)
+	assert.Equal(t, "Zed", rows[2].Shelf)
+
+	rows, err = s.ShelfBooks.ListForExport(ctx, 999)
+	require.NoError(t, err)
+	assert.Empty(t, rows)
+}
+
+func mustGetID(t *testing.T, s *Storage, shelfID, bookID int64) int64 {
+	t.Helper()
+	sb, err := s.ShelfBooks.Get(context.Background(), shelfID, bookID)
+	require.NoError(t, err)
+	return sb.ID
+}

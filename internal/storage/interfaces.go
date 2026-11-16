@@ -61,6 +61,8 @@ type ShelfBookRepository interface {
 	ListBooksOnShelf(ctx context.Context, shelfID int64) ([]db.ListBooksOnShelfRow, error)
 	GetUserBookShelves(ctx context.Context, userID, bookID int64) ([]db.Shelf, error)
 	GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)
+	// ListForExport returns every shelved book of the user, ordered by shelf name then book title.
+	ListForExport(ctx context.Context, userID int64) ([]ShelfExportRow, error)
 }
 
 // FinishedBook is a book a reading challenge counts, with the earliest time it
@@ -97,4 +99,16 @@ type ReviewRepository interface {
 // RecommendationRepository defines operations for book recommendations.
 type RecommendationRepository interface {
 	ForUser(ctx context.Context, userID, limit int64) ([]db.GetRecommendationsRow, error)
+}
+
+// ShelfExportRow is one book on one of a user's shelves, as exported.
+type ShelfExportRow struct {
+	Shelf           string
+	Title           string
+	Author          string
+	ISBN            string
+	PagesRead       int64
+	ProgressPercent int64
+	FinishedAt      *time.Time
+	AddedAt         time.Time
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/storage"
 )
 
 // DefaultShelfNames are the four default shelves created for each new user.
@@ -110,4 +111,18 @@ func (b *Business) ensureCustomShelf(ctx context.Context, id int64) error {
 		return ErrDefaultShelf
 	}
 	return nil
+}
+
+// ListShelvesForExport returns every book on the user's shelves, ordered by
+// shelf name then book title. It returns an error wrapping sql.ErrNoRows when
+// the user does not exist.
+func (b *Business) ListShelvesForExport(ctx context.Context, userID int64) ([]storage.ShelfExportRow, error) {
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return nil, fmt.Errorf("failed to get user for shelf export: %w", err)
+	}
+	rows, err := b.Storage.ShelfBooks.ListForExport(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list shelves for export: %w", err)
+	}
+	return rows, nil
 }
