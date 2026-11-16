@@ -12,6 +12,9 @@ export async function fetchJSON(url, signal, options = {}) {
 export const fetchUserShelves = (userId, signal) =>
   fetchJSON(`/api/users/${userId}/shelves`, signal)
 
+export const shelvesExportUrl = (userId) =>
+  `/api/users/${encodeURIComponent(userId)}/shelves/export.csv`
+
 export const fetchShelfBooks = (shelfId, signal) =>
   fetchJSON(`/api/shelves/${shelfId}/books`, signal)
 

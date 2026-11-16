@@ -5,6 +5,7 @@ import {
   fetchShelfBooks,
   fetchUserShelves,
   renameShelf,
+  shelvesExportUrl,
   updateShelfBookProgress,
 } from './api.js'
 
@@ -264,6 +265,11 @@ export function Shelves({ userId }) {
   return (
     <section className="shelves">
       <h2>Shelves</h2>
+      <p>
+        <a href={shelvesExportUrl(userId)} download={`shelves-${userId}.csv`}>
+          Export as CSV
+        </a>
+      </p>
       <CreateShelfForm
         userId={userId}
         onCreated={(shelf) =>

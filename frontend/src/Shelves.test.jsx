@@ -20,6 +20,23 @@ afterEach(() => {
 })
 
 describe('Shelves', () => {
+  it('links to the CSV export for the selected user and follows changes', async () => {
+    fetch.mockReturnValue(json(shelves))
+    const { rerender } = render(<Shelves userId="1" />)
+    const link = await screen.findByRole('link', { name: 'Export as CSV' })
+    expect(link.getAttribute('href')).toBe('/api/users/1/shelves/export.csv')
+    expect(link.getAttribute('download')).toBe('shelves-1.csv')
+    rerender(<Shelves userId="2" />)
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'Export as CSV' }).getAttribute('href')).toBe(
+        '/api/users/2/shelves/export.csv',
+      ),
+    )
+    expect(screen.getByRole('link', { name: 'Export as CSV' }).getAttribute('download')).toBe(
+      'shelves-2.csv',
+    )
+  })
+
   it('shows loading while pending', () => {
     fetch.mockReturnValue(new Promise(() => {}))
     render(<Shelves userId="1" />)
