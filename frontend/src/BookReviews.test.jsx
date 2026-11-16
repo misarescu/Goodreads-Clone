@@ -146,4 +146,65 @@ describe('BookReviews', () => {
     render(<BookReviews userId="1" />)
     expect((await screen.findByRole('alert')).textContent).toContain('boom')
   })
+
+  describe('sort and filter', () => {
+    const reviewUrls = () =>
+      fetch.mock.calls.map(([u]) => u).filter((u) => u.startsWith('/api/books/7/reviews'))
+
+    it('offers the sort and minimum rating options', async () => {
+      route([
+        ['GET /api/books?', json(books)],
+        ['GET /api/books/7/reviews', json([review(1)])],
+        ['GET /api/books/7', json(stats())],
+      ])
+      render(<BookReviews userId="9" />)
+      await screen.findByText('body 1')
+      const sort = screen.getByLabelText('Sort')
+      expect(Array.from(sort.options).map((o) => o.textContent)).toEqual(['Newest', 'Highest rated'])
+      const min = screen.getByLabelText('Minimum rating')
+      expect(Array.from(min.options).map((o) => o.textContent)).toEqual([
+        'Any', '1 star', '2 stars', '3 stars', '4 stars', '5 stars',
+      ])
+      expect(reviewUrls()).toEqual(['/api/books/7/reviews?limit=20&offset=0&sort=recent'])
+    })
+
+    it('reloads from the first page when the selection changes', async () => {
+      route([
+        ['GET /api/books?', json(books)],
+        ['GET /api/books/7/reviews?limit=20&offset=0&sort=rating&min_rating=4', json([review(5)])],
+        ['GET /api/books/7/reviews?limit=20&offset=0&sort=rating', json([review(3)])],
+        ['GET /api/books/7/reviews', json([review(1)])],
+        ['GET /api/books/7', json(stats())],
+      ])
+      render(<BookReviews userId="9" />)
+      await screen.findByText('body 1')
+      fireEvent.change(screen.getByLabelText('Sort'), { target: { value: 'rating' } })
+      expect(await screen.findByText('body 3')).toBeTruthy()
+      expect(screen.queryByText('body 1')).toBeNull()
+      fireEvent.change(screen.getByLabelText('Minimum rating'), { target: { value: '4' } })
+      expect(await screen.findByText('body 5')).toBeTruthy()
+      expect(screen.getByLabelText('Sort').value).toBe('rating')
+      expect(screen.getByLabelText('Minimum rating').value).toBe('4')
+      expect(reviewUrls().at(-1)).toBe('/api/books/7/reviews?limit=20&offset=0&sort=rating&min_rating=4')
+    })
+
+    it('keeps the selection when loading more', async () => {
+      const page1 = Array.from({ length: 20 }, (_, i) => review(i + 100))
+      route([
+        ['GET /api/books?', json(books)],
+        ['GET /api/books/7/reviews?limit=20&offset=0', json(page1)],
+        ['GET /api/books/7/reviews?limit=20&offset=20&sort=rating&min_rating=3', json([review(1)])],
+        ['GET /api/books/7', json(stats({ review_count: 21 }))],
+      ])
+      render(<BookReviews userId="9" />)
+      await screen.findByText('Load more')
+      fireEvent.change(screen.getByLabelText('Sort'), { target: { value: 'rating' } })
+      fireEvent.change(screen.getByLabelText('Minimum rating'), { target: { value: '3' } })
+      fireEvent.click(await screen.findByText('Load more'))
+      expect(await screen.findByText('body 1')).toBeTruthy()
+      expect(reviewUrls().at(-1)).toBe(
+        '/api/books/7/reviews?limit=20&offset=20&sort=rating&min_rating=3',
+      )
+    })
+  })
 })
