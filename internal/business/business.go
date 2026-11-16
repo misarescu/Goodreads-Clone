@@ -1,6 +1,7 @@
 package business
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -42,6 +43,14 @@ func New(cfg Config) (*Business, error) {
 func (b *Business) Close() error {
 	if err := b.Storage.Close(); err != nil {
 		return fmt.Errorf("closing storage: %w", err)
+	}
+	return nil
+}
+
+// Ready reports whether the database answers a ping.
+func (b *Business) Ready(ctx context.Context) error {
+	if err := b.Storage.Ping(ctx); err != nil {
+		return fmt.Errorf("readiness check: %w", err)
 	}
 	return nil
 }

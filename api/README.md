@@ -9,6 +9,10 @@ http://localhost:8080
 
 ## API Endpoints
 
+### Health
+- `GET /api/health` - Liveness: `{"status":"ok"}`, does not touch the database
+- `GET /api/ready` - Readiness: 200 `{"status":"ready"}` when the database answers a ping, else 503 `{"status":"unavailable"}`
+
 ### Users
 - `POST /api/users` - Create a new user
 - `GET /api/users/{id}` - Get user by ID
