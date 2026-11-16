@@ -15,3 +15,7 @@ sql:
               import: "time"
               type: "Time"
               pointer: true
+          - column: "books.cover_url"
+            go_type:
+              type: "string"
+              pointer: true

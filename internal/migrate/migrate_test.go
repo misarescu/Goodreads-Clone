@@ -40,8 +40,8 @@ func TestApplyFreshDatabase(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if n := count(t, db, "SELECT COUNT(*) FROM schema_migrations"); n != 6 {
-		t.Fatalf("recorded = %d, want 6", n)
+	if n := count(t, db, "SELECT COUNT(*) FROM schema_migrations"); n != 7 {
+		t.Fatalf("recorded = %d, want 7", n)
 	}
 	if _, err := db.Exec("INSERT INTO books (title, author) VALUES ('a','b')"); err != nil {
 		t.Fatal(err)
@@ -51,9 +51,13 @@ func TestApplyFreshDatabase(t *testing.T) {
 func TestApplyLegacyDatabase(t *testing.T) {
 	db := open(t)
 	ctx := context.Background()
-	// Simulate `make migrate`: run every file directly, no schema_migrations.
+	// Simulate `make migrate` before schema_migrations existed: files up to 006 run
+	// directly, no schema_migrations; 007 is applied by Apply.
 	entries, _ := dbmigrations.FS.ReadDir("migrations")
 	for _, e := range entries {
+		if e.Name() > "006_books_fts.sql" {
+			continue
+		}
 		b, _ := dbmigrations.FS.ReadFile("migrations/" + e.Name())
 		if _, err := db.Exec(string(b)); err != nil {
 			t.Fatal(err)
@@ -63,8 +67,8 @@ func TestApplyLegacyDatabase(t *testing.T) {
 	if err := migrate.Apply(ctx, db, dbmigrations.FS, "migrations"); err != nil {
 		t.Fatal(err)
 	}
-	if n := count(t, db, "SELECT COUNT(*) FROM schema_migrations"); n != 6 {
-		t.Fatalf("recorded = %d, want 6", n)
+	if n := count(t, db, "SELECT COUNT(*) FROM schema_migrations"); n != 7 {
+		t.Fatalf("recorded = %d, want 7", n)
 	}
 }
 

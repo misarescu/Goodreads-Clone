@@ -1,6 +1,6 @@
 -- name: CreateBook :one
-INSERT INTO books (title, author, page_count, isbn, release_date, language)
-VALUES (?, ?, ?, ?, ?, ?)
+INSERT INTO books (title, author, page_count, isbn, release_date, language, cover_url)
+VALUES (?, ?, ?, ?, ?, ?, ?)
 RETURNING *;
 
 -- name: GetBookByID :one
@@ -10,7 +10,7 @@ SELECT * FROM books WHERE id = ?;
 SELECT * FROM books WHERE isbn = ?;
 
 -- name: UpdateBook :one
-UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?, rating = ?
+UPDATE books SET title = ?, author = ?, page_count = ?, isbn = ?, release_date = ?, language = ?, cover_url = ?, rating = ?
 WHERE id = ?
 RETURNING *;
 

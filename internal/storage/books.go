@@ -86,7 +86,8 @@ WHERE (?2 = '' OR lower(b.language) = lower(?2))`
 	}
 
 	rows, err := r.db.QueryContext(ctx,
-		"SELECT b.id, b.title, b.author, b.page_count, b.isbn, b.release_date, b.language, b.created_at, b.rating "+
+		"SELECT b.id, b.title, b.author, b.page_count, b.isbn, b.release_date, b.language, b.created_at, b.rating, "+
+			"b.cover_url "+
 			from+" ORDER BY bm25(books_fts, 10.0, 1.0), b.id LIMIT ?3 OFFSET ?4",
 		params.Match, params.Language, params.Limit, params.Offset)
 	if err != nil {
@@ -98,7 +99,7 @@ WHERE (?2 = '' OR lower(b.language) = lower(?2))`
 	for rows.Next() {
 		var b db.Book
 		if err := rows.Scan(&b.ID, &b.Title, &b.Author, &b.PageCount, &b.Isbn,
-			&b.ReleaseDate, &b.Language, &b.CreatedAt, &b.Rating); err != nil {
+			&b.ReleaseDate, &b.Language, &b.CreatedAt, &b.Rating, &b.CoverUrl); err != nil {
 			return nil, 0, fmt.Errorf("scan searched book failed: %w", err)
 		}
 		books = append(books, b)
