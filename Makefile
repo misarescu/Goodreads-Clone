@@ -58,7 +58,11 @@ migrate:
 	@mkdir -p bin/migrations
 	@cp db/migrations/*.sql bin/migrations/
 	@echo "Running migrations..."
+	@# Only the legacy baseline (see internal/migrate): the server records and
+	@# applies every later migration itself at startup, so running them here too
+	@# would make them fail (e.g. duplicate column).
 	@for file in bin/migrations/*.sql; do \
+		if [ "$$(basename $$file)" \> "006_books_fts.sql" ]; then continue; fi; \
 		echo "Applying $$file..."; \
 		sqlite3 goodreads.db < $$file; \
 	done

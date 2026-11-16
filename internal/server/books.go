@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/url"
 	"time"
 
 	"goodreads-clone.com/internal/business"
@@ -20,6 +21,7 @@ type createBookRequest struct {
 	ISBN        *string `json:"isbn,omitempty"`
 	ReleaseDate *string `json:"release_date,omitempty"`
 	Language    *string `json:"language,omitempty"`
+	CoverURL    *string `json:"cover_url,omitempty"`
 }
 
 type updateBookRequest struct {
@@ -29,11 +31,15 @@ type updateBookRequest struct {
 	ISBN        *string  `json:"isbn,omitempty"`
 	ReleaseDate *string  `json:"release_date,omitempty"`
 	Language    *string  `json:"language,omitempty"`
+	CoverURL    *string  `json:"cover_url,omitempty"`
 	Rating      *float64 `json:"rating,omitempty"`
 }
 
-// ratingParam validates the optional rating and converts it for storage.
+// ratingParam validates the optional cover_url and rating and converts the rating for storage.
 func (req *updateBookRequest) ratingParam() (sql.NullFloat64, error) {
+	if err := validateCoverURL(req.CoverURL); err != nil {
+		return sql.NullFloat64{}, err
+	}
 	if req.Rating == nil {
 		return sql.NullFloat64{}, nil
 	}
@@ -48,10 +54,31 @@ func validRating(r float64) bool {
 	return r >= 0 && r <= 5 && r*4 == math.Trunc(r*4)
 }
 
+// maxCoverURLLength is the longest accepted cover_url.
+const maxCoverURLLength = 2048
+
+// validateCoverURL checks that a cover_url is an absolute http or https URL of at
+// most maxCoverURLLength characters.
+func validateCoverURL(raw *string) error {
+	if raw == nil {
+		return nil
+	}
+	err := errors.New("cover_url must be an absolute http or https URL of at most 2048 characters")
+	if len(*raw) > maxCoverURLLength {
+		return err
+	}
+	u, perr := url.Parse(*raw)
+	if perr != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		return err
+	}
+	return nil
+}
+
 func (req *createBookRequest) toParams() (db.CreateBookParams, error) {
 	params := db.CreateBookParams{
-		Title:  req.Title,
-		Author: req.Author,
+		Title:    req.Title,
+		Author:   req.Author,
+		CoverUrl: req.CoverURL,
 	}
 
 	if req.PageCount != nil {
@@ -83,6 +110,11 @@ func (s *Server) handleCreateBook(w http.ResponseWriter, r *http.Request) {
 
 	if req.Title == "" || req.Author == "" {
 		writeError(w, http.StatusBadRequest, "title and author are required")
+		return
+	}
+
+	if err := validateCoverURL(req.CoverURL); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -197,9 +229,10 @@ func (s *Server) handleUpdateBook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := db.UpdateBookParams{
-		ID:     id,
-		Title:  req.Title,
-		Author: req.Author,
+		ID:       id,
+		Title:    req.Title,
+		Author:   req.Author,
+		CoverUrl: req.CoverURL,
 	}
 
 	rating, err := req.ratingParam()

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -157,5 +158,97 @@ func TestHandleSearchBooksRejectsUnsearchableQuery(t *testing.T) {
 		if rec.Code != http.StatusBadRequest {
 			t.Errorf("q=%q: status = %d, want 400", q, rec.Code)
 		}
+	}
+}
+
+// coverRequest sends a create or update request with the given cover_url JSON value to a
+// server over a mock repository that accepts both, and returns the response and the
+// cover_url the repository received (nil if it was not called).
+func coverRequest(t *testing.T, method, cover string) (*httptest.ResponseRecorder, *string) {
+	t.Helper()
+	var received *string
+	repo := mocks.NewMockBookRepository(t)
+	repo.EXPECT().Create(mock.Anything, mock.Anything).
+		RunAndReturn(func(_ context.Context, p db.CreateBookParams) (*db.Book, error) {
+			received = p.CoverUrl
+			return &db.Book{ID: 1}, nil
+		}).Maybe()
+	repo.EXPECT().Update(mock.Anything, mock.Anything).
+		RunAndReturn(func(_ context.Context, p db.UpdateBookParams) (*db.Book, error) {
+			received = p.CoverUrl
+			return &db.Book{ID: 1}, nil
+		}).Maybe()
+	s := &Server{
+		business: &business.Business{Storage: &storage.Storage{Books: repo}},
+		mux:      http.NewServeMux(),
+	}
+	s.registerRoutes()
+
+	path := "/api/books"
+	if method == http.MethodPut {
+		path += "/1"
+	}
+	body := `{"title":"t","author":"a","cover_url":` + cover + `}`
+	rec := httptest.NewRecorder()
+	s.ServeHTTP(rec, httptest.NewRequest(method, path, strings.NewReader(body)))
+	return rec, received
+}
+
+func TestHandleBookCoverURL(t *testing.T) {
+	long := "https://example.com/" + strings.Repeat("a", 2048-len("https://example.com/"))
+	tests := []struct {
+		name  string
+		cover string // the URL, unquoted
+		ok    bool
+	}{
+		{"http", "http://example.com/a.jpg", true},
+		{"https", "https://example.com/a.jpg", true},
+		{"exactly 2048", long, true},
+		{"too long", long + "a", false},
+		{"relative", "/covers/a.jpg", false},
+		{"protocol relative", "//example.com/a.jpg", false},
+		{"ftp", "ftp://example.com/a.jpg", false},
+		{"javascript", "javascript:alert(1)", false},
+		{"data", "data:image/png;base64,AAAA", false},
+		{"no host", "https://", false},
+		{"empty", "", false},
+		{"not a url", "not a url", false},
+	}
+	for _, method := range []string{http.MethodPost, http.MethodPut} {
+		for _, tt := range tests {
+			t.Run(method+" "+tt.name, func(t *testing.T) {
+				rec, received := coverRequest(t, method, `"`+tt.cover+`"`)
+				if !tt.ok {
+					if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), "cover_url") {
+						t.Fatalf("got %d %s, want 400 naming cover_url", rec.Code, rec.Body.String())
+					}
+					return
+				}
+				if rec.Code != http.StatusOK && rec.Code != http.StatusCreated {
+					t.Fatalf("status = %d (%s)", rec.Code, rec.Body.String())
+				}
+				if received == nil || *received != tt.cover {
+					t.Errorf("repository received %v, want %q", received, tt.cover)
+				}
+			})
+		}
+	}
+}
+
+func TestHandleBookCoverURLOmitted(t *testing.T) {
+	repo := mocks.NewMockBookRepository(t)
+	repo.EXPECT().Update(mock.Anything, mock.MatchedBy(func(p db.UpdateBookParams) bool {
+		return p.CoverUrl == nil
+	})).Return(&db.Book{ID: 1}, nil)
+	s := &Server{
+		business: &business.Business{Storage: &storage.Storage{Books: repo}},
+		mux:      http.NewServeMux(),
+	}
+	s.registerRoutes()
+
+	rec := httptest.NewRecorder()
+	s.ServeHTTP(rec, httptest.NewRequest(http.MethodPut, "/api/books/1", strings.NewReader(`{"title":"t","author":"a"}`)))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d", rec.Code)
 	}
 }

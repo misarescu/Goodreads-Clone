@@ -19,6 +19,7 @@ type Book struct {
 	Language    sql.NullString  `json:"language"`
 	CreatedAt   time.Time       `json:"created_at"`
 	Rating      sql.NullFloat64 `json:"rating"`
+	CoverUrl    *string         `json:"cover_url"`
 }
 
 type BooksFt struct {
