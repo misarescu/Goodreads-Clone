@@ -60,3 +60,19 @@ SELECT sb.*, b.title, b.author, b.page_count
 FROM shelf_books sb
 JOIN books b ON sb.book_id = b.id
 WHERE sb.shelf_id = ? AND sb.book_id = ?;
+
+-- name: ListUserShelfBooksForExport :many
+SELECT
+    s.name AS shelf,
+    b.title,
+    b.author,
+    b.isbn,
+    sb.pages_read,
+    sb.progress_percent,
+    CAST(COALESCE(CAST(sb.finished_at AS TEXT), '') AS TEXT) AS finished_at,
+    sb.added_at
+FROM shelf_books sb
+JOIN shelves s ON s.id = sb.shelf_id
+JOIN books b ON b.id = sb.book_id
+WHERE s.user_id = ?
+ORDER BY s.name, b.title, b.id;

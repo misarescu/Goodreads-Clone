@@ -64,3 +64,24 @@ export const renameShelf = (shelfId, name) =>
   mutateShelf(`/api/shelves/${shelfId}`, 'PUT', { name })
 
 export const deleteShelf = (shelfId) => mutateShelf(`/api/shelves/${shelfId}`, 'DELETE')
+
+// Creates a book. Failures carry the API's message (the server's {"Error": "..."}
+// body) in err.apiMessage for 400 responses.
+export async function createBook(book, signal) {
+  const res = await fetch('/api/books', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(book),
+    signal,
+  })
+  if (!res.ok) {
+    const err = new Error(`Request failed (${res.status})`)
+    err.status = res.status
+    if (res.status === 400) {
+      const body = await res.json().catch(() => null)
+      if (typeof body?.Error === 'string') err.apiMessage = body.Error
+    }
+    throw err
+  }
+  return res.json()
+}

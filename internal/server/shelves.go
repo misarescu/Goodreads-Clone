@@ -1,8 +1,14 @@
 package server
 
 import (
+	"bytes"
+	"encoding/csv"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"goodreads-clone.com/internal/business"
 )
@@ -123,4 +129,49 @@ func (s *Server) handleDeleteShelf(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+var shelvesExportHeader = []string{
+	"shelf", "title", "author", "isbn", "pages_read", "progress_percent", "finished_at", "added_at",
+}
+
+func (s *Server) handleExportShelves(w http.ResponseWriter, r *http.Request) {
+	userID, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	rows, err := s.business.ListShelvesForExport(r.Context(), userID)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	var buf bytes.Buffer
+	cw := csv.NewWriter(&buf)
+	_ = cw.Write(shelvesExportHeader)
+	for _, row := range rows {
+		finished := ""
+		if row.FinishedAt != nil {
+			finished = row.FinishedAt.Format(time.RFC3339)
+		}
+		_ = cw.Write([]string{
+			row.Shelf, row.Title, row.Author, row.ISBN,
+			strconv.FormatInt(row.PagesRead, 10), strconv.FormatInt(row.ProgressPercent, 10),
+			finished, row.AddedAt.Format(time.RFC3339),
+		})
+	}
+	cw.Flush()
+	if err := cw.Error(); err != nil {
+		log.Printf("Error encoding CSV: %v", err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="shelves-%d.csv"`, userID))
+	if _, err := w.Write(buf.Bytes()); err != nil {
+		log.Printf("Error writing CSV response: %v", err)
+	}
 }

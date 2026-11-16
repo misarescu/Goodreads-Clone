@@ -1,0 +1,25 @@
+meta {
+  name: Export Shelves CSV
+  type: http
+  seq: 12
+}
+
+get {
+  url: http://localhost:8080/api/users/1/shelves/export.csv
+  body: none
+  auth: none
+}
+
+docs {
+  Downloads every book on the user's shelves as CSV, ordered by shelf name then book title.
+
+  Response: 200 OK
+  Content-Type: text/csv; charset=utf-8
+  Content-Disposition: attachment; filename="shelves-1.csv"
+  ```csv
+  shelf,title,author,isbn,pages_read,progress_percent,finished_at,added_at
+  Finished,"Dune, Part ""One""",Frank Herbert,,412,100,2024-03-01T10:00:00Z,2024-01-01T00:00:00Z
+  ```
+
+  A user with no shelved books gets the header row only. 404 for an unknown user.
+}

@@ -4,6 +4,7 @@ import { fetchJSON } from './api.js'
 import { ReadingChallenge } from './ReadingChallenge.jsx'
 import { BookReviews } from './BookReviews.jsx'
 import { BookSearch } from './BookSearch.jsx'
+import { AddBook } from './AddBook.jsx'
 import { Recommendations } from './Recommendations.jsx'
 import { Shelves } from './Shelves.jsx'
 
@@ -65,6 +66,7 @@ function App() {
   return (
     <>
       <BookSearch />
+      <AddBook />
       <h1>Reading stats</h1>
       {users.status === 'loading' && <p>Loading users…</p>}
       {users.status === 'error' && (

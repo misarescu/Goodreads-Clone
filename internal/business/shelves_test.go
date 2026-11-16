@@ -489,3 +489,28 @@ func TestBusiness_DefaultShelvesProtected(t *testing.T) {
 		require.ErrorIs(t, b.DeleteShelf(ctx, 1), sql.ErrNoRows)
 	})
 }
+
+func TestBusiness_ListShelvesForExport(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("unknown user", func(t *testing.T) {
+		users := mocks.NewMockUserRepository(t)
+		users.EXPECT().GetByID(ctx, int64(9)).Return(nil, sql.ErrNoRows)
+		b := &business.Business{Storage: &storage.Storage{Users: users}}
+		_, err := b.ListShelvesForExport(ctx, 9)
+		require.ErrorIs(t, err, sql.ErrNoRows)
+	})
+
+	t.Run("rows", func(t *testing.T) {
+		users := mocks.NewMockUserRepository(t)
+		sbs := mocks.NewMockShelfBookRepository(t)
+		users.EXPECT().GetByID(ctx, int64(1)).Return(&db.User{ID: 1}, nil)
+		want := []storage.ShelfExportRow{{Shelf: "Alpha", Title: "T"}}
+		sbs.EXPECT().ListForExport(ctx, int64(1)).Return(want, nil)
+		b := &business.Business{Storage: &storage.Storage{Users: users, ShelfBooks: sbs}}
+		got, err := b.ListShelvesForExport(ctx, 1)
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
+	})
+}
