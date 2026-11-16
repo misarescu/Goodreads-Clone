@@ -5,18 +5,15 @@ COPY frontend/ ./
 RUN bun install && \
     bun run build
 
-FROM golang:1.25-alpine AS backend-builder
+# The Go version of go.mod and mise.toml. The generated database code
+# (internal/db) is committed, so the build needs no code generators.
+FROM golang:1.25.5-alpine AS backend-builder
 
 WORKDIR /app
 COPY . .
-RUN go mod download && \
-	go install github.com/vektra/mockery/v2@latest && \
-    go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+RUN go mod download
 
 COPY --from=frontend-builder /app/static/dist ./static/dist
-
-# Generate database code
-RUN sqlc -f db/sqlc.yaml generate
 
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -ldflags "-X goodreads-clone.com/internal/server.Version=${VERSION}" -o bin/ ./cmd/...
