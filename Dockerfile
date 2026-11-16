@@ -18,7 +18,8 @@ COPY --from=frontend-builder /app/static/dist ./static/dist
 # Generate database code
 RUN sqlc -f db/sqlc.yaml generate
 
-RUN CGO_ENABLED=0 go build -o bin/ ./cmd/...
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -ldflags "-X goodreads-clone.com/internal/server.Version=${VERSION}" -o bin/ ./cmd/...
 
 FROM alpine:latest AS application
 
