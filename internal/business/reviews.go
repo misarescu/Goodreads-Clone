@@ -37,6 +37,7 @@ var (
 type BookWithStats struct {
 	db.Book
 
+	Tags          []string `json:"tags"`
 	AverageRating *float64 `json:"average_rating"`
 	ReviewCount   int64    `json:"review_count"`
 }
@@ -116,13 +117,17 @@ func (b *Business) WithReviewStats(ctx context.Context, books []db.Book) ([]Book
 	if err != nil {
 		return nil, fmt.Errorf("failed to get review stats: %w", err)
 	}
+	tags, err := b.tagsByBook(ctx, books)
+	if err != nil {
+		return nil, err
+	}
 	byBook := make(map[int64]db.GetReviewStatsRow, len(stats))
 	for _, s := range stats {
 		byBook[s.BookID] = s
 	}
 	out := make([]BookWithStats, len(books))
 	for i, bk := range books {
-		out[i] = BookWithStats{Book: bk}
+		out[i] = BookWithStats{Book: bk, Tags: orEmpty(tags[bk.ID])}
 		if s, ok := byBook[bk.ID]; ok && s.ReviewCount > 0 {
 			avg := math.Round(s.AverageRating*10) / 10
 			out[i].AverageRating = &avg

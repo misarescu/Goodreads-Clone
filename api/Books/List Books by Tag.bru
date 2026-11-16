@@ -1,0 +1,28 @@
+meta {
+  name: List Books by Tag
+  type: http
+  seq: 9
+}
+
+get {
+  url: http://localhost:8080/api/books?tag=sci-fi&limit=20&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  tag: sci-fi
+  limit: 20
+  offset: 0
+}
+
+docs {
+  Lists only the books carrying the tag (trimmed and lowercased first), newest first.
+
+  Query Parameters:
+  - tag: a valid tag (1 to 32 characters from a-z, 0-9 and "-"); invalid is 400
+  - limit (optional): default 20, max 100
+  - offset (optional): default 0
+
+  Every book in the response has a sorted `tags` array (`[]` when none).
+}

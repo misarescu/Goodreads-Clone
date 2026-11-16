@@ -37,6 +37,12 @@ type BookRepository interface {
 	List(ctx context.Context, limit, offset int64) ([]db.Book, error)
 	Search(ctx context.Context, params SearchParams) ([]db.Book, int64, error)
 	Count(ctx context.Context) (int64, error)
+	// ListByTag returns one page of the books carrying tag, newest first.
+	ListByTag(ctx context.Context, tag string, limit, offset int64) ([]db.Book, error)
+	// SetTags replaces all of a book's tags; tags must already be validated and unique.
+	SetTags(ctx context.Context, bookID int64, tags []string) error
+	// TagsFor returns the sorted tags of each book; books without tags are absent from the map.
+	TagsFor(ctx context.Context, bookIDs []int64) (map[int64][]string, error)
 }
 
 // ShelfRepository defines operations for managing user shelves.

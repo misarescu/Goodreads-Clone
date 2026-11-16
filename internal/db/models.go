@@ -22,6 +22,11 @@ type Book struct {
 	CoverUrl    *string         `json:"cover_url"`
 }
 
+type BookTag struct {
+	BookID int64  `json:"book_id"`
+	Tag    string `json:"tag"`
+}
+
 type BooksFt struct {
 	Title  string `json:"title"`
 	Author string `json:"author"`
