@@ -182,3 +182,49 @@ func (b *Business) MoveBookToShelf(
 	}
 	return moved, nil
 }
+
+// MinStatsYear is the earliest year GetMonthlyReadingStats accepts; the latest is next year.
+const MinStatsYear = 1900
+
+// ErrInvalidYear is returned when the requested stats year is out of range.
+var ErrInvalidYear = errors.New("invalid year")
+
+// MonthlyReading is one month of a user's reading stats.
+type MonthlyReading struct {
+	Month         int   `json:"month"`
+	BooksFinished int64 `json:"books_finished"`
+	PagesFinished int64 `json:"pages_finished"`
+}
+
+// GetMonthlyReadingStats returns twelve entries, January to December, with the
+// books and pages the user finished each month of the year; a nil year means
+// the current year. It returns ErrInvalidYear for a year before MinStatsYear or
+// after next year, and an error wrapping sql.ErrNoRows for an unknown user.
+func (b *Business) GetMonthlyReadingStats(ctx context.Context, userID int64, year *int64) ([]MonthlyReading, error) {
+	current := int64(b.now().UTC().Year())
+	y := current
+	if year != nil {
+		y = *year
+	}
+	if y < MinStatsYear || y > current+1 {
+		return nil, fmt.Errorf("%w: year must be between %d and %d", ErrInvalidYear, MinStatsYear, current+1)
+	}
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return nil, fmt.Errorf("failed to get user for monthly stats: %w", err)
+	}
+	rows, err := b.Storage.ShelfBooks.ListMonthlyFinished(ctx, userID, y)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get monthly reading stats: %w", err)
+	}
+	out := make([]MonthlyReading, 12)
+	for i := range out {
+		out[i].Month = i + 1
+	}
+	for _, r := range rows {
+		if r.Month >= 1 && r.Month <= 12 {
+			out[r.Month-1].BooksFinished = r.BooksFinished
+			out[r.Month-1].PagesFinished = r.PagesFinished
+		}
+	}
+	return out, nil
+}

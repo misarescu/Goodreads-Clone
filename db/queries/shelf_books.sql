@@ -76,3 +76,21 @@ JOIN shelves s ON s.id = sb.shelf_id
 JOIN books b ON b.id = sb.book_id
 WHERE s.user_id = ?
 ORDER BY s.name, b.title, b.id;
+
+-- name: ListMonthlyFinishedBooks :many
+SELECT
+    CAST(strftime('%m', first_finished) AS INTEGER) AS month,
+    COUNT(*) AS books_finished,
+    CAST(COALESCE(SUM(page_count), 0) AS INTEGER) AS pages_finished
+FROM (
+    SELECT MIN(sb.finished_at) AS first_finished, b.page_count AS page_count
+    FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    JOIN books b ON b.id = sb.book_id
+    WHERE s.user_id = sqlc.arg(user_id)
+      AND sb.finished_at IS NOT NULL
+      AND CAST(strftime('%Y', sb.finished_at) AS INTEGER) = CAST(sqlc.arg(year) AS INTEGER)
+    GROUP BY b.id
+) AS per_book
+GROUP BY month
+ORDER BY month;

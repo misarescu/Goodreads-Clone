@@ -156,10 +156,10 @@ func (s *Server) handleGetBookByID(w http.ResponseWriter, r *http.Request) {
 
 // searchBooksResponse is a page of search results with the total number of matches.
 type searchBooksResponse struct {
-	Books  []business.BookWithTags `json:"books"`
-	Total  int64                   `json:"total"`
-	Limit  int64                   `json:"limit"`
-	Offset int64                   `json:"offset"`
+	Books  []business.BookWithStats `json:"books"`
+	Total  int64                    `json:"total"`
+	Limit  int64                    `json:"limit"`
+	Offset int64                    `json:"offset"`
 }
 
 func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
@@ -181,13 +181,13 @@ func (s *Server) handleSearchBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	withTags, err := s.business.WithTags(r.Context(), books)
+	withStats, err := s.business.WithReviewStats(r.Context(), books)
 	if err != nil {
 		handleDBError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, searchBooksResponse{Books: withTags, Total: total, Limit: limit, Offset: offset})
+	writeJSON(w, http.StatusOK, searchBooksResponse{Books: withStats, Total: total, Limit: limit, Offset: offset})
 }
 
 func (s *Server) handleGetBooks(w http.ResponseWriter, r *http.Request) {

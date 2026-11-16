@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"goodreads-clone.com/internal/db"
 )
 
 func TestShelfBookRepository_Add(t *testing.T) {
@@ -506,4 +508,65 @@ func mustGetID(t *testing.T, s *Storage, shelfID, bookID int64) int64 {
 	sb, err := s.ShelfBooks.Get(context.Background(), shelfID, bookID)
 	require.NoError(t, err)
 	return sb.ID
+}
+
+func TestShelfBookRepository_ListMonthlyFinished(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	user := createTestUser(t, s, "m@example.com", "monthly")
+	other := createTestUser(t, s, "mo@example.com", "monthlyother")
+	shelf1 := createTestShelf(t, s, user.ID, "One", false)
+	shelf2 := createTestShelf(t, s, user.ID, "Two", false)
+	otherShelf := createTestShelf(t, s, other.ID, "Theirs", false)
+
+	withPages := func(title string, pages int64) *db.Book {
+		b := createTestBook(t, s, title, "A")
+		_, err := s.DB().ExecContext(ctx, `UPDATE books SET page_count = ? WHERE id = ?`, pages, b.ID)
+		require.NoError(t, err)
+		return b
+	}
+	multi := withPages("Multi", 100)
+	jan := withPages("Jan", 50)
+	noPages := createTestBook(t, s, "No pages", "B")
+	lastYear := withPages("Last year", 999)
+	theirs := withPages("Theirs", 777)
+	unfinished := withPages("Unfinished", 5)
+
+	for _, r := range []struct {
+		shelf, book int64
+		at          string
+	}{
+		{shelf1.ID, multi.ID, "2026-03-05 10:00:00"},
+		{shelf2.ID, multi.ID, "2026-02-01 10:00:00"},
+		{shelf1.ID, jan.ID, "2026-02-28 23:00:00"},
+		{shelf1.ID, noPages.ID, "2026-02-10 08:00:00"},
+		{shelf1.ID, lastYear.ID, "2025-12-31 23:59:59"},
+		{shelf1.ID, unfinished.ID, ""},
+		{otherShelf.ID, theirs.ID, "2026-04-01 10:00:00"},
+	} {
+		_, err := s.ShelfBooks.Add(ctx, r.shelf, r.book, 0, 0)
+		require.NoError(t, err)
+		if r.at != "" {
+			_, err = s.DB().ExecContext(ctx, `UPDATE shelf_books SET finished_at = ? WHERE shelf_id = ? AND book_id = ?`,
+				r.at, r.shelf, r.book)
+			require.NoError(t, err)
+		}
+	}
+
+	got, err := s.ShelfBooks.ListMonthlyFinished(ctx, user.ID, 2026)
+	require.NoError(t, err)
+	// Multi counts once, in February (its earliest finish), not March.
+	assert.Equal(t, []db.ListMonthlyFinishedBooksRow{
+		{Month: 2, BooksFinished: 3, PagesFinished: 150},
+	}, got)
+
+	got, err = s.ShelfBooks.ListMonthlyFinished(ctx, user.ID, 2025)
+	require.NoError(t, err)
+	assert.Equal(t, []db.ListMonthlyFinishedBooksRow{{Month: 12, BooksFinished: 1, PagesFinished: 999}}, got)
+
+	got, err = s.ShelfBooks.ListMonthlyFinished(ctx, user.ID, 2024)
+	require.NoError(t, err)
+	assert.Empty(t, got)
 }

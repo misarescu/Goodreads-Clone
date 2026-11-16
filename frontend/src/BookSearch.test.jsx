@@ -45,8 +45,8 @@ describe('BookSearch', () => {
     expect(fetch.mock.calls[0][0]).toBe('/api/books/search?q=dune&limit=10&offset=0')
     expect(screen.getByText('2 results')).toBeTruthy()
     const items = screen.getAllByRole('listitem')
-    expect(items[0].textContent).toBe('Book 1 by Author 1 (en)')
-    expect(items[1].textContent).toBe('Book 2 by Author 2')
+    expect(items[0].textContent).toBe('Book 1 by Author 1 (en) No reviews yet')
+    expect(items[1].textContent).toBe('Book 2 by Author 2 No reviews yet')
   })
 
   it('pages with previous and next', async () => {
@@ -56,17 +56,17 @@ describe('BookSearch', () => {
     })
     render(<BookSearch />)
     await type('a')
-    expect(screen.getByRole('listitem').textContent).toBe('Book 1 by Author 1 (en)')
+    expect(screen.getByRole('listitem').textContent).toBe('Book 1 by Author 1 (en) No reviews yet')
     expect(screen.getByText('Previous').disabled).toBe(true)
     fireEvent.click(screen.getByText('Next'))
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(fetch.mock.calls[1][0]).toBe('/api/books/search?q=a&limit=10&offset=10')
-    expect(screen.getByRole('listitem').textContent).toBe('Book 11 by Author 11 (en)')
+    expect(screen.getByRole('listitem').textContent).toBe('Book 11 by Author 11 (en) No reviews yet')
     expect(screen.getByText('Next').disabled).toBe(true)
     fireEvent.click(screen.getByText('Previous'))
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(fetch.mock.calls[2][0]).toBe('/api/books/search?q=a&limit=10&offset=0')
-    expect(screen.getByRole('listitem').textContent).toBe('Book 1 by Author 1 (en)')
+    expect(screen.getByRole('listitem').textContent).toBe('Book 1 by Author 1 (en) No reviews yet')
   })
 
   it('shows a message when nothing matches', async () => {
@@ -154,5 +154,26 @@ describe('BookSearch tags', () => {
     expect(screen.getByText('Loading…')).toBeTruthy()
     await act(() => vi.advanceTimersByTimeAsync(0))
     expect(screen.getByRole('alert').textContent).toContain('Request failed (500)')
+  })
+})
+
+describe('BookSearch ratings', () => {
+  it('shows the average to one decimal with the review count, or No reviews yet', async () => {
+    fetch.mockReturnValue(
+      json({
+        books: [
+          book(1, { average_rating: 4.2, review_count: 12 }),
+          book(2, { average_rating: 4, review_count: 1 }),
+          book(3, { average_rating: null, review_count: 0 }),
+        ],
+        total: 3,
+      }),
+    )
+    render(<BookSearch />)
+    await type('x')
+    const items = screen.getAllByRole('listitem')
+    expect(items[0].textContent).toContain('4.2 (12 reviews)')
+    expect(items[1].textContent).toContain('4.0 (1 review)')
+    expect(items[2].textContent).toContain('No reviews yet')
   })
 })

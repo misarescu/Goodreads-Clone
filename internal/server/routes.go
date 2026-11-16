@@ -17,6 +17,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("POST /api/users", s.handleCreateUser)
 	s.mux.HandleFunc("GET /api/users/{id}", s.handleGetUserByID)
 	s.mux.HandleFunc("GET /api/users/{id}/stats", s.handleGetUserStats)
+	s.mux.HandleFunc("GET /api/users/{id}/stats/monthly", s.handleGetUserMonthlyStats)
 	s.mux.HandleFunc("GET /api/users", s.handleGetUsers)
 	s.mux.HandleFunc("PUT /api/users/{id}", s.handleUpdateUser)
 	s.mux.HandleFunc("DELETE /api/users/{id}", s.handleDeleteUser)
