@@ -2,8 +2,10 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -108,7 +110,7 @@ func TestHandleSearchBooksLimit(t *testing.T) {
 			wantLimit := mock.MatchedBy(func(p storage.SearchParams) bool { return p.Limit == tt.want })
 			repo.EXPECT().Search(mock.Anything, wantLimit).Return([]db.Book{}, 0, nil)
 			s := &Server{
-				business: &business.Business{Storage: &storage.Storage{Books: repo}},
+				business: &business.Business{Storage: &storage.Storage{Books: repo, Reviews: noStats(t)}},
 				mux:      http.NewServeMux(),
 			}
 			s.registerRoutes()
@@ -131,7 +133,7 @@ func TestHandleSearchBooksResponse(t *testing.T) {
 		}).
 		Return([]db.Book{{ID: 1, Title: "The Hobbit"}}, int64(11), nil)
 	s := &Server{
-		business: &business.Business{Storage: &storage.Storage{Books: repo}},
+		business: &business.Business{Storage: &storage.Storage{Books: repo, Reviews: noStats(t)}},
 		mux:      http.NewServeMux(),
 	}
 	s.registerRoutes()
@@ -257,4 +259,60 @@ func TestHandleBookCoverURLOmitted(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}
+}
+
+func TestHandleSearchBooksReviewStats(t *testing.T) {
+	books := mocks.NewMockBookRepository(t)
+	books.EXPECT().TagsFor(mock.Anything, mock.Anything).Return(map[int64][]string{}, nil)
+	books.EXPECT().Search(mock.Anything, mock.Anything).
+		Return([]db.Book{{ID: 1, Title: "A"}, {ID: 2, Title: "B"}, {ID: 3, Title: "C"}}, int64(3), nil)
+	reviews := mocks.NewMockReviewRepository(t)
+	// One call for all results, not one per result.
+	reviews.EXPECT().Stats(mock.Anything, []int64{1, 2, 3}).Return([]db.GetReviewStatsRow{
+		{BookID: 1, AverageRating: 4.25, ReviewCount: 4},
+		{BookID: 3, AverageRating: 2, ReviewCount: 1},
+	}, nil).Once()
+	s := &Server{
+		business: &business.Business{Storage: &storage.Storage{Books: books, Reviews: reviews}},
+		mux:      http.NewServeMux(),
+	}
+	s.registerRoutes()
+
+	rec := httptest.NewRecorder()
+	s.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/books/search?q=a", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 (%s)", rec.Code, rec.Body.String())
+	}
+	var got struct {
+		Books []struct {
+			ID            int64    `json:"id"`
+			AverageRating *float64 `json:"average_rating"`
+			ReviewCount   int64    `json:"review_count"`
+		} `json:"books"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	type stat struct {
+		Avg   *float64
+		Count int64
+	}
+	want := []stat{{ptr(4.3), 4}, {nil, 0}, {ptr(2), 1}}
+	if len(got.Books) != len(want) {
+		t.Fatalf("got %d books", len(got.Books))
+	}
+	for i, w := range want {
+		g := got.Books[i]
+		if !reflect.DeepEqual(g.AverageRating, w.Avg) || g.ReviewCount != w.Count {
+			t.Errorf("book %d = %v/%d, want %v/%d", i+1, g.AverageRating, g.ReviewCount, w.Avg, w.Count)
+		}
+	}
+}
+
+// noStats is a review repository that reports no reviews for any book.
+func noStats(t *testing.T) *mocks.MockReviewRepository {
+	t.Helper()
+	r := mocks.NewMockReviewRepository(t)
+	r.EXPECT().Stats(mock.Anything, mock.Anything).Return([]db.GetReviewStatsRow{}, nil).Maybe()
+	return r
 }

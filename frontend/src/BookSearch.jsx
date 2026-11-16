@@ -11,6 +11,13 @@ function languageOf(book) {
   return l || ''
 }
 
+// "4.2 (12 reviews)", or "No reviews yet" when there are none.
+function ratingSummary(book) {
+  const n = book.review_count
+  if (book.average_rating == null || !n) return 'No reviews yet'
+  return `${book.average_rating.toFixed(1)} (${n} ${n === 1 ? 'review' : 'reviews'})`
+}
+
 const COVER_W = 48
 const COVER_H = 72
 
@@ -102,7 +109,8 @@ export function BookSearch() {
               <li key={b.id}>
                 <Cover title={b.title} url={b.cover_url} />
                 <strong>{b.title}</strong> by {b.author}
-                {languageOf(b) && <> ({languageOf(b)})</>}
+                {languageOf(b) && <> ({languageOf(b)})</>}{' '}
+                <span className="book-rating">{ratingSummary(b)}</span>
               </li>
             ))}
           </ul>
