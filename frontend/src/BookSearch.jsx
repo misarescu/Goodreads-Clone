@@ -11,6 +11,36 @@ function languageOf(book) {
   return l || ''
 }
 
+const COVER_W = 48
+const COVER_H = 72
+
+// Cover thumbnail with a same-sized placeholder when missing or failing to load.
+function Cover({ title, url }) {
+  const [failedUrl, setFailedUrl] = useState(null)
+  const box = { width: COVER_W, height: COVER_H, flex: 'none', verticalAlign: 'middle', marginRight: 8 }
+  if (!url || failedUrl === url) {
+    return (
+      <span
+        className="book-cover-placeholder"
+        data-testid="cover-placeholder"
+        aria-hidden="true"
+        style={{ ...box, display: 'inline-block', background: '#ddd', borderRadius: 2 }}
+      />
+    )
+  }
+  return (
+    <img
+      src={url}
+      alt={`Cover of ${title}`}
+      loading="lazy"
+      width={COVER_W}
+      height={COVER_H}
+      style={{ ...box, objectFit: 'cover' }}
+      onError={() => setFailedUrl(url)}
+    />
+  )
+}
+
 export function BookSearch() {
   const [input, setInput] = useState('')
   const [search, setSearch] = useState({ q: '', offset: 0 })
@@ -70,6 +100,7 @@ export function BookSearch() {
           <ul>
             {books.map((b) => (
               <li key={b.id}>
+                <Cover title={b.title} url={b.cover_url} />
                 <strong>{b.title}</strong> by {b.author}
                 {languageOf(b) && <> ({languageOf(b)})</>}
               </li>

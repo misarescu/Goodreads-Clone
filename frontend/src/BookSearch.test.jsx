@@ -83,4 +83,28 @@ describe('BookSearch', () => {
     await type('dune')
     expect(screen.getByRole('alert').textContent).toContain('Request failed (500)')
   })
+
+  it('shows covers, a placeholder without one, and a placeholder after load failure', async () => {
+    fetch.mockReturnValue(json({
+      books: [
+        book(1, { cover_url: 'http://x/1.jpg' }),
+        book(2, { cover_url: null }),
+        book(3, { cover_url: 'http://x/3.jpg' }),
+      ],
+      total: 3,
+    }))
+    render(<BookSearch />)
+    await type('a')
+    const img = screen.getByAltText('Cover of Book 1')
+    expect(img.getAttribute('src')).toBe('http://x/1.jpg')
+    expect(img.getAttribute('loading')).toBe('lazy')
+    expect(img.getAttribute('width')).toBe('48')
+    expect(img.getAttribute('height')).toBe('72')
+    expect(img.style.objectFit).toBe('cover')
+    expect(screen.getAllByTestId('cover-placeholder')).toHaveLength(1)
+    fireEvent.error(screen.getByAltText('Cover of Book 3'))
+    expect(screen.queryByAltText('Cover of Book 3')).toBeNull()
+    expect(screen.getAllByTestId('cover-placeholder')).toHaveLength(2)
+    expect(screen.getByAltText('Cover of Book 1')).toBeTruthy()
+  })
 })
