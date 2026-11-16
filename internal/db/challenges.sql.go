@@ -70,6 +70,58 @@ func (q *Queries) GetReadingChallenge(ctx context.Context, arg GetReadingChallen
 	return i, err
 }
 
+const listBooksFinishedInYear = `-- name: ListBooksFinishedInYear :many
+SELECT b.id, b.title, b.author, CAST(MIN(sb.finished_at) AS TEXT) AS finished_at
+FROM shelf_books sb
+JOIN shelves s ON s.id = sb.shelf_id
+JOIN books b ON b.id = sb.book_id
+WHERE s.user_id = ?1
+  AND sb.finished_at IS NOT NULL
+  AND CAST(strftime('%Y', sb.finished_at) AS INTEGER) = CAST(?2 AS INTEGER)
+GROUP BY b.id
+ORDER BY MIN(sb.finished_at) DESC, b.id DESC
+`
+
+type ListBooksFinishedInYearParams struct {
+	UserID int64 `json:"user_id"`
+	Year   int64 `json:"year"`
+}
+
+type ListBooksFinishedInYearRow struct {
+	ID         int64  `json:"id"`
+	Title      string `json:"title"`
+	Author     string `json:"author"`
+	FinishedAt string `json:"finished_at"`
+}
+
+func (q *Queries) ListBooksFinishedInYear(ctx context.Context, arg ListBooksFinishedInYearParams) ([]ListBooksFinishedInYearRow, error) {
+	rows, err := q.db.QueryContext(ctx, listBooksFinishedInYear, arg.UserID, arg.Year)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListBooksFinishedInYearRow{}
+	for rows.Next() {
+		var i ListBooksFinishedInYearRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Author,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listReadingChallengesByUser = `-- name: ListReadingChallengesByUser :many
 SELECT id, user_id, year, goal, created_at, updated_at FROM reading_challenges WHERE user_id = ? ORDER BY year DESC
 `

@@ -6,7 +6,7 @@ const year = new Date().getFullYear()
 const json = (body, status = 200) =>
   Promise.resolve({ ok: status < 400, status, json: () => Promise.resolve(body) })
 const challenge = (o = {}) => ({
-  year, goal: 24, finished: 3, expected_by_now: 3, ahead_by: 0, ...o,
+  year, goal: 24, finished: 3, expected_by_now: 3, ahead_by: 0, books: [], ...o,
 })
 
 beforeEach(() => vi.stubGlobal('fetch', vi.fn()))
@@ -33,6 +33,29 @@ describe('ReadingChallenge', () => {
     expect(screen.getByText('3 of 24 books')).toBeTruthy()
     expect(screen.getByText(`3 books finished in ${year}`)).toBeTruthy()
     expect(screen.getByText('On schedule')).toBeTruthy()
+  })
+
+  it('lists the books finished this year', async () => {
+    const books = [
+      { id: 2, title: 'Dune', author: 'Frank Herbert', finished_at: `${year}-05-01T10:00:00Z` },
+      { id: 1, title: 'Emma', author: 'Jane Austen', finished_at: `${year}-02-01T10:00:00Z` },
+    ]
+    fetch.mockReturnValue(json(challenge({ finished: 2, books })))
+    render(<ReadingChallenge userId="1" />)
+    expect(await screen.findByText('Finished this year')).toBeTruthy()
+    const items = screen.getAllByRole('listitem')
+    expect(items).toHaveLength(2)
+    expect(items[0].textContent).toContain('Dune by Frank Herbert')
+    expect(items[1].textContent).toContain('Emma by Jane Austen')
+    expect(screen.queryByText('No books finished yet this year.')).toBeNull()
+  })
+
+  it('shows an empty state when no books are finished', async () => {
+    fetch.mockReturnValue(json(challenge({ finished: 0, books: [] })))
+    render(<ReadingChallenge userId="1" />)
+    expect(await screen.findByText('Finished this year')).toBeTruthy()
+    expect(screen.getByText('No books finished yet this year.')).toBeTruthy()
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
   it.each([

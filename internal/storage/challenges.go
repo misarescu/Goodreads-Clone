@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"goodreads-clone.com/internal/db"
 )
@@ -58,4 +59,35 @@ func (r *challengeRepository) Delete(ctx context.Context, userID, year int64) er
 		return fmt.Errorf("reading challenge not found: %w", sql.ErrNoRows)
 	}
 	return nil
+}
+
+// finishedAtLayouts are the formats a finished_at timestamp can be stored in.
+var finishedAtLayouts = []string{"2006-01-02 15:04:05", time.RFC3339Nano, "2006-01-02T15:04:05", "2006-01-02"}
+
+func parseFinishedAt(v string) (time.Time, error) {
+	for _, layout := range finishedAtLayouts {
+		if t, err := time.Parse(layout, v); err == nil {
+			return t.UTC(), nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unrecognised finished_at %q", v)
+}
+
+// ListFinishedInYear returns the distinct books on the user's shelves finished
+// in the year (the books CountFinishedInYear counts), newest first, each with
+// its earliest finished_at that year.
+func (r *challengeRepository) ListFinishedInYear(ctx context.Context, userID, year int64) ([]FinishedBook, error) {
+	rows, err := r.queries.ListBooksFinishedInYear(ctx, db.ListBooksFinishedInYearParams{UserID: userID, Year: year})
+	if err != nil {
+		return nil, fmt.Errorf("list books finished in year query failed: %w", err)
+	}
+	out := make([]FinishedBook, 0, len(rows))
+	for _, row := range rows {
+		at, err := parseFinishedAt(row.FinishedAt)
+		if err != nil {
+			return nil, fmt.Errorf("list books finished in year: %w", err)
+		}
+		out = append(out, FinishedBook{ID: row.ID, Title: row.Title, Author: row.Author, FinishedAt: at})
+	}
+	return out, nil
 }

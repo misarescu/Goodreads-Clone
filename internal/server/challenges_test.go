@@ -80,11 +80,14 @@ func TestChallengeGet(t *testing.T) {
 		want       string
 	}{
 		{"current year", "/api/users/1/challenges/2026", 200,
-			`{"year":2026,"goal":25,"finished":2,"expected_by_now":12,"ahead_by":-10}`},
+			`{"year":2026,"goal":25,"finished":2,"expected_by_now":12,"ahead_by":-10,"books":[` +
+				`{"id":2,"title":"B2","author":"A","finished_at":"2026-12-31T23:59:59Z"},` +
+				`{"id":1,"title":"Title","author":"Author","finished_at":"2026-03-01T10:00:00Z"}]}`},
 		{"past year", "/api/users/1/challenges/2025", 200,
-			`{"year":2025,"goal":10,"finished":1,"expected_by_now":10,"ahead_by":-9}`},
+			`{"year":2025,"goal":10,"finished":1,"expected_by_now":10,"ahead_by":-9,"books":[` +
+				`{"id":3,"title":"B3","author":"A","finished_at":"2025-12-31T23:59:59Z"}]}`},
 		{"future year", "/api/users/1/challenges/2027", 200,
-			`{"year":2027,"goal":10,"finished":0,"expected_by_now":0,"ahead_by":0}`},
+			`{"year":2027,"goal":10,"finished":0,"expected_by_now":0,"ahead_by":0,"books":[]}`},
 		{"no challenge", "/api/users/1/challenges/2024", 404, ""},
 		{"unknown user", "/api/users/99/challenges/2026", 404, ""},
 		{"bad year", "/api/users/1/challenges/abc", 400, ""},

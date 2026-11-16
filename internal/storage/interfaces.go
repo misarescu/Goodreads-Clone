@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	"goodreads-clone.com/internal/db"
 )
@@ -62,12 +63,22 @@ type ShelfBookRepository interface {
 	GetUserReadingStats(ctx context.Context, userID int64) (*db.GetUserReadingStatsRow, error)
 }
 
+// FinishedBook is a book a reading challenge counts, with the earliest time it
+// was finished in that year.
+type FinishedBook struct {
+	ID         int64     `json:"id"`
+	Title      string    `json:"title"`
+	Author     string    `json:"author"`
+	FinishedAt time.Time `json:"finished_at"`
+}
+
 // ChallengeRepository defines operations for yearly reading challenges.
 type ChallengeRepository interface {
 	Upsert(ctx context.Context, userID, year, goal int64) (*db.ReadingChallenge, error)
 	Get(ctx context.Context, userID, year int64) (*db.ReadingChallenge, error)
 	ListByUser(ctx context.Context, userID int64) ([]db.ReadingChallenge, error)
 	CountFinishedInYear(ctx context.Context, userID, year int64) (int64, error)
+	ListFinishedInYear(ctx context.Context, userID, year int64) ([]FinishedBook, error)
 	Delete(ctx context.Context, userID, year int64) error
 }
 
