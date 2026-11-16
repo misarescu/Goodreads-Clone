@@ -157,3 +157,44 @@ func (s *Server) handleUpdateShelfBookProgress(w http.ResponseWriter, r *http.Re
 
 	writeJSON(w, http.StatusOK, shelfBook)
 }
+
+type moveShelfBookRequest struct {
+	ToShelfID int64 `json:"to_shelf_id"`
+}
+
+func (s *Server) handleMoveShelfBook(w http.ResponseWriter, r *http.Request) {
+	shelfID, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid shelf ID")
+		return
+	}
+	bookID, err := parseID(r, "bookID")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid book ID")
+		return
+	}
+	var req moveShelfBookRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if req.ToShelfID <= 0 {
+		writeError(w, http.StatusBadRequest, "to_shelf_id is required")
+		return
+	}
+
+	moved, err := s.business.MoveBookToShelf(r.Context(), shelfID, bookID, req.ToShelfID)
+	if err != nil {
+		switch {
+		case errors.Is(err, business.ErrSameShelf), errors.Is(err, business.ErrDifferentUsers):
+			writeError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, business.ErrBookAlreadyOnShelf), isUniqueViolation(err):
+			writeError(w, http.StatusConflict, business.ErrBookAlreadyOnShelf.Error())
+		default:
+			handleDBError(w, err)
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, moved)
+}

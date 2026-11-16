@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -137,4 +138,47 @@ func (b *Business) RecordReadingProgress(
 		return nil, err
 	}
 	return b.UpdateReadingProgress(ctx, shelfBook.ID, pages, percent)
+}
+
+// Errors returned by MoveBookToShelf.
+var (
+	ErrSameShelf          = errors.New("target shelf is the same as the source shelf")
+	ErrDifferentUsers     = errors.New("shelves belong to different users")
+	ErrBookAlreadyOnShelf = errors.New("book is already on the target shelf")
+)
+
+// MoveBookToShelf moves a book from one shelf to another shelf of the same
+// user, keeping its reading progress. Missing shelves or a book that is not on
+// the source shelf wrap sql.ErrNoRows.
+func (b *Business) MoveBookToShelf(
+	ctx context.Context,
+	fromShelfID, bookID, toShelfID int64,
+) (*db.ListBooksOnShelfRow, error) {
+	from, err := b.Storage.Shelves.GetByID(ctx, fromShelfID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get source shelf: %w", err)
+	}
+	to, err := b.Storage.Shelves.GetByID(ctx, toShelfID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get target shelf: %w", err)
+	}
+	if from.ID == to.ID {
+		return nil, ErrSameShelf
+	}
+	if from.UserID != to.UserID {
+		return nil, ErrDifferentUsers
+	}
+	if _, err := b.Storage.ShelfBooks.Get(ctx, fromShelfID, bookID); err != nil {
+		return nil, fmt.Errorf("failed to get shelf book: %w", err)
+	}
+	if _, err := b.Storage.ShelfBooks.Get(ctx, toShelfID, bookID); err == nil {
+		return nil, ErrBookAlreadyOnShelf
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("failed to check target shelf: %w", err)
+	}
+	moved, err := b.Storage.ShelfBooks.Move(ctx, fromShelfID, bookID, toShelfID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to move book: %w", err)
+	}
+	return moved, nil
 }

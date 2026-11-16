@@ -296,3 +296,114 @@ func assertListFinishedAt(t *testing.T, s *Server, bookID int, finished bool) {
 	}
 	t.Errorf("book %d missing from list: %s", bookID, rec.Body.String())
 }
+
+// seedMoveFixtures adds shelf 2 (same user), shelf 3 (another user) and a
+// finished book entry (80/100 pages... recorded as 100%) for book 1 on shelf 1.
+func seedMoveFixtures(t *testing.T, s *Server) *sql.DB {
+	t.Helper()
+	database := s.business.Storage.DB()
+	for _, q := range []string{
+		`INSERT INTO users (email, username, password_hash) VALUES ('b@b.c', 'u2', 'x')`,
+		`INSERT INTO shelves (user_id, name) VALUES (1, 'Second')`,
+		`INSERT INTO shelves (user_id, name) VALUES (2, 'Other user')`,
+		`INSERT INTO shelf_books (shelf_id, book_id, pages_read, progress_percent, finished_at)
+		 VALUES (1, 1, 120, 100, '2026-01-02 10:00:00')`,
+	} {
+		if _, err := database.Exec(q); err != nil {
+			t.Fatalf("seed %q: %v", q, err)
+		}
+	}
+	return database
+}
+
+func countOnShelf(t *testing.T, database *sql.DB, shelfID int) int {
+	t.Helper()
+	var n int
+	if err := database.QueryRow(`SELECT COUNT(*) FROM shelf_books WHERE shelf_id = ?`, shelfID).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
+
+func TestShelfBooksMoveKeepsProgress(t *testing.T) {
+	s := newShelfBooksServer(t)
+	database := seedMoveFixtures(t, s)
+
+	rec := doRequest(s, http.MethodPost, "/api/shelves/1/books/1/move", `{"to_shelf_id":2}`)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d (%s)", rec.Code, rec.Body.String())
+	}
+	var got db.ListBooksOnShelfRow
+	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	assertMovedEntry(t, got)
+	if countOnShelf(t, database, 1) != 0 || countOnShelf(t, database, 2) != 1 {
+		t.Error("book should be only on shelf 2")
+	}
+
+	list := doRequest(s, http.MethodGet, "/api/shelves/2/books", "")
+	var rows []db.ListBooksOnShelfRow
+	if err := json.Unmarshal(list.Body.Bytes(), &rows); err != nil || len(rows) != 1 || rows[0].ID != got.ID {
+		t.Errorf("list = %s (err %v)", list.Body.String(), err)
+	}
+}
+
+func TestShelfBooksMoveErrors(t *testing.T) {
+	tests := []struct {
+		name       string
+		path       string
+		body       string
+		wantStatus int
+	}{
+		{"unknown source shelf", "/api/shelves/99/books/1/move", `{"to_shelf_id":2}`, http.StatusNotFound},
+		{"unknown target shelf", "/api/shelves/1/books/1/move", `{"to_shelf_id":99}`, http.StatusNotFound},
+		{"book not on source shelf", "/api/shelves/2/books/1/move", `{"to_shelf_id":1}`, http.StatusNotFound},
+		{"same shelf", "/api/shelves/1/books/1/move", `{"to_shelf_id":1}`, http.StatusBadRequest},
+		{"different users", "/api/shelves/1/books/1/move", `{"to_shelf_id":3}`, http.StatusBadRequest},
+		{"missing target", "/api/shelves/1/books/1/move", `{}`, http.StatusBadRequest},
+		{"invalid body", "/api/shelves/1/books/1/move", `{nope`, http.StatusBadRequest},
+		{"invalid book id", "/api/shelves/1/books/x/move", `{"to_shelf_id":2}`, http.StatusBadRequest},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := newShelfBooksServer(t)
+			database := seedMoveFixtures(t, s)
+			rec := doRequest(s, http.MethodPost, tt.path, tt.body)
+			if rec.Code != tt.wantStatus {
+				t.Fatalf("status = %d, want %d (%s)", rec.Code, tt.wantStatus, rec.Body.String())
+			}
+			if countOnShelf(t, database, 1) != 1 {
+				t.Error("book must stay on shelf 1")
+			}
+		})
+	}
+}
+
+func TestShelfBooksMoveConflict(t *testing.T) {
+	t.Run("already on target shelf", func(t *testing.T) {
+		s := newShelfBooksServer(t)
+		database := seedMoveFixtures(t, s)
+		if _, err := database.Exec(`INSERT INTO shelf_books (shelf_id, book_id, pages_read) VALUES (2, 1, 5)`); err != nil {
+			t.Fatal(err)
+		}
+		rec := doRequest(s, http.MethodPost, "/api/shelves/1/books/1/move", `{"to_shelf_id":2}`)
+		if rec.Code != http.StatusConflict {
+			t.Fatalf("status = %d (%s)", rec.Code, rec.Body.String())
+		}
+		var pages1, pages2 int
+		_ = database.QueryRow(`SELECT pages_read FROM shelf_books WHERE shelf_id = 1`).Scan(&pages1)
+		_ = database.QueryRow(`SELECT pages_read FROM shelf_books WHERE shelf_id = 2`).Scan(&pages2)
+		if pages1 != 120 || pages2 != 5 {
+			t.Errorf("nothing should change: %d, %d", pages1, pages2)
+		}
+	})
+}
+
+func assertMovedEntry(t *testing.T, got db.ListBooksOnShelfRow) {
+	t.Helper()
+	want := time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC)
+	if got.FinishedAt == nil || !got.FinishedAt.Equal(want) {
+		t.Errorf("finished_at = %v, want %v", got.FinishedAt, want)
+	}
+}

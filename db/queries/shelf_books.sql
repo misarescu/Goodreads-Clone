@@ -48,3 +48,15 @@ FROM (
     WHERE s.user_id = ?
     GROUP BY sb.book_id
 ) AS per_book;
+
+-- name: MoveShelfBook :execrows
+UPDATE shelf_books SET
+    shelf_id = sqlc.arg(to_shelf_id),
+    updated_at = CURRENT_TIMESTAMP
+WHERE shelf_id = sqlc.arg(from_shelf_id) AND book_id = sqlc.arg(book_id);
+
+-- name: GetBookOnShelf :one
+SELECT sb.*, b.title, b.author, b.page_count
+FROM shelf_books sb
+JOIN books b ON sb.book_id = b.id
+WHERE sb.shelf_id = ? AND sb.book_id = ?;

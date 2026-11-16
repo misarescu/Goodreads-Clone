@@ -55,6 +55,7 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("GET /api/shelves/{id}/books", s.handleListShelfBooks)
 	s.mux.HandleFunc("DELETE /api/shelves/{id}/books/{bookID}", s.handleRemoveBookFromShelf)
 	s.mux.HandleFunc("PUT /api/shelves/{id}/books/{bookID}/progress", s.handleUpdateShelfBookProgress)
+	s.mux.HandleFunc("POST /api/shelves/{id}/books/{bookID}/move", s.handleMoveShelfBook)
 
 	// Unknown API routes
 	s.mux.HandleFunc("/api/", s.handleAPINotFound)

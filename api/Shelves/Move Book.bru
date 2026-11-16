@@ -1,0 +1,30 @@
+meta {
+  name: Move Book
+  type: http
+  seq: 11
+}
+
+post {
+  url: http://localhost:8080/api/shelves/1/books/1/move
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "to_shelf_id": 2
+  }
+}
+
+docs {
+  Moves a book from shelf {id} to another shelf of the same user, keeping
+  pages_read, progress_percent and finished_at.
+
+  Response: 200 OK with the book's entry on the target shelf, in the form
+  GET /api/shelves/{id}/books returns.
+
+  400 invalid IDs or body, target is the same shelf, or the shelves belong
+  to different users,
+  404 either shelf does not exist or the book is not on shelf {id},
+  409 the book is already on the target shelf (nothing changes)
+}
