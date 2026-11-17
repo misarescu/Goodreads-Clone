@@ -1,0 +1,30 @@
+meta {
+  name: gc-78 Tags after removing a tag from a book
+  type: http
+  seq: 37
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{gc78UserA}}/tags
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  const runId = bru.getVar("runId");
+  const t = function (n) { return "g78" + runId + "-" + n; };
+  test("lists the tags with their book counts", function () {
+    expect(res.body.tags).to.eql([{tag:t("cla"),books:2},{tag:t("fan"),books:2},{tag:t("zed"),books:1}]);
+    expect(res.body.total).to.equal(3);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(0);
+  });
+}
+
+docs {
+  gc-78 Tags after removing a tag from a book. Response: 200
+}

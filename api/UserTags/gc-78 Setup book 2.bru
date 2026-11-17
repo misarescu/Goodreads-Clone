@@ -1,0 +1,33 @@
+meta {
+  name: gc-78 Setup book 2
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {"title":"gc-78 Book 2 {{runId}}","author":"Suite Author","isbn":"978-782-{{runId}}"}
+}
+
+script:post-response {
+  bru.setVar("gc78Book2", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+}
+
+tests {
+  test("creates the book", function () {
+    expect(res.body.id).to.be.a("number");
+  });
+}
+
+docs {
+  gc-78 Setup book 2. Response: 201
+}

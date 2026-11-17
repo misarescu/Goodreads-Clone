@@ -1,0 +1,30 @@
+meta {
+  name: gc-78 Other user tags not mixed in
+  type: http
+  seq: 31
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{gc78UserC}}/tags
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  const runId = bru.getVar("runId");
+  const t = function (n) { return "g78" + runId + "-" + n; };
+  test("lists the tags with their book counts", function () {
+    expect(res.body.tags).to.eql([{tag:t("fan"),books:2},{tag:t("cla"),books:1},{tag:t("onlyc"),books:1},{tag:t("zed"),books:1}]);
+    expect(res.body.total).to.equal(4);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(0);
+  });
+}
+
+docs {
+  gc-78 Other user tags not mixed in. Response: 200
+}
