@@ -61,6 +61,33 @@ run = "make test"
 # The API suite against a running server: the local one by default, or the
 # stage the factory verifies a release on (E2E_BASE_URL). Results are JUnit
 # XML at E2E_RESULTS, which the factory reads; a failing assertion fails it.
+[tasks."e2e:local"]
+description = "Start the server from this checkout on a fresh database and run the API suite against it (the factory's e2e gate)"
+run = """
+set -eu
+tmp=$(mktemp -d)
+port=${E2E_LOCAL_PORT:-18080}
+pid=""
+cleanup() { [ -n "$pid" ] && kill "$pid" 2>/dev/null || true; rm -rf "$tmp"; }
+trap cleanup EXIT
+go build -o "$tmp/goodreads" ./cmd/goodreads
+DATABASE_PATH="$tmp/e2e.db" go run ./cmd/migrate
+DATABASE_PATH="$tmp/e2e.db" SERVER_ADDR="127.0.0.1:$port" "$tmp/goodreads" > "$tmp/server.log" 2>&1 &
+pid=$!
+ready=""
+for i in $(seq 1 60); do
+  if curl -fsS "http://127.0.0.1:$port/api/ready" > /dev/null 2>&1; then ready=1; break; fi
+  sleep 0.5
+done
+if [ -z "$ready" ]; then echo "the server did not become ready; its log:"; tail -n 50 "$tmp/server.log"; exit 1; fi
+if ! E2E_BASE_URL="http://127.0.0.1:$port" mise run e2e; then
+  # Every request is logged; show the errors and server errors, which say why.
+  echo "--- the server's errors and 5xx responses:"
+  grep -E 'ERROR|WARN|panic|status=5[0-9][0-9]' "$tmp/server.log" | tail -n 40 || tail -n 20 "$tmp/server.log"
+  exit 1
+fi
+"""
+
 [tasks.e2e]
 description = "Run the Bruno API suite against E2E_BASE_URL (default http://localhost:8080)"
 dir = "api"
