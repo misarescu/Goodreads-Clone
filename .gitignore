@@ -87,3 +87,6 @@ temp/
 
 # OS generated files
 Thumbs.db
+
+# API suite results (mise run e2e)
+api/e2e-results.*

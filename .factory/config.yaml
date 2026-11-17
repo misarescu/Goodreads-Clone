@@ -2,4 +2,9 @@ dependencies:
   files: [go.mod, go.sum, go-packages.txt, frontend/package.json, frontend/bun.lock]
   run: mise run deps:warm
 egress:
-  allow: [nodejs.org]
+  # nodejs.org: Node for the toolchain; registry.npmjs.org: the Bruno CLI.
+  allow: [nodejs.org, registry.npmjs.org]
+# The API suite, run against a stage that verifies a release with e2e-suite
+# (Frankie D116). Stages arrive once the factory can reach them.
+e2e:
+  command: mise run e2e
