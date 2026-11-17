@@ -88,7 +88,10 @@ func verifyBaseline(ctx context.Context, db *sql.DB) error {
 		}
 	}
 	if len(missing) > 0 {
-		return fmt.Errorf("database has no schema_migrations and its schema is behind migrations up to %s (missing %s); recreate it from the migrations", legacyBaseline, strings.Join(missing, ", "))
+		return fmt.Errorf(
+			"database has no schema_migrations and its schema is behind migrations up to %s "+
+				"(missing %s); recreate it from the migrations",
+			legacyBaseline, strings.Join(missing, ", "))
 	}
 	return nil
 }
