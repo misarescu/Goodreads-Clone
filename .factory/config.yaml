@@ -5,6 +5,23 @@ egress:
   # nodejs.org: Node for the toolchain; registry.npmjs.org: the Bruno CLI.
   allow: [nodejs.org, registry.npmjs.org]
 # The API suite, run against a stage that verifies a release with e2e-suite
-# (Frankie D116). Stages arrive once the factory can reach them.
+# (Frankie D116).
 e2e:
   command: mise run e2e
+# Where a merged commit is released (Frankie D113, D117). Staging runs on the
+# homelab, deployed by its Flux from misarescu/Goodreads-CD; the factory commits
+# the release's image tag there, waits until the stage reports the commit, and
+# rolls back by committing the previous tag. It reaches the stage over the
+# tailnet through the Tailscale egress Service on its cluster (Frankie D118).
+# No verify yet: the API suite is not repeatable against a stage that keeps its
+# data; verify: e2e-suite comes once it is.
+stages:
+  - name: staging
+    driver: flux
+    url: http://goodreads-stg.stages.svc.cluster.local
+    rollback: true
+    config:
+      repo: misarescu/Goodreads-CD
+      path: apps/goodreads/staging/kustomization.yaml
+      image: ghcr.io/misarescu/goodreads-clone
+      versionURL: http://goodreads-stg.stages.svc.cluster.local/api/version
