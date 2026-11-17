@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/storage"
 )
 
 // MaxTagsPerBook is the most tags a book can have.
@@ -128,4 +129,24 @@ func orEmpty(s []string) []string {
 		return []string{}
 	}
 	return s
+}
+
+// ListTags lists one page of the tags in use with the number of books carrying each, and the
+// total number of matching tags. prefix is trimmed and lowercased; an empty one matches all.
+// It returns an error wrapping ErrInvalidTag when no valid tag can start with prefix.
+func (b *Business) ListTags(
+	ctx context.Context, prefix string, limit, offset int64,
+) ([]storage.TagCount, int64, error) {
+	p := strings.ToLower(strings.TrimSpace(prefix))
+	if p != "" && !tagPattern.MatchString(p) {
+		return nil, 0, fmt.Errorf("%w prefix %q: must be at most 32 characters from a-z, 0-9 and -", ErrInvalidTag, prefix)
+	}
+	tags, total, err := b.Storage.Books.ListTagCounts(ctx, p, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list tags: %w", err)
+	}
+	if tags == nil {
+		tags = []storage.TagCount{}
+	}
+	return tags, total, nil
 }

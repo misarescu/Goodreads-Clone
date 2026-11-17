@@ -41,6 +41,9 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("PUT /api/books/{id}/tags", s.handleSetBookTags)
 	s.mux.HandleFunc("DELETE /api/books/{id}", s.handleDeleteBook)
 
+	// Tags API
+	s.mux.HandleFunc("GET /api/tags", s.handleListTags)
+
 	// Reviews API
 	s.mux.HandleFunc("POST /api/books/{id}/reviews", s.handleSaveReview)
 	s.mux.HandleFunc("GET /api/books/{id}/reviews", s.handleListReviews)

@@ -1,0 +1,36 @@
+meta {
+  name: List Tags
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/tags?prefix=SCI-FI-{{runId}}&limit=20&offset=0
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("lists the tag the book carries once", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.tags).to.eql([{ tag: "sci-fi-" + runId, books: 1 }]);
+    expect(res.body.total).to.equal(1);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(0);
+  });
+}
+
+docs {
+  Lists the tags in use, most books first then alphabetical. `prefix` is trimmed and
+  lowercased; `limit` (default 20, max 100) and `offset` work as in other lists.
+
+  Response: 200 OK
+  ```json
+  {"tags": [{"tag": "fantasy", "books": 3}], "total": 1, "limit": 20, "offset": 0}
+  ```
+}

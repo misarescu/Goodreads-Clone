@@ -1,0 +1,19 @@
+meta {
+  name: gc-75 Delete Book B
+  type: http
+  seq: 14
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{gc75BookB}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deleting a book lowers the counts of its tags.
+}

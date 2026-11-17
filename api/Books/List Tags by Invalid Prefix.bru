@@ -1,0 +1,25 @@
+meta {
+  name: List Tags by Invalid Prefix
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/tags?prefix=Bad_Prefix
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 400 Bad Request (no valid tag starts with the prefix)
+}

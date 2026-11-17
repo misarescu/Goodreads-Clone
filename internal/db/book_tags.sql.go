@@ -10,6 +10,18 @@ import (
 	"strings"
 )
 
+const countTags = `-- name: CountTags :one
+SELECT COUNT(DISTINCT tag) FROM book_tags
+WHERE substr(tag, 1, length(?1)) = ?1
+`
+
+func (q *Queries) CountTags(ctx context.Context, prefix interface{}) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countTags, prefix)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteBookTags = `-- name: DeleteBookTags :exec
 DELETE FROM book_tags WHERE book_id = ?
 `
@@ -106,6 +118,48 @@ func (q *Queries) ListBooksByTag(ctx context.Context, arg ListBooksByTagParams) 
 			&i.Rating,
 			&i.CoverUrl,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTagCounts = `-- name: ListTagCounts :many
+SELECT tag, COUNT(*) AS books FROM book_tags
+WHERE substr(tag, 1, length(?1)) = ?1
+GROUP BY tag
+ORDER BY books DESC, tag
+LIMIT ?3 OFFSET ?2
+`
+
+type ListTagCountsParams struct {
+	Prefix interface{} `json:"prefix"`
+	Offset int64       `json:"offset"`
+	Limit  int64       `json:"limit"`
+}
+
+type ListTagCountsRow struct {
+	Tag   string `json:"tag"`
+	Books int64  `json:"books"`
+}
+
+func (q *Queries) ListTagCounts(ctx context.Context, arg ListTagCountsParams) ([]ListTagCountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listTagCounts, arg.Prefix, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTagCountsRow{}
+	for rows.Next() {
+		var i ListTagCountsRow
+		if err := rows.Scan(&i.Tag, &i.Books); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

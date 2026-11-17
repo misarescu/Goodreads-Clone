@@ -1,0 +1,31 @@
+meta {
+  name: gc-75 Remove tag from B
+  type: http
+  seq: 12
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc75BookB}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tags": ["g75{{runId}}-alpha"]
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the book", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  Sets the tags of a gc-75 book.
+}
