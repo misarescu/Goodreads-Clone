@@ -7,6 +7,11 @@ REST API for the Goodreads Clone application.
 http://localhost:8080
 ```
 
+Requests use `{{baseUrl}}` from the `ci` environment. `mise run e2e` runs the
+suite against `E2E_BASE_URL` (default `http://localhost:8080`) and writes JUnit
+results to `E2E_RESULTS` (default `api/e2e-results.xml`); the factory runs it
+the same way against a stage.
+
 ## API Endpoints
 
 ### Health

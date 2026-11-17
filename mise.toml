@@ -6,6 +6,8 @@ go = "1.25.5"
 bun = "1.4.4"
 # Node runs vitest and the Bruno CLI; vitest 5 and jsdom 31 need Node 22.12+ or 24.15+.
 node = "24.22.3"
+# The Bruno CLI runs the API suite in api/ (mise run e2e).
+"npm:@usebruno/cli" = "4.3.0"
 golangci-lint = "2.8.0"
 mockery = "3.6.1"
 sqlc = "1.30.0"
@@ -55,3 +57,11 @@ run = "make lint"
 [tasks.test]
 description = "Run unit tests (make test)"
 run = "make test"
+
+# The API suite against a running server: the local one by default, or the
+# stage the factory verifies a release on (E2E_BASE_URL). Results are JUnit
+# XML at E2E_RESULTS, which the factory reads; a failing assertion fails it.
+[tasks.e2e]
+description = "Run the Bruno API suite against E2E_BASE_URL (default http://localhost:8080)"
+dir = "api"
+run = 'bru run --env ci --env-var "baseUrl=${E2E_BASE_URL:-http://localhost:8080}" --reporter-junit "${E2E_RESULTS:-e2e-results.xml}"'
