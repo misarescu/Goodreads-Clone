@@ -49,7 +49,7 @@ WHERE t.book_id IN (
     WHERE s.user_id = sqlc.arg('user_id')
 )
 GROUP BY t.tag
-ORDER BY books DESC, t.tag
+ORDER BY t.tag
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 -- name: CountUserTags :one

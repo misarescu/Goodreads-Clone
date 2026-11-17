@@ -278,7 +278,7 @@ WHERE t.book_id IN (
     WHERE s.user_id = ?1
 )
 GROUP BY t.tag
-ORDER BY books DESC, t.tag
+ORDER BY t.tag
 LIMIT ?3 OFFSET ?2
 `
 
