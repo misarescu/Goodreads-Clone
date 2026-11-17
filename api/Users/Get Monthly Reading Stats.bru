@@ -1,17 +1,21 @@
 meta {
   name: Get Monthly Reading Stats
   type: http
-  seq: 12
+  seq: 8
 }
 
 get {
-  url: {{baseUrl}}/api/users/1/stats/monthly?year=2026
+  url: {{baseUrl}}/api/users/{{userId}}/stats/monthly?year=2026
   body: none
   auth: none
 }
 
 params:query {
   year: 2026
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

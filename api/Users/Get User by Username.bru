@@ -5,13 +5,17 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/users?username=johndoe
+  url: {{baseUrl}}/api/users?username={{userUsername}}
   body: none
   auth: none
 }
 
 params:query {
-  username: johndoe
+  username: {{userUsername}}
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

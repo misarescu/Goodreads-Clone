@@ -1,0 +1,19 @@
+meta {
+  name: Teardown Book
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{bookId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deletes the book this folder created. Runs last, after everything that refers to it.
+}

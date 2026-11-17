@@ -12,6 +12,19 @@ suite against `E2E_BASE_URL` (default `http://localhost:8080`) and writes JUnit
 results to `E2E_RESULTS` (default `api/e2e-results.xml`); the factory runs it
 the same way against a stage.
 
+### Repeatable runs
+
+The suite can run any number of times against a server that keeps its data:
+
+- `collection.bru` sets a per-run token (`runId`, from `Date.now()`) once; every
+  unique value (ISBN, email, username, shelf name, tag) includes `{{runId}}`.
+- Requests never use fixed IDs: each create request saves the ID it returns
+  (`userId`, `bookId`, `shelfId`, `shelf2Id`) with `bru.setVar`, and later
+  requests in the folder use it.
+- Each folder creates what it needs (the Reviews and Shelves folders start with
+  Setup User and Setup Book) and ends by deleting it, in a valid order, so a
+  run leaves nothing behind. Requests run in `seq` order within a folder.
+
 ## API Endpoints
 
 ### Health

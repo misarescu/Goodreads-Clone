@@ -5,22 +5,26 @@ meta {
 }
 
 put {
-  url: {{baseUrl}}/api/books/1
+  url: {{baseUrl}}/api/books/{{bookId}}
   body: json
   auth: none
 }
 
 body:json {
   {
-    "title": "The Great Gatsby (Updated)",
+    "title": "The Great Gatsby {{runId}} (Updated)",
     "author": "F. Scott Fitzgerald",
     "page_count": 185,
-    "isbn": "978-0-7432-7356-5",
+    "isbn": "978-0-{{runId}}",
     "release_date": "1925-04-10T00:00:00Z",
     "language": "English",
     "cover_url": "https://example.com/covers/gatsby.jpg",
     "rating": 4.5
   }
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {
@@ -43,10 +47,10 @@ docs {
   {
     "data": {
       "id": 1,
-      "title": "The Great Gatsby (Updated)",
+      "title": "The Great Gatsby {{runId}} (Updated)",
       "author": "F. Scott Fitzgerald",
       "page_count": 185,
-      "isbn": "978-0-7432-7356-5",
+      "isbn": "978-0-{{runId}}",
       "release_date": "1925-04-10T00:00:00Z",
       "language": "English",
       "cover_url": "https://example.com/covers/gatsby.jpg",

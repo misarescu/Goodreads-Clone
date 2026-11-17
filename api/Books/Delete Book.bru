@@ -1,13 +1,17 @@
 meta {
   name: Delete Book
   type: http
-  seq: 7
+  seq: 9
 }
 
 delete {
-  url: {{baseUrl}}/api/books/1
+  url: {{baseUrl}}/api/books/{{bookId}}
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 204
 }
 
 docs {

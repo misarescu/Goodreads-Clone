@@ -1,19 +1,23 @@
 meta {
   name: Set Book Tags
   type: http
-  seq: 8
+  seq: 7
 }
 
 put {
-  url: {{baseUrl}}/api/books/1/tags
+  url: {{baseUrl}}/api/books/{{bookId}}/tags
   body: json
   auth: none
 }
 
 body:json {
   {
-    "tags": ["sci-fi", "classic"]
+    "tags": ["sci-fi-{{runId}}", "classic"]
   }
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

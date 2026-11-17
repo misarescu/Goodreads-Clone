@@ -1,13 +1,17 @@
 meta {
   name: List Shelf Books
   type: http
-  seq: 9
+  seq: 10
 }
 
 get {
-  url: {{baseUrl}}/api/shelves/1/books
+  url: {{baseUrl}}/api/shelves/{{shelfId}}/books
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

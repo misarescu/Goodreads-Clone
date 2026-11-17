@@ -1,0 +1,30 @@
+meta {
+  name: Create Second Shelf
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/shelves
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": {{userId}},
+    "name": "Second Shelf {{runId}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("shelf2Id", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Creates a second custom shelf, the target of Move Book.
+}

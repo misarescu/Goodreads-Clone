@@ -1,13 +1,17 @@
 meta {
   name: List User Shelves
   type: http
-  seq: 3
+  seq: 6
 }
 
 get {
-  url: {{baseUrl}}/api/users/1/shelves
+  url: {{baseUrl}}/api/users/{{userId}}/shelves
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

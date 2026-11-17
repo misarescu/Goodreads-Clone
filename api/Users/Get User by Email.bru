@@ -5,13 +5,17 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/users?email=user@example.com
+  url: {{baseUrl}}/api/users?email={{userEmail}}
   body: none
   auth: none
 }
 
 params:query {
-  email: user@example.com
+  email: {{userEmail}}
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

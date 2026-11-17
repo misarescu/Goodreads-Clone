@@ -1,19 +1,23 @@
 meta {
   name: Move Book
   type: http
-  seq: 11
+  seq: 13
 }
 
 post {
-  url: {{baseUrl}}/api/shelves/1/books/1/move
+  url: {{baseUrl}}/api/shelves/{{shelfId}}/books/{{bookId}}/move
   body: json
   auth: none
 }
 
 body:json {
   {
-    "to_shelf_id": 2
+    "to_shelf_id": {{shelf2Id}}
   }
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

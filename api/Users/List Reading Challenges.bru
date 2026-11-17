@@ -1,13 +1,17 @@
 meta {
   name: List Reading Challenges
   type: http
-  seq: 11
+  seq: 10
 }
 
 get {
-  url: {{baseUrl}}/api/users/1/challenges
+  url: {{baseUrl}}/api/users/{{userId}}/challenges
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

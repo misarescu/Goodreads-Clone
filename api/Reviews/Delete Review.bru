@@ -1,13 +1,17 @@
 meta {
   name: Delete Review
   type: http
-  seq: 3
+  seq: 6
 }
 
 delete {
-  url: {{baseUrl}}/api/books/1/reviews/1
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews/{{userId}}
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 204
 }
 
 docs {

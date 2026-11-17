@@ -1,0 +1,19 @@
+meta {
+  name: Teardown User
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/users/{{userId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deletes the user this folder created. Runs last, after everything that refers to it.
+}

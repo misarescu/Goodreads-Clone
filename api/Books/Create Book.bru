@@ -12,14 +12,22 @@ post {
 
 body:json {
   {
-    "title": "The Great Gatsby",
+    "title": "The Great Gatsby {{runId}}",
     "author": "F. Scott Fitzgerald",
     "page_count": 180,
-    "isbn": "978-0-7432-7356-5",
+    "isbn": "978-0-{{runId}}",
     "release_date": "1925-04-10T00:00:00Z",
     "language": "English",
     "cover_url": "https://example.com/covers/gatsby.jpg"
   }
+}
+
+script:post-response {
+  bru.setVar("bookId", res.body.id);
+}
+
+assert {
+  res.status: eq 201
 }
 
 docs {
@@ -41,10 +49,10 @@ docs {
   {
     "data": {
       "id": 1,
-      "title": "The Great Gatsby",
+      "title": "The Great Gatsby {{runId}}",
       "author": "F. Scott Fitzgerald",
       "page_count": 180,
-      "isbn": "978-0-7432-7356-5",
+      "isbn": "978-0-{{runId}}",
       "release_date": "1925-04-10T00:00:00Z",
       "language": "English",
       "cover_url": "https://example.com/covers/gatsby.jpg",

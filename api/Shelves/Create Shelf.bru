@@ -1,7 +1,7 @@
 meta {
   name: Create Shelf
   type: http
-  seq: 1
+  seq: 3
 }
 
 post {
@@ -12,9 +12,18 @@ post {
 
 body:json {
   {
-    "user_id": 1,
-    "name": "My Custom Shelf"
+    "user_id": {{userId}},
+    "name": "My Custom Shelf {{runId}}"
   }
+}
+
+script:post-response {
+  bru.setVar("shelfId", res.body.id);
+  bru.setVar("shelfName", res.body.name);
+}
+
+assert {
+  res.status: eq 201
 }
 
 docs {
@@ -29,8 +38,8 @@ docs {
   {
     "data": {
       "id": 1,
-      "user_id": 1,
-      "name": "My Custom Shelf",
+      "user_id": {{userId}},
+      "name": "My Custom Shelf {{runId}}",
       "is_default": false,
       "created_at": "2024-01-01T00:00:00Z"
     }

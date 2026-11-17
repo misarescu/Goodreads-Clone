@@ -1,0 +1,19 @@
+meta {
+  name: Delete Second Shelf
+  type: http
+  seq: 16
+}
+
+delete {
+  url: {{baseUrl}}/api/shelves/{{shelf2Id}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deletes the second custom shelf.
+}

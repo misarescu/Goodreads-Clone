@@ -1,0 +1,12 @@
+script:pre-request {
+  // One token per run (the first request sets it): every unique value in the
+  // suite (ISBN, email, username, shelf name, tag) includes it, so a second
+  // run against a server that keeps its data does not collide with the first.
+  if (!bru.getVar("runId")) {
+    bru.setVar("runId", Date.now().toString(36));
+  }
+}
+
+docs {
+  Run token and variable conventions: see README.md ("Repeatable runs").
+}

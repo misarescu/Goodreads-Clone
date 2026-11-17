@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/users/1/shelves/export.csv
+  url: {{baseUrl}}/api/users/{{userId}}/shelves/export.csv
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

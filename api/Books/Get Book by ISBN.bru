@@ -5,13 +5,17 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/books?isbn=978-0-7432-7356-5
+  url: {{baseUrl}}/api/books?isbn=978-0-{{runId}}
   body: none
   auth: none
 }
 
 params:query {
-  isbn: 978-0-7432-7356-5
+  isbn: 978-0-{{runId}}
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {
