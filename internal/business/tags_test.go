@@ -170,3 +170,37 @@ func TestBusiness_ListTags(t *testing.T) {
 		require.ErrorIs(t, err, sql.ErrConnDone)
 	})
 }
+
+func TestBusiness_ListSimilarBooks(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("unknown book", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().GetByID(ctx, int64(9)).Return(nil, sql.ErrNoRows)
+		_, _, err := b.ListSimilarBooks(ctx, 9, 20, 0)
+		require.ErrorIs(t, err, sql.ErrNoRows)
+	})
+
+	t.Run("no similar books gives an empty slice", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().GetByID(ctx, int64(1)).Return(&db.Book{ID: 1}, nil)
+		books.EXPECT().ListSimilar(ctx, int64(1), int64(20), int64(0)).Return(nil, 0, nil)
+		got, total, err := b.ListSimilarBooks(ctx, 1, 20, 0)
+		require.NoError(t, err)
+		assert.NotNil(t, got)
+		assert.Empty(t, got)
+		assert.Zero(t, total)
+	})
+
+	t.Run("storage error", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().GetByID(ctx, int64(1)).Return(&db.Book{ID: 1}, nil)
+		books.EXPECT().ListSimilar(ctx, int64(1), int64(20), int64(0)).Return(nil, 0, assert.AnError)
+		_, _, err := b.ListSimilarBooks(ctx, 1, 20, 0)
+		require.ErrorIs(t, err, assert.AnError)
+	})
+}

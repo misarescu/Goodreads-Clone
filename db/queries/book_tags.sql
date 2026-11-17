@@ -25,3 +25,18 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 -- name: CountTags :one
 SELECT COUNT(DISTINCT tag) FROM book_tags
 WHERE substr(tag, 1, length(sqlc.arg('prefix'))) = sqlc.arg('prefix');
+
+-- name: ListSimilarBooks :many
+SELECT b.*, CAST(group_concat(o.tag) AS TEXT) AS shared_tags
+FROM book_tags o
+JOIN book_tags m ON m.tag = o.tag AND m.book_id = sqlc.arg('book_id')
+JOIN books b ON b.id = o.book_id
+WHERE o.book_id <> sqlc.arg('book_id')
+GROUP BY b.id
+ORDER BY COUNT(*) DESC, b.id
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountSimilarBooks :one
+SELECT COUNT(DISTINCT o.book_id) FROM book_tags o
+JOIN book_tags m ON m.tag = o.tag AND m.book_id = sqlc.arg('book_id')
+WHERE o.book_id <> sqlc.arg('book_id');

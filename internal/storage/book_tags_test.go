@@ -117,3 +117,52 @@ func TestBookRepository_ListTagCounts(t *testing.T) {
 	assert.Empty(t, got)
 	assert.Zero(t, total)
 }
+
+func TestBookRepository_ListSimilar(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+	a := createTestBook(t, s, "A", "a")
+	b := createTestBook(t, s, "B", "b")
+	c := createTestBook(t, s, "C", "c")
+	d := createTestBook(t, s, "D", "d")
+	e := createTestBook(t, s, "E", "e")
+	require.NoError(t, s.Books.SetTags(ctx, a.ID, []string{"fantasy", "epic", "zed"}))
+	require.NoError(t, s.Books.SetTags(ctx, b.ID, []string{"fantasy"}))
+	require.NoError(t, s.Books.SetTags(ctx, c.ID, []string{"zed", "fantasy", "epic"}))
+	require.NoError(t, s.Books.SetTags(ctx, d.ID, []string{"epic", "other"}))
+	require.NoError(t, s.Books.SetTags(ctx, e.ID, []string{"other"}))
+
+	got, total, err := s.Books.ListSimilar(ctx, a.ID, 10, 0)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, total)
+	require.Len(t, got, 3)
+	assert.Equal(t, c.ID, got[0].Book.ID)
+	assert.Equal(t, []string{"epic", "fantasy", "zed"}, got[0].SharedTags)
+	assert.Equal(t, b.ID, got[1].Book.ID) // ties by id: b before d
+	assert.Equal(t, []string{"fantasy"}, got[1].SharedTags)
+	assert.Equal(t, d.ID, got[2].Book.ID)
+	assert.Equal(t, []string{"epic"}, got[2].SharedTags)
+
+	got, total, err = s.Books.ListSimilar(ctx, a.ID, 1, 2)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, total)
+	require.Len(t, got, 1)
+	assert.Equal(t, d.ID, got[0].Book.ID)
+
+	require.NoError(t, s.Books.Delete(ctx, c.ID))
+	_, total, err = s.Books.ListSimilar(ctx, a.ID, 10, 0)
+	require.NoError(t, err)
+	assert.EqualValues(t, 2, total)
+
+	got, total, err = s.Books.ListSimilar(ctx, e.ID, 10, 0)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, total)
+	assert.Equal(t, []string{"other"}, got[0].SharedTags)
+
+	require.NoError(t, s.Books.SetTags(ctx, a.ID, nil))
+	got, total, err = s.Books.ListSimilar(ctx, a.ID, 10, 0)
+	require.NoError(t, err)
+	assert.Empty(t, got)
+	assert.Zero(t, total)
+}

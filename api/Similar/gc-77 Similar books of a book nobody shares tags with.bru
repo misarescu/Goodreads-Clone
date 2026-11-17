@@ -1,0 +1,26 @@
+meta {
+  name: gc-77 Similar books of a book nobody shares tags with
+  type: http
+  seq: 22
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc77L}}/similar
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns an empty array, not null", function () {
+    expect(res.body.books).to.be.an("array").that.is.empty;
+    expect(res.body.total).to.equal(0);
+  });
+}
+
+docs {
+  Similar books of a book nobody shares tags with. Response: 200
+}

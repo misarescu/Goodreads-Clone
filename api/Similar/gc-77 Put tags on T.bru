@@ -1,0 +1,29 @@
+meta {
+  name: gc-77 Put tags on T
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc77T}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {"tags":["g77{{runId}}-a","g77{{runId}}-b","g77{{runId}}-c"]}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the book", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  Put tags on T. Response: 200
+}

@@ -150,3 +150,37 @@ func (b *Business) ListTags(
 	}
 	return tags, total, nil
 }
+
+// SimilarBook is a book sharing tags with another, with the tags they share (sorted).
+type SimilarBook struct {
+	Book       BookWithStats `json:"book"`
+	SharedTags []string      `json:"sharedTags"`
+}
+
+// ListSimilarBooks lists one page of the books sharing the most tags with book id, and the
+// total number of similar books. It returns an error wrapping sql.ErrNoRows for an unknown book.
+func (b *Business) ListSimilarBooks(ctx context.Context, id, limit, offset int64) ([]SimilarBook, int64, error) {
+	if _, err := b.Storage.Books.GetByID(ctx, id); err != nil {
+		return nil, 0, fmt.Errorf("failed to get book for similar books: %w", err)
+	}
+	similar, total, err := b.Storage.Books.ListSimilar(ctx, id, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list similar books: %w", err)
+	}
+	if len(similar) == 0 {
+		return []SimilarBook{}, total, nil
+	}
+	books := make([]db.Book, len(similar))
+	for i, s := range similar {
+		books[i] = s.Book
+	}
+	withStats, err := b.WithReviewStats(ctx, books)
+	if err != nil {
+		return nil, 0, err
+	}
+	out := make([]SimilarBook, len(similar))
+	for i, s := range similar {
+		out[i] = SimilarBook{Book: withStats[i], SharedTags: s.SharedTags}
+	}
+	return out, total, nil
+}

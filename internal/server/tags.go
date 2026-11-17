@@ -31,3 +31,28 @@ func (s *Server) handleListTags(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, listTagsResponse{Tags: tags, Total: total, Limit: limit, Offset: offset})
 }
+
+// similarBooksResponse is a page of the books similar to a book.
+type similarBooksResponse struct {
+	Books  []business.SimilarBook `json:"books"`
+	Total  int64                  `json:"total"`
+	Limit  int64                  `json:"limit"`
+	Offset int64                  `json:"offset"`
+}
+
+func (s *Server) handleListSimilarBooks(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid book ID")
+		return
+	}
+	limit, offset := getPaginationParams(r)
+
+	books, total, err := s.business.ListSimilarBooks(r.Context(), id, limit, offset)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, similarBooksResponse{Books: books, Total: total, Limit: limit, Offset: offset})
+}
