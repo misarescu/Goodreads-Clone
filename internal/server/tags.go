@@ -56,3 +56,20 @@ func (s *Server) handleListSimilarBooks(w http.ResponseWriter, r *http.Request) 
 
 	writeJSON(w, http.StatusOK, similarBooksResponse{Books: books, Total: total, Limit: limit, Offset: offset})
 }
+
+func (s *Server) handleListUserTags(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+	limit, offset := getPaginationParams(r)
+
+	tags, total, err := s.business.ListUserTags(r.Context(), id, limit, offset)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, listTagsResponse{Tags: tags, Total: total, Limit: limit, Offset: offset})
+}

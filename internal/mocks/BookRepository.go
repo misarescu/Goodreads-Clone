@@ -686,6 +686,92 @@ func (_c *MockBookRepository_ListTagCounts_Call) RunAndReturn(run func(ctx conte
 	return _c
 }
 
+// ListUserTagCounts provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) ListUserTagCounts(ctx context.Context, userID int64, limit int64, offset int64) ([]storage.TagCount, int64, error) {
+	ret := _mock.Called(ctx, userID, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListUserTagCounts")
+	}
+
+	var r0 []storage.TagCount
+	var r1 int64
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) ([]storage.TagCount, int64, error)); ok {
+		return returnFunc(ctx, userID, limit, offset)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) []storage.TagCount); ok {
+		r0 = returnFunc(ctx, userID, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]storage.TagCount)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64, int64) int64); ok {
+		r1 = returnFunc(ctx, userID, limit, offset)
+	} else {
+		r1 = ret.Get(1).(int64)
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, int64, int64, int64) error); ok {
+		r2 = returnFunc(ctx, userID, limit, offset)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockBookRepository_ListUserTagCounts_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListUserTagCounts'
+type MockBookRepository_ListUserTagCounts_Call struct {
+	*mock.Call
+}
+
+// ListUserTagCounts is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID int64
+//   - limit int64
+//   - offset int64
+func (_e *MockBookRepository_Expecter) ListUserTagCounts(ctx interface{}, userID interface{}, limit interface{}, offset interface{}) *MockBookRepository_ListUserTagCounts_Call {
+	return &MockBookRepository_ListUserTagCounts_Call{Call: _e.mock.On("ListUserTagCounts", ctx, userID, limit, offset)}
+}
+
+func (_c *MockBookRepository_ListUserTagCounts_Call) Run(run func(ctx context.Context, userID int64, limit int64, offset int64)) *MockBookRepository_ListUserTagCounts_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		var arg3 int64
+		if args[3] != nil {
+			arg3 = args[3].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockBookRepository_ListUserTagCounts_Call) Return(tagCounts []storage.TagCount, n int64, err error) *MockBookRepository_ListUserTagCounts_Call {
+	_c.Call.Return(tagCounts, n, err)
+	return _c
+}
+
+func (_c *MockBookRepository_ListUserTagCounts_Call) RunAndReturn(run func(ctx context.Context, userID int64, limit int64, offset int64) ([]storage.TagCount, int64, error)) *MockBookRepository_ListUserTagCounts_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Search provides a mock function for the type MockBookRepository
 func (_mock *MockBookRepository) Search(ctx context.Context, params storage.SearchParams) ([]db.Book, int64, error) {
 	ret := _mock.Called(ctx, params)

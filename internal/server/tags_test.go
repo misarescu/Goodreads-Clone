@@ -1,13 +1,20 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"goodreads-clone.com/internal/business"
+	"goodreads-clone.com/internal/db"
+	"goodreads-clone.com/internal/mocks"
+	"goodreads-clone.com/internal/storage"
 )
 
 type tagPage struct {
@@ -192,4 +199,56 @@ func TestHandleListSimilarBooksErrors(t *testing.T) {
 	s := newTagServer(t)
 	assert.Equal(t, http.StatusNotFound, do(t, s, http.MethodGet, "/api/books/999/similar", "").Code)
 	assert.Equal(t, http.StatusBadRequest, do(t, s, http.MethodGet, "/api/books/abc/similar", "").Code)
+}
+
+func TestHandleListUserTags(t *testing.T) {
+	t.Parallel()
+	newS := func(t *testing.T) (*Server, *mocks.MockUserRepository, *mocks.MockBookRepository) {
+		users := mocks.NewMockUserRepository(t)
+		books := mocks.NewMockBookRepository(t)
+		s := &Server{
+			business: &business.Business{Storage: &storage.Storage{Users: users, Books: books}},
+			mux:      http.NewServeMux(),
+		}
+		s.registerRoutes()
+		return s, users, books
+	}
+
+	t.Run("page with defaults", func(t *testing.T) {
+		t.Parallel()
+		s, users, books := newS(t)
+		users.EXPECT().GetByID(mock.Anything, int64(3)).Return(&db.User{ID: 3}, nil)
+		books.EXPECT().ListUserTagCounts(mock.Anything, int64(3), int64(20), int64(0)).
+			Return([]storage.TagCount{{Tag: "fantasy", Books: 3}, {Tag: "classic", Books: 1}}, int64(2), nil)
+		rec := do(t, s, http.MethodGet, "/api/users/3/tags", "")
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.JSONEq(t, `{"tags":[{"tag":"fantasy","books":3},{"tag":"classic","books":1}],"total":2,"limit":20,"offset":0}`,
+			rec.Body.String())
+	})
+
+	t.Run("pagination params", func(t *testing.T) {
+		t.Parallel()
+		s, users, books := newS(t)
+		users.EXPECT().GetByID(mock.Anything, int64(3)).Return(&db.User{ID: 3}, nil)
+		books.EXPECT().ListUserTagCounts(mock.Anything, int64(3), int64(100), int64(4)).
+			Return(nil, int64(0), nil)
+		rec := do(t, s, http.MethodGet, "/api/users/3/tags?limit=500&offset=4", "")
+		require.Equal(t, http.StatusOK, rec.Code)
+		assert.JSONEq(t, `{"tags":[],"total":0,"limit":100,"offset":4}`, rec.Body.String())
+	})
+
+	t.Run("unknown user", func(t *testing.T) {
+		t.Parallel()
+		s, users, _ := newS(t)
+		users.EXPECT().GetByID(mock.Anything, int64(9)).Return(nil, sql.ErrNoRows)
+		assert.Equal(t, http.StatusNotFound, do(t, s, http.MethodGet, "/api/users/9/tags", "").Code)
+	})
+
+	t.Run("bad id", func(t *testing.T) {
+		t.Parallel()
+		s, _, _ := newS(t)
+		rec := do(t, s, http.MethodGet, "/api/users/abc/tags", "")
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "Error")
+	})
 }

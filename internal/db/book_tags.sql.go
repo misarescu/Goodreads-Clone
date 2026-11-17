@@ -37,6 +37,22 @@ func (q *Queries) CountTags(ctx context.Context, prefix interface{}) (int64, err
 	return count, err
 }
 
+const countUserTags = `-- name: CountUserTags :one
+SELECT COUNT(DISTINCT t.tag) FROM book_tags t
+WHERE t.book_id IN (
+    SELECT sb.book_id FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    WHERE s.user_id = ?1
+)
+`
+
+func (q *Queries) CountUserTags(ctx context.Context, userID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countUserTags, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteBookTags = `-- name: DeleteBookTags :exec
 DELETE FROM book_tags WHERE book_id = ?
 `
@@ -240,6 +256,52 @@ func (q *Queries) ListTagCounts(ctx context.Context, arg ListTagCountsParams) ([
 	items := []ListTagCountsRow{}
 	for rows.Next() {
 		var i ListTagCountsRow
+		if err := rows.Scan(&i.Tag, &i.Books); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserTagCounts = `-- name: ListUserTagCounts :many
+SELECT t.tag, COUNT(DISTINCT t.book_id) AS books FROM book_tags t
+WHERE t.book_id IN (
+    SELECT sb.book_id FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    WHERE s.user_id = ?1
+)
+GROUP BY t.tag
+ORDER BY books DESC, t.tag
+LIMIT ?3 OFFSET ?2
+`
+
+type ListUserTagCountsParams struct {
+	UserID int64 `json:"user_id"`
+	Offset int64 `json:"offset"`
+	Limit  int64 `json:"limit"`
+}
+
+type ListUserTagCountsRow struct {
+	Tag   string `json:"tag"`
+	Books int64  `json:"books"`
+}
+
+func (q *Queries) ListUserTagCounts(ctx context.Context, arg ListUserTagCountsParams) ([]ListUserTagCountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listUserTagCounts, arg.UserID, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUserTagCountsRow{}
+	for rows.Next() {
+		var i ListUserTagCountsRow
 		if err := rows.Scan(&i.Tag, &i.Books); err != nil {
 			return nil, err
 		}

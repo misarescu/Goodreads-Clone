@@ -1,0 +1,19 @@
+meta {
+  name: gc-78 Delete user A
+  type: http
+  seq: 52
+}
+
+delete {
+  url: {{baseUrl}}/api/users/{{gc78UserA}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  gc-78 Delete user A. Response: 204
+}

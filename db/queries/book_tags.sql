@@ -40,3 +40,22 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 SELECT COUNT(DISTINCT o.book_id) FROM book_tags o
 JOIN book_tags m ON m.tag = o.tag AND m.book_id = sqlc.arg('book_id')
 WHERE o.book_id <> sqlc.arg('book_id');
+
+-- name: ListUserTagCounts :many
+SELECT t.tag, COUNT(DISTINCT t.book_id) AS books FROM book_tags t
+WHERE t.book_id IN (
+    SELECT sb.book_id FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    WHERE s.user_id = sqlc.arg('user_id')
+)
+GROUP BY t.tag
+ORDER BY books DESC, t.tag
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: CountUserTags :one
+SELECT COUNT(DISTINCT t.tag) FROM book_tags t
+WHERE t.book_id IN (
+    SELECT sb.book_id FROM shelf_books sb
+    JOIN shelves s ON s.id = sb.shelf_id
+    WHERE s.user_id = sqlc.arg('user_id')
+);

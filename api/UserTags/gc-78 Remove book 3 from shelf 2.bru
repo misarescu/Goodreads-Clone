@@ -1,0 +1,19 @@
+meta {
+  name: gc-78 Remove book 3 from shelf 2
+  type: http
+  seq: 34
+}
+
+delete {
+  url: {{baseUrl}}/api/shelves/{{gc78Shelf2}}/books/{{gc78Book3}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  gc-78 Remove book 3 from shelf 2. Response: 204
+}

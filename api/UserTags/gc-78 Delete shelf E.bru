@@ -1,0 +1,19 @@
+meta {
+  name: gc-78 Delete shelf E
+  type: http
+  seq: 46
+}
+
+delete {
+  url: {{baseUrl}}/api/shelves/{{gc78ShelfE}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  gc-78 Delete shelf E. Response: 204
+}
