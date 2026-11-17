@@ -14,6 +14,14 @@ workflows: {bug: bug-fix}
 # (Frankie D116), and the suite the e2e test writer adds to.
 e2e:
   command: mise run e2e
+# Each release is prepared by Frankie's release agent (D129): it proposes the
+# semver bump and writes the notes while the release moves through its stages.
+# Once every stage passed, the factory tags the release commit vX.Y.Z (the
+# first is v0.1.0) and publishes a GitHub Release with the notes. When a
+# verification fails, the agent's analysis of the likely culprits is a section
+# of the bug issue. The agent is read-only and never deploys or pushes.
+release:
+  agent: true
 # Where a merged commit is released (Frankie D113, D117). Staging runs on the
 # homelab, deployed by its Flux from misarescu/Goodreads-CD; the factory commits
 # the release's image tag there, waits until the stage reports the commit, and
