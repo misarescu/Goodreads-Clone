@@ -7,8 +7,23 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"strings"
+	"time"
 )
+
+const countSimilarBooks = `-- name: CountSimilarBooks :one
+SELECT COUNT(DISTINCT o.book_id) FROM book_tags o
+JOIN book_tags m ON m.tag = o.tag AND m.book_id = ?1
+WHERE o.book_id <> ?1
+`
+
+func (q *Queries) CountSimilarBooks(ctx context.Context, bookID int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countSimilarBooks, bookID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
 
 const countTags = `-- name: CountTags :one
 SELECT COUNT(DISTINCT tag) FROM book_tags
@@ -117,6 +132,72 @@ func (q *Queries) ListBooksByTag(ctx context.Context, arg ListBooksByTagParams) 
 			&i.CreatedAt,
 			&i.Rating,
 			&i.CoverUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSimilarBooks = `-- name: ListSimilarBooks :many
+SELECT b.id, b.title, b.author, b.page_count, b.isbn, b.release_date, b.language, b.created_at, b.rating, b.cover_url, CAST(group_concat(o.tag) AS TEXT) AS shared_tags
+FROM book_tags o
+JOIN book_tags m ON m.tag = o.tag AND m.book_id = ?1
+JOIN books b ON b.id = o.book_id
+WHERE o.book_id <> ?1
+GROUP BY b.id
+ORDER BY COUNT(*) DESC, b.id
+LIMIT ?3 OFFSET ?2
+`
+
+type ListSimilarBooksParams struct {
+	BookID int64 `json:"book_id"`
+	Offset int64 `json:"offset"`
+	Limit  int64 `json:"limit"`
+}
+
+type ListSimilarBooksRow struct {
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Author      string          `json:"author"`
+	PageCount   sql.NullInt64   `json:"page_count"`
+	Isbn        sql.NullString  `json:"isbn"`
+	ReleaseDate sql.NullTime    `json:"release_date"`
+	Language    sql.NullString  `json:"language"`
+	CreatedAt   time.Time       `json:"created_at"`
+	Rating      sql.NullFloat64 `json:"rating"`
+	CoverUrl    *string         `json:"cover_url"`
+	SharedTags  string          `json:"shared_tags"`
+}
+
+func (q *Queries) ListSimilarBooks(ctx context.Context, arg ListSimilarBooksParams) ([]ListSimilarBooksRow, error) {
+	rows, err := q.db.QueryContext(ctx, listSimilarBooks, arg.BookID, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSimilarBooksRow{}
+	for rows.Next() {
+		var i ListSimilarBooksRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Author,
+			&i.PageCount,
+			&i.Isbn,
+			&i.ReleaseDate,
+			&i.Language,
+			&i.CreatedAt,
+			&i.Rating,
+			&i.CoverUrl,
+			&i.SharedTags,
 		); err != nil {
 			return nil, err
 		}

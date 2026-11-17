@@ -514,6 +514,92 @@ func (_c *MockBookRepository_ListByTag_Call) RunAndReturn(run func(ctx context.C
 	return _c
 }
 
+// ListSimilar provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) ListSimilar(ctx context.Context, bookID int64, limit int64, offset int64) ([]storage.SimilarBook, int64, error) {
+	ret := _mock.Called(ctx, bookID, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListSimilar")
+	}
+
+	var r0 []storage.SimilarBook
+	var r1 int64
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) ([]storage.SimilarBook, int64, error)); ok {
+		return returnFunc(ctx, bookID, limit, offset)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, int64, int64, int64) []storage.SimilarBook); ok {
+		r0 = returnFunc(ctx, bookID, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]storage.SimilarBook)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, int64, int64, int64) int64); ok {
+		r1 = returnFunc(ctx, bookID, limit, offset)
+	} else {
+		r1 = ret.Get(1).(int64)
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, int64, int64, int64) error); ok {
+		r2 = returnFunc(ctx, bookID, limit, offset)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockBookRepository_ListSimilar_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListSimilar'
+type MockBookRepository_ListSimilar_Call struct {
+	*mock.Call
+}
+
+// ListSimilar is a helper method to define mock.On call
+//   - ctx context.Context
+//   - bookID int64
+//   - limit int64
+//   - offset int64
+func (_e *MockBookRepository_Expecter) ListSimilar(ctx interface{}, bookID interface{}, limit interface{}, offset interface{}) *MockBookRepository_ListSimilar_Call {
+	return &MockBookRepository_ListSimilar_Call{Call: _e.mock.On("ListSimilar", ctx, bookID, limit, offset)}
+}
+
+func (_c *MockBookRepository_ListSimilar_Call) Run(run func(ctx context.Context, bookID int64, limit int64, offset int64)) *MockBookRepository_ListSimilar_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 int64
+		if args[1] != nil {
+			arg1 = args[1].(int64)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		var arg3 int64
+		if args[3] != nil {
+			arg3 = args[3].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockBookRepository_ListSimilar_Call) Return(similarBooks []storage.SimilarBook, n int64, err error) *MockBookRepository_ListSimilar_Call {
+	_c.Call.Return(similarBooks, n, err)
+	return _c
+}
+
+func (_c *MockBookRepository_ListSimilar_Call) RunAndReturn(run func(ctx context.Context, bookID int64, limit int64, offset int64) ([]storage.SimilarBook, int64, error)) *MockBookRepository_ListSimilar_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListTagCounts provides a mock function for the type MockBookRepository
 func (_mock *MockBookRepository) ListTagCounts(ctx context.Context, prefix string, limit int64, offset int64) ([]storage.TagCount, int64, error) {
 	ret := _mock.Called(ctx, prefix, limit, offset)

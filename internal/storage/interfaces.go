@@ -33,6 +33,12 @@ type TagCount struct {
 	Books int64  `json:"books"`
 }
 
+// SimilarBook is a book sharing tags with another, with the shared tags sorted.
+type SimilarBook struct {
+	Book       db.Book
+	SharedTags []string
+}
+
 // BookRepository defines operations for managing book data.
 type BookRepository interface {
 	Create(ctx context.Context, params db.CreateBookParams) (*db.Book, error)
@@ -52,6 +58,9 @@ type BookRepository interface {
 	// ListTagCounts returns one page of the tags in use starting with prefix (empty means all),
 	// most books first then alphabetical, plus the total number of matching tags.
 	ListTagCounts(ctx context.Context, prefix string, limit, offset int64) ([]TagCount, int64, error)
+	// ListSimilar returns one page of the books sharing at least one tag with bookID (never
+	// bookID itself), most shared tags first then by id, plus the total number of such books.
+	ListSimilar(ctx context.Context, bookID, limit, offset int64) ([]SimilarBook, int64, error)
 }
 
 // ShelfRepository defines operations for managing user shelves.

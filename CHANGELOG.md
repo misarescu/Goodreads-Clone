@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `GET /api/books/{id}/similar` (gc-77): the books sharing the most tags with a book (`{books: [{book, sharedTags}], total, limit, offset}`), most shared tags first then by `id`; `sharedTags` is alphabetical. `limit` (max 100) and `offset` as in other lists; 404 for an unknown book. One grouped query plus one count.
+
 - Added `GET /api/tags` (gc-75): the tags in use with the number of books carrying each (`{tags: [{tag, books}], total, limit, offset}`), most books first then alphabetical. `limit` (max 100) and `offset` as in other lists; `prefix` filters (trimmed, lowercased) and answers 400 when no valid tag can start with it. Counted in one grouped query plus one count.
 
 - Added `GET /api/books/{id}/ratings` (gc-74): a book's review count, average rating and the number of reviews at each of 1 to 5 stars (`stars` always has all five keys). Counted in one grouped query.

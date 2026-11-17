@@ -5,6 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"sort"
+	"strings"
 
 	"goodreads-clone.com/internal/db"
 )
@@ -174,6 +176,33 @@ func (r *bookRepository) ListTagCounts(
 	out := make([]TagCount, len(rows))
 	for i, row := range rows {
 		out[i] = TagCount{Tag: row.Tag, Books: row.Books}
+	}
+	return out, total, nil
+}
+
+// ListSimilar returns one page of the books sharing tags with bookID, ordered by number of
+// shared tags (most first) then id, each with its sorted shared tags, and the total count.
+func (r *bookRepository) ListSimilar(ctx context.Context, bookID, limit, offset int64) ([]SimilarBook, int64, error) {
+	total, err := r.queries.CountSimilarBooks(ctx, bookID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count similar books query failed: %w", err)
+	}
+	rows, err := r.queries.ListSimilarBooks(ctx, db.ListSimilarBooksParams{BookID: bookID, Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, 0, fmt.Errorf("list similar books query failed: %w", err)
+	}
+	out := make([]SimilarBook, len(rows))
+	for i, row := range rows {
+		tags := strings.Split(row.SharedTags, ",")
+		sort.Strings(tags)
+		out[i] = SimilarBook{
+			Book: db.Book{
+				ID: row.ID, Title: row.Title, Author: row.Author, PageCount: row.PageCount, Isbn: row.Isbn,
+				ReleaseDate: row.ReleaseDate, Language: row.Language, CreatedAt: row.CreatedAt,
+				Rating: row.Rating, CoverUrl: row.CoverUrl,
+			},
+			SharedTags: tags,
+		}
 	}
 	return out, total, nil
 }
