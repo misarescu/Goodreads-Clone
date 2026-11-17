@@ -1,0 +1,25 @@
+meta {
+  name: gc-77 Similar books of an unknown book
+  type: http
+  seq: 35
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc77T}}/similar
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Similar books of an unknown book. Response: 404
+}

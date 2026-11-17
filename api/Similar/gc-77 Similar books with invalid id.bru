@@ -1,0 +1,25 @@
+meta {
+  name: gc-77 Similar books with invalid id
+  type: http
+  seq: 24
+}
+
+get {
+  url: {{baseUrl}}/api/books/abc/similar
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Similar books with invalid id. Response: 400
+}

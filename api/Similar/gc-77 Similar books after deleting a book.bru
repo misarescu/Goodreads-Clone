@@ -1,0 +1,26 @@
+meta {
+  name: gc-77 Similar books after deleting a book
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc77T}}/similar
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("drops the deleted book", function () {
+    expect(res.body.books.map(function (b) { return b.book.id; })).to.eql([bru.getVar("gc77B4"), bru.getVar("gc77B2")]);
+    expect(res.body.total).to.equal(2);
+  });
+}
+
+docs {
+  Similar books after deleting a book. Response: 200
+}

@@ -1,0 +1,28 @@
+meta {
+  name: gc-77 Similar books with limit
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc77T}}/similar?limit=1
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns one book and the full total", function () {
+    expect(res.body.books).to.have.length(1);
+    expect(res.body.books[0].book.id).to.equal(bru.getVar("gc77B3"));
+    expect(res.body.total).to.equal(4);
+    expect(res.body.limit).to.equal(1);
+  });
+}
+
+docs {
+  Similar books with limit. Response: 200
+}
