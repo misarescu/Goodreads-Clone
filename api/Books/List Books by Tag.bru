@@ -1,7 +1,7 @@
 meta {
   name: List Books by Tag
   type: http
-  seq: 8
+  seq: 13
 }
 
 get {
@@ -18,6 +18,16 @@ params:query {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("lists only the tagged book", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body).to.be.an("array").with.lengthOf(1);
+    expect(res.body[0].id).to.equal(bru.getVar("bookId"));
+    expect(res.body[0].tags).to.include("sci-fi-" + runId);
+  });
 }
 
 docs {

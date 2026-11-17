@@ -1,7 +1,7 @@
 meta {
   name: Get Monthly Reading Stats
   type: http
-  seq: 8
+  seq: 11
 }
 
 get {
@@ -16,6 +16,17 @@ params:query {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns twelve months, January to December", function () {
+    expect(res.body).to.be.an("array").with.lengthOf(12);
+    res.body.forEach((m, i) => {
+      expect(m.month).to.equal(i + 1);
+      expect(m.books_finished).to.be.a("number");
+      expect(m.pages_finished).to.be.a("number");
+    });
+  });
 }
 
 docs {

@@ -1,0 +1,35 @@
+meta {
+  name: Save Review With Invalid Rating
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": {{userId}},
+    "rating": 9,
+    "body": "Too good."
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Rating must be 1-5.
+
+  Response: 400 Bad Request
+}

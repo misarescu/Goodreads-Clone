@@ -1,0 +1,31 @@
+meta {
+  name: Search Books Without Words
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/books/search?q=!!!
+  body: none
+  auth: none
+}
+
+params:query {
+  q: !!!
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  A query with no searchable word or author: filter.
+
+  Response: 400 Bad Request
+}

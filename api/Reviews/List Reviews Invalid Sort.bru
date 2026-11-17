@@ -1,0 +1,29 @@
+meta {
+  name: List Reviews With Invalid Sort
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews?sort=bogus
+  body: none
+  auth: none
+}
+
+params:query {
+  sort: bogus
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 400 Bad Request (unknown sort)
+}

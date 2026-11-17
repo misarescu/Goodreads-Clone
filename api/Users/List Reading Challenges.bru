@@ -1,7 +1,7 @@
 meta {
   name: List Reading Challenges
   type: http
-  seq: 10
+  seq: 15
 }
 
 get {
@@ -12,6 +12,16 @@ get {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("lists the challenge that was set", function () {
+    expect(res.body).to.be.an("array");
+    const c = res.body.find((x) => x.year === 2026);
+    expect(c).to.be.an("object");
+    expect(c.goal).to.equal(24);
+    expect(c).to.include.keys("finished", "expected_by_now", "ahead_by");
+  });
 }
 
 docs {

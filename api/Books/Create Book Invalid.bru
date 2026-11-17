@@ -1,0 +1,33 @@
+meta {
+  name: Create Book Without Title
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "author": "Nobody {{runId}}"
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Title and author are required.
+
+  Response: 400 Bad Request
+}

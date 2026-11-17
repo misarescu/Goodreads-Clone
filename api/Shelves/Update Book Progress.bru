@@ -1,7 +1,7 @@
 meta {
   name: Update Book Progress
   type: http
-  seq: 11
+  seq: 15
 }
 
 put {
@@ -18,6 +18,15 @@ body:json {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("records the pages and computes the percentage", function () {
+    expect(res.body.book_id).to.equal(bru.getVar("bookId"));
+    expect(res.body.pages_read).to.equal(120);
+    expect(res.body.progress_percent).to.equal(40);
+    expect(res.body.finished_at).to.equal(null);
+  });
 }
 
 docs {

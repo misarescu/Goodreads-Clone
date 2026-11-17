@@ -1,7 +1,7 @@
 meta {
   name: Update User
   type: http
-  seq: 6
+  seq: 8
 }
 
 put {
@@ -19,6 +19,15 @@ body:json {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("echoes the new email and username", function () {
+    const runId = bru.getVar("runId");
+    expect(res.body.id).to.equal(bru.getVar("userId"));
+    expect(res.body.email).to.equal("new-" + runId + "@example.com");
+    expect(res.body.username).to.equal("new-" + runId);
+  });
 }
 
 docs {

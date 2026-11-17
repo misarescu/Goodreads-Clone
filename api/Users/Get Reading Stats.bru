@@ -1,7 +1,7 @@
 meta {
   name: Get Reading Stats
   type: http
-  seq: 7
+  seq: 9
 }
 
 get {
@@ -12,6 +12,14 @@ get {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the three counters", function () {
+    expect(res.body.books_on_shelves).to.be.a("number");
+    expect(res.body.pages_read).to.be.a("number");
+    expect(res.body.books_finished).to.be.a("number");
+  });
 }
 
 docs {

@@ -10,6 +10,16 @@ get {
   auth: none
 }
 
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("reports ready", function () {
+    expect(res.body.status).to.equal("ready");
+  });
+}
+
 docs {
   Readiness probe. Pings the database (unlike /api/health, which does not).
 

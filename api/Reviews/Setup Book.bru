@@ -27,6 +27,16 @@ assert {
   res.status: eq 201
 }
 
+tests {
+  test("creates the book", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.be.a("number");
+    expect(res.body.title).to.equal("Setup Book " + runId);
+    expect(res.body.page_count.Int64).to.equal(300);
+  });
+}
+
 docs {
   Creates the book this folder works on. Teardown Book deletes it at the end.
 }

@@ -1,0 +1,25 @@
+meta {
+  name: Get Book Count
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/books/count
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the number of books, at least the created one", function () {
+    expect(res.body.book_count).to.be.a("number").and.at.least(1);
+  });
+}
+
+docs {
+  Response: 200 OK {"book_count": <number>}
+}

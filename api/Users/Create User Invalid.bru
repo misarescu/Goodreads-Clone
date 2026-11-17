@@ -1,0 +1,33 @@
+meta {
+  name: Create User Without Fields
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "user-{{runId}}@example.com"
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Creating a user without username or password_hash is rejected.
+
+  Response: 400 Bad Request
+}

@@ -25,6 +25,27 @@ The suite can run any number of times against a server that keeps its data:
   Setup User and Setup Book) and ends by deleting it, in a valid order, so a
   run leaves nothing behind. Requests run in `seq` order within a folder.
 
+### Assertions
+
+Every request asserts what its `docs` block promises:
+
+- `assert { res.status: eq N }` checks the status code.
+- A `tests` block checks the body: a create echoes what it sent and returns an
+  `id`, a get returns the requested resource (compare against the saved
+  `userId`, `bookId`, ...), a list returns an array (the search also
+  `total`, `limit`, `offset`).
+- Each delete is followed by a get of the same resource that must answer 404.
+- Negative cases cover the errors the docs name: 400 for an invalid body or ID,
+  404 for a deleted resource, 409 for a duplicate (a book added to a shelf
+  twice). Invalid IDs are non-numeric (`abc`); "unknown" resources are ones
+  the run just deleted, never a fixed number.
+
+### Issue tags
+
+A request that checks behaviour an issue added carries that issue's key in its
+name, for example `gc-65 List books by tag`, so a failure points to the issue.
+Requests that predate this convention need no tag.
+
 ## API Endpoints
 
 ### Health

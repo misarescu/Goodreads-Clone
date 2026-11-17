@@ -1,0 +1,31 @@
+meta {
+  name: Add Book to Shelf With Invalid ID
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/shelves/abc/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "book_id": {{bookId}}
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 400 Bad Request (invalid shelf ID)
+}

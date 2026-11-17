@@ -1,0 +1,29 @@
+meta {
+  name: Get Reading Challenge
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}/challenges/2026
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the goal that was set", function () {
+    expect(res.body.year).to.equal(2026);
+    expect(res.body.goal).to.equal(24);
+    expect(res.body).to.include.keys("finished", "expected_by_now", "ahead_by");
+  });
+}
+
+docs {
+  Returns the user's reading challenge for 2026 with its progress.
+
+  Response: 200 {"year", "goal", "finished", "expected_by_now", "ahead_by", "books"}
+}

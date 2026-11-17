@@ -1,0 +1,33 @@
+meta {
+  name: Update Book Progress Above Page Count
+  type: http
+  seq: 16
+}
+
+put {
+  url: {{baseUrl}}/api/shelves/{{shelfId}}/books/{{bookId}}/progress
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "pages_read": 301
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  The book has 300 pages.
+
+  Response: 400 Bad Request
+}

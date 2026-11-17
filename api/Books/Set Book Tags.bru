@@ -1,7 +1,7 @@
 meta {
   name: Set Book Tags
   type: http
-  seq: 7
+  seq: 11
 }
 
 put {
@@ -18,6 +18,15 @@ body:json {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the book with sorted tags", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.equal(bru.getVar("bookId"));
+    expect(res.body.tags).to.eql(["classic", "sci-fi-" + runId]);
+  });
 }
 
 docs {

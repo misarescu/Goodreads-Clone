@@ -1,7 +1,7 @@
 meta {
   name: Get Book by ISBN
   type: http
-  seq: 4
+  seq: 6
 }
 
 get {
@@ -16,6 +16,15 @@ params:query {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the created book", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.equal(bru.getVar("bookId"));
+    expect(res.body.isbn.String).to.equal("978-0-" + runId);
+  });
 }
 
 docs {

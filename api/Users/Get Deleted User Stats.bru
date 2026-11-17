@@ -1,0 +1,25 @@
+meta {
+  name: Get Stats of Deleted User
+  type: http
+  seq: 21
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}/stats
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 404 Not Found (unknown user)
+}

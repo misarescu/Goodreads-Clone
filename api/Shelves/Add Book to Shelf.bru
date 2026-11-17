@@ -1,7 +1,7 @@
 meta {
   name: Add Book to Shelf
   type: http
-  seq: 9
+  seq: 11
 }
 
 post {
@@ -18,6 +18,16 @@ body:json {
 
 assert {
   res.status: eq 201
+}
+
+tests {
+  test("returns the shelf book with no progress", function () {
+    expect(res.body.id).to.be.a("number");
+    expect(res.body.shelf_id).to.equal(bru.getVar("shelfId"));
+    expect(res.body.book_id).to.equal(bru.getVar("bookId"));
+    expect(res.body.pages_read).to.equal(0);
+    expect(res.body.progress_percent).to.equal(0);
+  });
 }
 
 docs {

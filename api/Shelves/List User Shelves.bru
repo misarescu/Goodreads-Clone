@@ -1,7 +1,7 @@
 meta {
   name: List User Shelves
   type: http
-  seq: 6
+  seq: 8
 }
 
 get {
@@ -12,6 +12,16 @@ get {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("lists the user's shelves, including the created ones", function () {
+    expect(res.body).to.be.an("array");
+    const ids = res.body.map((s) => s.id);
+    expect(ids).to.include(bru.getVar("shelfId"));
+    expect(ids).to.include(bru.getVar("shelf2Id"));
+    res.body.forEach((s) => expect(s.user_id).to.equal(bru.getVar("userId")));
+  });
 }
 
 docs {
