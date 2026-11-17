@@ -125,5 +125,6 @@ func (s *Server) handleRatingSpread(w http.ResponseWriter, r *http.Request) {
 		handleDBError(w, err)
 		return
 	}
+	spread.ReviewCount = int64(len(spread.Stars))
 	writeJSON(w, http.StatusOK, spread)
 }
