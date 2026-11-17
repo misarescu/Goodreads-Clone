@@ -1,0 +1,29 @@
+meta {
+  name: gc-77 Put tags on L
+  type: http
+  seq: 13
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc77L}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {"tags":["g77{{runId}}-lonely"]}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the book", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  Put tags on L. Response: 200
+}

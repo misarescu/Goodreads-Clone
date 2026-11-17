@@ -1,0 +1,23 @@
+meta {
+  name: gc-77 Get book B3
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc77B3}}
+  body: none
+  auth: none
+}
+
+script:post-response {
+  bru.setVar("gc77SnapB3", res.body);
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Get book B3. Response: 200
+}
