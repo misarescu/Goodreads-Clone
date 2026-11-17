@@ -1,0 +1,25 @@
+meta {
+  name: gc-75 List tags with too long prefix
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/tags?prefix=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  A prefix longer than 32 characters. Response: 400
+}

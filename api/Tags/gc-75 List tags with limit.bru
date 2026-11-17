@@ -1,0 +1,33 @@
+meta {
+  name: gc-75 List tags with limit
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/tags?prefix=g75{{runId}}&limit=2
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("lists the expected page", function () {
+    const runId = bru.getVar("runId");
+    const expected = [{ tag: "g75@RUN@-alpha", books: 2 }, { tag: "g75@RUN@-top", books: 2 }].map(function (r) {
+      return { tag: r.tag.replace("@RUN@", runId), books: r.books };
+    });
+    expect(res.body.tags).to.be.an("array");
+    expect(res.body.tags).to.eql(expected);
+    expect(res.body.total).to.equal(3);
+    expect(res.body.limit).to.equal(2);
+    expect(res.body.offset).to.equal(0);
+  });
+}
+
+docs {
+  Lists the tags in use with how many books carry each, narrowed to this run's tags by prefix. Response: 200 OK
+}

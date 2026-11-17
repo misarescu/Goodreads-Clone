@@ -1,0 +1,31 @@
+meta {
+  name: gc-75 Put tags on A
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc75BookA}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tags": ["g75{{runId}}-top", "g75{{runId}}-alpha", "g75{{runId}}-zulu"]
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the book", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  Sets the tags of a gc-75 book.
+}
