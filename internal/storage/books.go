@@ -206,3 +206,23 @@ func (r *bookRepository) ListSimilar(ctx context.Context, bookID, limit, offset 
 	}
 	return out, total, nil
 }
+
+// ListUserTagCounts returns one page of the tags carried by the books on userID's shelves,
+// ordered by number of distinct books (most first) then tag, and the total number of tags.
+func (r *bookRepository) ListUserTagCounts(
+	ctx context.Context, userID, limit, offset int64,
+) ([]TagCount, int64, error) {
+	total, err := r.queries.CountUserTags(ctx, userID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count user tags query failed: %w", err)
+	}
+	rows, err := r.queries.ListUserTagCounts(ctx, db.ListUserTagCountsParams{UserID: userID, Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, 0, fmt.Errorf("list user tag counts query failed: %w", err)
+	}
+	out := make([]TagCount, len(rows))
+	for i, row := range rows {
+		out[i] = TagCount{Tag: row.Tag, Books: row.Books}
+	}
+	return out, total, nil
+}

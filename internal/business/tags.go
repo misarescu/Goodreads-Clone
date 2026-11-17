@@ -184,3 +184,20 @@ func (b *Business) ListSimilarBooks(ctx context.Context, id, limit, offset int64
 	}
 	return out, total, nil
 }
+
+// ListUserTags lists one page of the tags carried by the books on a user's shelves with the
+// number of those books carrying each, and the total number of tags. It returns an error
+// wrapping sql.ErrNoRows for an unknown user.
+func (b *Business) ListUserTags(ctx context.Context, userID, limit, offset int64) ([]storage.TagCount, int64, error) {
+	if _, err := b.Storage.Users.GetByID(ctx, userID); err != nil {
+		return nil, 0, fmt.Errorf("failed to get user for tags: %w", err)
+	}
+	tags, total, err := b.Storage.Books.ListUserTagCounts(ctx, userID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list user tags: %w", err)
+	}
+	if tags == nil {
+		tags = []storage.TagCount{}
+	}
+	return tags, total, nil
+}

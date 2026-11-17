@@ -204,3 +204,54 @@ func TestBusiness_ListSimilarBooks(t *testing.T) {
 		require.ErrorIs(t, err, assert.AnError)
 	})
 }
+
+func TestBusiness_ListUserTags(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	newB := func(t *testing.T) (*business.Business, *mocks.MockUserRepository, *mocks.MockBookRepository) {
+		users := mocks.NewMockUserRepository(t)
+		books := mocks.NewMockBookRepository(t)
+		return &business.Business{Storage: &storage.Storage{Users: users, Books: books}}, users, books
+	}
+
+	t.Run("lists the page and total", func(t *testing.T) {
+		t.Parallel()
+		b, users, books := newB(t)
+		users.EXPECT().GetByID(ctx, int64(3)).Return(&db.User{ID: 3}, nil)
+		books.EXPECT().ListUserTagCounts(ctx, int64(3), int64(20), int64(0)).
+			Return([]storage.TagCount{{Tag: "fantasy", Books: 3}}, int64(5), nil)
+		got, total, err := b.ListUserTags(ctx, 3, 20, 0)
+		require.NoError(t, err)
+		assert.Equal(t, []storage.TagCount{{Tag: "fantasy", Books: 3}}, got)
+		assert.EqualValues(t, 5, total)
+	})
+
+	t.Run("nil becomes empty", func(t *testing.T) {
+		t.Parallel()
+		b, users, books := newB(t)
+		users.EXPECT().GetByID(ctx, int64(3)).Return(&db.User{ID: 3}, nil)
+		books.EXPECT().ListUserTagCounts(ctx, int64(3), int64(20), int64(0)).Return(nil, int64(0), nil)
+		got, total, err := b.ListUserTags(ctx, 3, 20, 0)
+		require.NoError(t, err)
+		assert.NotNil(t, got)
+		assert.Empty(t, got)
+		assert.EqualValues(t, 0, total)
+	})
+
+	t.Run("unknown user", func(t *testing.T) {
+		t.Parallel()
+		b, users, _ := newB(t)
+		users.EXPECT().GetByID(ctx, int64(9)).Return(nil, sql.ErrNoRows)
+		_, _, err := b.ListUserTags(ctx, 9, 20, 0)
+		require.ErrorIs(t, err, sql.ErrNoRows)
+	})
+
+	t.Run("storage error", func(t *testing.T) {
+		t.Parallel()
+		b, users, books := newB(t)
+		users.EXPECT().GetByID(ctx, int64(3)).Return(&db.User{ID: 3}, nil)
+		books.EXPECT().ListUserTagCounts(ctx, int64(3), int64(20), int64(0)).Return(nil, int64(0), assert.AnError)
+		_, _, err := b.ListUserTags(ctx, 3, 20, 0)
+		require.ErrorIs(t, err, assert.AnError)
+	})
+}

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `GET /api/users/{id}/tags` (gc-78): the tags carried by the books on a user's shelves with how many distinct books carry each (`{tags: [{tag, books}], total, limit, offset}`), most books first then alphabetical. A book counts once however many shelves hold it. `limit` (max 100) and `offset` as in other lists; 404 for an unknown user, 400 for a bad id. One grouped query plus one count.
+
 - Added `GET /api/books/{id}/similar` (gc-77): the books sharing the most tags with a book (`{books: [{book, sharedTags}], total, limit, offset}`), most shared tags first then by `id`; `sharedTags` is alphabetical. `limit` (max 100) and `offset` as in other lists; 404 for an unknown book. One grouped query plus one count.
 
 - Added `GET /api/tags` (gc-75): the tags in use with the number of books carrying each (`{tags: [{tag, books}], total, limit, offset}`), most books first then alphabetical. `limit` (max 100) and `offset` as in other lists; `prefix` filters (trimmed, lowercased) and answers 400 when no valid tag can start with it. Counted in one grouped query plus one count.

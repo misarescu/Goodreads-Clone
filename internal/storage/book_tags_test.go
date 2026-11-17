@@ -166,3 +166,44 @@ func TestBookRepository_ListSimilar(t *testing.T) {
 	assert.Empty(t, got)
 	assert.Zero(t, total)
 }
+
+func TestBookRepository_ListUserTagCounts(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+	u := createTestUser(t, s, "tags@example.com", "taguser")
+	other := createTestUser(t, s, "other@example.com", "otheruser")
+	sh1 := createTestShelf(t, s, u.ID, "One", false)
+	sh2 := createTestShelf(t, s, u.ID, "Two", false)
+	osh := createTestShelf(t, s, other.ID, "Other", false)
+	a := createTestBook(t, s, "A", "x")
+	b := createTestBook(t, s, "B", "x")
+	c := createTestBook(t, s, "C", "x")
+	off := createTestBook(t, s, "Off", "x")
+	require.NoError(t, s.Books.SetTags(ctx, a.ID, []string{"fantasy", "zed"}))
+	require.NoError(t, s.Books.SetTags(ctx, b.ID, []string{"fantasy", "apple"}))
+	require.NoError(t, s.Books.SetTags(ctx, c.ID, []string{"classic"}))
+	require.NoError(t, s.Books.SetTags(ctx, off.ID, []string{"fantasy", "hidden"}))
+	placements := []struct{ shelf, book int64 }{
+		{sh1.ID, a.ID}, {sh2.ID, a.ID}, {sh1.ID, b.ID}, {osh.ID, c.ID}, {osh.ID, off.ID},
+	}
+	for _, p := range placements {
+		_, err := s.ShelfBooks.Add(ctx, p.shelf, p.book, 0, 0)
+		require.NoError(t, err)
+	}
+
+	got, total, err := s.Books.ListUserTagCounts(ctx, u.ID, 20, 0)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, total)
+	assert.Equal(t, []TagCount{{Tag: "fantasy", Books: 2}, {Tag: "apple", Books: 1}, {Tag: "zed", Books: 1}}, got)
+
+	got, total, err = s.Books.ListUserTagCounts(ctx, u.ID, 1, 2)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, total)
+	assert.Equal(t, []TagCount{{Tag: "zed", Books: 1}}, got)
+
+	got, total, err = s.Books.ListUserTagCounts(ctx, 999, 20, 0)
+	require.NoError(t, err)
+	assert.EqualValues(t, 0, total)
+	assert.Empty(t, got)
+}

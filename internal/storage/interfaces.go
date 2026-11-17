@@ -58,6 +58,10 @@ type BookRepository interface {
 	// ListTagCounts returns one page of the tags in use starting with prefix (empty means all),
 	// most books first then alphabetical, plus the total number of matching tags.
 	ListTagCounts(ctx context.Context, prefix string, limit, offset int64) ([]TagCount, int64, error)
+	// ListUserTagCounts returns one page of the tags carried by the books on userID's shelves
+	// with the number of those distinct books carrying each (most first then alphabetical),
+	// plus the total number of such tags.
+	ListUserTagCounts(ctx context.Context, userID, limit, offset int64) ([]TagCount, int64, error)
 	// ListSimilar returns one page of the books sharing at least one tag with bookID (never
 	// bookID itself), most shared tags first then by id, plus the total number of such books.
 	ListSimilar(ctx context.Context, bookID, limit, offset int64) ([]SimilarBook, int64, error)
