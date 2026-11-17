@@ -24,6 +24,21 @@ e2e:
 # bug issue. The suite cleans up after itself, so it passes again and again
 # against the stage's kept data (gc-71, gc-72).
 stages:
+  # Before the merge queue, each change request's head is checked in a preview
+  # of it (Frankie D124-D126): the flux-preview driver adds the head's image to
+  # the ResourceSet inputs in misarescu/Goodreads-CD, the homelab's Flux runs it
+  # in its own namespace, and the factory reaches it over the tailnet at
+  # /pr-<number>/ on the previews proxy. Once it reports the head, the API suite
+  # runs against it; failures go back to the coder. The preview is removed after
+  # the check. At most two run at once; a third change request waits for room.
+  - name: preview
+    driver: flux-preview
+    url: http://goodreads-previews.stages.svc.cluster.local/pr-{changeRequest}
+    verify: e2e-suite
+    config:
+      repo: misarescu/Goodreads-CD
+      path: apps/goodreads/previews/inputs.yaml
+      versionURL: http://goodreads-previews.stages.svc.cluster.local/pr-{changeRequest}/api/version
   - name: staging
     driver: flux
     url: http://goodreads-stg.stages.svc.cluster.local
