@@ -1,0 +1,29 @@
+meta {
+  name: gc-78 Put tags on book 3
+  type: http
+  seq: 16
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc78Book3}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {"tags":["g78{{runId}}-fan","g78{{runId}}-apple"]}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the tags", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  gc-78 Put tags on book 3. Response: 200
+}

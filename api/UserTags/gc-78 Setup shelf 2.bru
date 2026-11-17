@@ -1,0 +1,33 @@
+meta {
+  name: gc-78 Setup shelf 2
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/shelves
+  body: json
+  auth: none
+}
+
+body:json {
+  {"user_id":{{gc78UserA}},"name":"gc-78 shelf 2 {{runId}}"}
+}
+
+script:post-response {
+  bru.setVar("gc78Shelf2", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+}
+
+tests {
+  test("creates the shelf", function () {
+    expect(res.body.id).to.be.a("number");
+  });
+}
+
+docs {
+  gc-78 Setup shelf 2. Response: 201
+}

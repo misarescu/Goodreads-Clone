@@ -1,0 +1,25 @@
+meta {
+  name: gc-78 Tags of an unknown user
+  type: http
+  seq: 55
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{gc78UserE}}/tags
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  gc-78 Tags of an unknown user. Response: 404
+}

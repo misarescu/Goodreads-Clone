@@ -1,0 +1,25 @@
+meta {
+  name: gc-78 Tags with invalid user id
+  type: http
+  seq: 56
+}
+
+get {
+  url: {{baseUrl}}/api/users/abc/tags
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  gc-78 Tags with invalid user id. Response: 400
+}

@@ -1,0 +1,23 @@
+meta {
+  name: gc-78 Add book 1 to shelf C
+  type: http
+  seq: 22
+}
+
+post {
+  url: {{baseUrl}}/api/shelves/{{gc78ShelfC}}/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {"book_id":{{gc78Book1}}}
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  gc-78 Add book 1 to shelf C. Response: 201
+}
