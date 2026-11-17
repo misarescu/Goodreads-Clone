@@ -70,14 +70,14 @@ jobs:
       - name: Run database migrations
         run: make migrate
         env:
-          DATABASE_PATH: goodreads.db
+          DATABASE_PATH: ${{ runner.temp }}/e2e.db
 
       - name: Start server in background
         run: |
           ./bin/goodreads &
           echo $! > server.pid
         env:
-          DATABASE_PATH: goodreads.db
+          DATABASE_PATH: ${{ runner.temp }}/e2e.db
           SERVER_ADDR: :8080
 
       - name: Wait for server to be ready

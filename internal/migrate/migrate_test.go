@@ -72,6 +72,27 @@ func TestApplyLegacyDatabase(t *testing.T) {
 	}
 }
 
+// A database that has users but only some of the legacy migrations (like the
+// committed goodreads.db) must not be reported as migrated while it lacks
+// later columns: Apply either fails or brings the schema up to date.
+func TestApplyStaleLegacyDatabase(t *testing.T) {
+	db := open(t)
+	ctx := context.Background()
+	b, err := dbmigrations.FS.ReadFile("migrations/001_schema.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(string(b)); err != nil {
+		t.Fatal(err)
+	}
+	if err := migrate.Apply(ctx, db, dbmigrations.FS, "migrations"); err != nil {
+		return // refusing the stale database is acceptable
+	}
+	if _, err := db.Exec("SELECT rating FROM books"); err != nil {
+		t.Fatalf("Apply succeeded but the schema is behind: %v", err)
+	}
+}
+
 func TestApplyPicksUpNewFileAndReportsFailure(t *testing.T) {
 	db := open(t)
 	ctx := context.Background()

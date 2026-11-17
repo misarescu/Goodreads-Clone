@@ -29,6 +29,11 @@ func Apply(ctx context.Context, db *sql.DB, fsys fs.FS, dir string) error {
 	if err != nil {
 		return err
 	}
+	if legacy {
+		if err := verifyBaseline(ctx, db); err != nil {
+			return err
+		}
+	}
 	if _, err := db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS schema_migrations (
 		name TEXT PRIMARY KEY,
 		applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -56,6 +61,39 @@ func isLegacy(ctx context.Context, db *sql.DB) (bool, error) {
 		return false, err
 	}
 	return tableExists(ctx, db, "users")
+}
+
+// verifyBaseline refuses a legacy database whose schema lacks the effects of
+// migrations 001-006 instead of recording them as applied. It runs before
+// schema_migrations is created so a refused database stays legacy.
+func verifyBaseline(ctx context.Context, db *sql.DB) error {
+	var missing []string
+	for _, t := range []string{"users", "books", "shelves", "shelf_books", "reading_challenges", "reviews", "books_fts"} {
+		ok, err := tableExists(ctx, db, t)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			missing = append(missing, "table "+t)
+		}
+	}
+	for _, c := range [][2]string{{"books", "rating"}, {"shelf_books", "finished_at"}} {
+		var n int
+		q := `SELECT COUNT(*) FROM pragma_table_info(?) WHERE name = ?`
+		if err := db.QueryRowContext(ctx, q, c[0], c[1]).Scan(&n); err != nil {
+			return fmt.Errorf("checking column %s.%s: %w", c[0], c[1], err)
+		}
+		if n == 0 {
+			missing = append(missing, "column "+c[0]+"."+c[1])
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf(
+			"database has no schema_migrations and its schema is behind migrations up to %s "+
+				"(missing %s); recreate it from the migrations",
+			legacyBaseline, strings.Join(missing, ", "))
+	}
+	return nil
 }
 
 func recordBaseline(ctx context.Context, db *sql.DB, files []string) error {
