@@ -5,9 +5,13 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/users/1
+  url: {{baseUrl}}/api/users/{{userId}}
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

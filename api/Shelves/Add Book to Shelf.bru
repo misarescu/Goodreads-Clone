@@ -1,19 +1,23 @@
 meta {
   name: Add Book to Shelf
   type: http
-  seq: 7
+  seq: 9
 }
 
 post {
-  url: {{baseUrl}}/api/shelves/1/books
+  url: {{baseUrl}}/api/shelves/{{shelfId}}/books
   body: json
   auth: none
 }
 
 body:json {
   {
-    "book_id": 1
+    "book_id": {{bookId}}
   }
+}
+
+assert {
+  res.status: eq 201
 }
 
 docs {

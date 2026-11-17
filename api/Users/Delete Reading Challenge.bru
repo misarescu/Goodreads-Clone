@@ -5,9 +5,13 @@ meta {
 }
 
 delete {
-  url: {{baseUrl}}/api/users/1/challenges/2026
+  url: {{baseUrl}}/api/users/{{userId}}/challenges/2026
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 204
 }
 
 docs {

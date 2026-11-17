@@ -5,16 +5,20 @@ meta {
 }
 
 put {
-  url: {{baseUrl}}/api/users/1
+  url: {{baseUrl}}/api/users/{{userId}}
   body: json
   auth: none
 }
 
 body:json {
   {
-    "email": "newemail@example.com",
-    "username": "newusername"
+    "email": "new-{{runId}}@example.com",
+    "username": "new-{{runId}}"
   }
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {
@@ -25,8 +29,8 @@ docs {
   {
     "data": {
       "id": 1,
-      "email": "newemail@example.com",
-      "username": "newusername",
+      "email": "new-{{runId}}@example.com",
+      "username": "new-{{runId}}",
       "created_at": "2024-01-01T00:00:00Z",
       "updated_at": "2024-01-01T00:01:00Z"
     }

@@ -1,0 +1,31 @@
+meta {
+  name: Setup User
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "user-{{runId}}@example.com",
+    "username": "user-{{runId}}",
+    "password_hash": "hashed_password_here"
+  }
+}
+
+script:post-response {
+  bru.setVar("userId", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Creates the user this folder works on. Teardown User deletes it at the end.
+}

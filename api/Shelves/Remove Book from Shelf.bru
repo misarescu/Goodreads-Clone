@@ -1,13 +1,17 @@
 meta {
   name: Remove Book from Shelf
   type: http
-  seq: 8
+  seq: 14
 }
 
 delete {
-  url: {{baseUrl}}/api/shelves/1/books/1
+  url: {{baseUrl}}/api/shelves/{{shelf2Id}}/books/{{bookId}}
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 204
 }
 
 docs {

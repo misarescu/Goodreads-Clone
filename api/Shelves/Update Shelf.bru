@@ -1,19 +1,23 @@
 meta {
   name: Update Shelf
   type: http
-  seq: 5
+  seq: 8
 }
 
 put {
-  url: {{baseUrl}}/api/shelves/1
+  url: {{baseUrl}}/api/shelves/{{shelfId}}
   body: json
   auth: none
 }
 
 body:json {
   {
-    "name": "Updated Shelf Name"
+    "name": "Updated Shelf Name {{runId}}"
   }
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {
@@ -30,7 +34,7 @@ docs {
     "data": {
       "id": 1,
       "user_id": 1,
-      "name": "Updated Shelf Name",
+      "name": "Updated Shelf Name {{runId}}",
       "is_default": false,
       "created_at": "2024-01-01T00:00:00Z"
     }

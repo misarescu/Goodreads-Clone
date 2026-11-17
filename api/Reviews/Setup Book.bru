@@ -1,0 +1,32 @@
+meta {
+  name: Setup Book
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Setup Book {{runId}}",
+    "author": "Suite Author",
+    "page_count": 300,
+    "isbn": "978-1-{{runId}}"
+  }
+}
+
+script:post-response {
+  bru.setVar("bookId", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Creates the book this folder works on. Teardown Book deletes it at the end.
+}

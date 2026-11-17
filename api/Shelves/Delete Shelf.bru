@@ -1,13 +1,17 @@
 meta {
   name: Delete Shelf
   type: http
-  seq: 6
+  seq: 15
 }
 
 delete {
-  url: {{baseUrl}}/api/shelves/1
+  url: {{baseUrl}}/api/shelves/{{shelfId}}
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 204
 }
 
 docs {

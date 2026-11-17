@@ -1,13 +1,17 @@
 meta {
   name: Delete User
   type: http
-  seq: 7
+  seq: 12
 }
 
 delete {
-  url: {{baseUrl}}/api/users/1
+  url: {{baseUrl}}/api/users/{{userId}}
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 204
 }
 
 docs {

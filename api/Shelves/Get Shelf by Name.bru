@@ -1,17 +1,21 @@
 meta {
   name: Get Shelf by Name
   type: http
-  seq: 4
+  seq: 7
 }
 
 get {
-  url: {{baseUrl}}/api/users/1/shelves?name=To Read
+  url: {{baseUrl}}/api/users/{{userId}}/shelves?name={{shelfName}}
   body: none
   auth: none
 }
 
 params:query {
-  name: To Read
+  name: {{shelfName}}
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

@@ -1,19 +1,23 @@
 meta {
   name: List Books by Tag
   type: http
-  seq: 9
+  seq: 8
 }
 
 get {
-  url: {{baseUrl}}/api/books?tag=sci-fi&limit=20&offset=0
+  url: {{baseUrl}}/api/books?tag=sci-fi-{{runId}}&limit=20&offset=0
   body: none
   auth: none
 }
 
 params:query {
-  tag: sci-fi
+  tag: sci-fi-{{runId}}
   limit: 20
   offset: 0
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

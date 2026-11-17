@@ -1,21 +1,25 @@
 meta {
   name: Save Review
   type: http
-  seq: 1
+  seq: 3
 }
 
 post {
-  url: {{baseUrl}}/api/books/1/reviews
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews
   body: json
   auth: none
 }
 
 body:json {
   {
-    "user_id": 1,
+    "user_id": {{userId}},
     "rating": 5,
     "body": "Loved it."
   }
+}
+
+assert {
+  res.status: eq 201
 }
 
 docs {

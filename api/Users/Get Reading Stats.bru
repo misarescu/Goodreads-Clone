@@ -1,13 +1,17 @@
 meta {
   name: Get Reading Stats
   type: http
-  seq: 8
+  seq: 7
 }
 
 get {
-  url: {{baseUrl}}/api/users/1/stats
+  url: {{baseUrl}}/api/users/{{userId}}/stats
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

@@ -1,13 +1,17 @@
 meta {
   name: List Reviews
   type: http
-  seq: 2
+  seq: 4
 }
 
 get {
-  url: {{baseUrl}}/api/books/1/reviews?limit=20&offset=0&sort=recent&min_rating=3
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews?limit=20&offset=0&sort=recent&min_rating=3
   body: none
   auth: none
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {

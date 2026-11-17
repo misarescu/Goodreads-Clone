@@ -5,14 +5,18 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/books/search?q=gatsby&limit=20
+  url: {{baseUrl}}/api/books/search?q=gatsby {{runId}}&limit=20
   body: none
   auth: none
 }
 
 params:query {
-  q: gatsby
+  q: gatsby {{runId}}
   limit: 20
+}
+
+assert {
+  res.status: eq 200
 }
 
 docs {
