@@ -1,0 +1,25 @@
+meta {
+  name: gc-75 List tags with invalid prefix
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/tags?prefix=Bad_Tag
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  A character outside a-z, 0-9 and - cannot start a tag. Response: 400
+}

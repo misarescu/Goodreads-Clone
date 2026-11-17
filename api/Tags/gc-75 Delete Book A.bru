@@ -1,0 +1,19 @@
+meta {
+  name: gc-75 Delete Book A
+  type: http
+  seq: 16
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{gc75BookA}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deletes the last book carrying the tags.
+}
