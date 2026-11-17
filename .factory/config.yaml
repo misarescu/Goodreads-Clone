@@ -13,13 +13,16 @@ e2e:
 # the release's image tag there, waits until the stage reports the commit, and
 # rolls back by committing the previous tag. It reaches the stage over the
 # tailnet through the Tailscale egress Service on its cluster (Frankie D118).
-# No verify yet: the API suite is not repeatable against a stage that keeps its
-# data; verify: e2e-suite comes once it is.
+# Once the stage reports the commit, the factory runs the API suite against it
+# (verify: e2e-suite, Frankie D116); a failure rolls the stage back and opens a
+# bug issue. The suite cleans up after itself, so it passes again and again
+# against the stage's kept data (gc-71, gc-72).
 stages:
   - name: staging
     driver: flux
     url: http://goodreads-stg.stages.svc.cluster.local
     rollback: true
+    verify: e2e-suite
     config:
       repo: misarescu/Goodreads-CD
       path: apps/goodreads/staging/kustomization.yaml
