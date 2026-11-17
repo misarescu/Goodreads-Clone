@@ -192,3 +192,40 @@ func TestBusiness_ListUserReviews(t *testing.T) {
 	_, err = b.ListUserReviews(ctx, 1, 20, 0)
 	require.ErrorIs(t, err, boom)
 }
+
+func TestBusiness_RatingSpread(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	b, m := newReviewBusiness(t)
+	m.books.EXPECT().GetByID(ctx, int64(1)).Return(&db.Book{ID: 1}, nil)
+	m.reviews.EXPECT().RatingCounts(ctx, int64(1)).Return([]db.GetRatingCountsRow{
+		{Rating: 4, ReviewCount: 2}, {Rating: 5, ReviewCount: 1},
+	}, nil)
+	got, err := b.RatingSpread(ctx, 1)
+	require.NoError(t, err)
+	assert.Equal(t, map[string]int64{"1": 0, "2": 0, "3": 0, "4": 2, "5": 1}, got.Stars)
+	assert.Equal(t, int64(3), got.ReviewCount)
+	require.NotNil(t, got.AverageRating)
+	assert.InDelta(t, 4.3, *got.AverageRating, 1e-9)
+
+	b, m = newReviewBusiness(t)
+	m.books.EXPECT().GetByID(ctx, int64(2)).Return(&db.Book{ID: 2}, nil)
+	m.reviews.EXPECT().RatingCounts(ctx, int64(2)).Return(nil, nil)
+	got, err = b.RatingSpread(ctx, 2)
+	require.NoError(t, err)
+	assert.Len(t, got.Stars, 5)
+	assert.Zero(t, got.ReviewCount)
+	assert.Nil(t, got.AverageRating)
+
+	b, m = newReviewBusiness(t)
+	m.books.EXPECT().GetByID(ctx, int64(9)).Return(nil, sql.ErrNoRows)
+	_, err = b.RatingSpread(ctx, 9)
+	require.ErrorIs(t, err, sql.ErrNoRows)
+
+	b, m = newReviewBusiness(t)
+	m.books.EXPECT().GetByID(ctx, int64(1)).Return(&db.Book{ID: 1}, nil)
+	m.reviews.EXPECT().RatingCounts(ctx, int64(1)).Return(nil, errors.New("boom"))
+	_, err = b.RatingSpread(ctx, 1)
+	require.Error(t, err)
+}

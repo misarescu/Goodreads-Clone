@@ -1,0 +1,33 @@
+meta {
+  name: gc-74 Review by B 5 stars
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}/reviews
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": {{gc74UserBId}},
+    "rating": 5,
+    "body": "gc-74 rating 5."
+  }
+}
+
+assert {
+  res.status: in [200, 201]
+}
+
+tests {
+  test("returns the review with the rating", function () {
+    expect(res.body.rating).to.equal(5);
+  });
+}
+
+docs {
+  User B rates the gc-74 book 5 stars.
+}

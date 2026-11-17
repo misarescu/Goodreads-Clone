@@ -1,0 +1,19 @@
+meta {
+  name: gc-74 Delete review by B
+  type: http
+  seq: 23
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}/reviews/{{gc74UserBId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Removes user B's review; the spread must drop it.
+}

@@ -42,3 +42,9 @@ JOIN books b ON b.id = r.book_id
 WHERE r.user_id = ?
 ORDER BY r.created_at DESC, r.id DESC
 LIMIT ? OFFSET ?;
+
+-- name: GetRatingCounts :many
+SELECT rating, COUNT(*) AS review_count
+FROM reviews
+WHERE book_id = ?
+GROUP BY rating;

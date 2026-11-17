@@ -1,0 +1,33 @@
+meta {
+  name: gc-74 Ratings after a review is replaced
+  type: http
+  seq: 22
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}/ratings
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the spread", function () {
+    expect(res.body.book_id).to.equal(bru.getVar("gc74BookId"));
+    expect(res.body.stars).to.deep.equal({ "1": 0, "2": 1, "3": 0, "4": 0, "5": 1 });
+    expect(res.body.review_count).to.equal(2);
+    expect(res.body.average_rating).to.equal(3.5);
+  });
+}
+
+docs {
+  GET /api/books/{id}/ratings returns {book_id, review_count, average_rating, stars}.
+  stars always has the keys "1" to "5" (reviews with that rating, 0 when none);
+  review_count is their sum; average_rating is rounded to one decimal like
+  GET /api/books/{id}, and null without reviews.
+  The replaced review moved from 4 to 2 stars; the count stays 2.
+  Response: 200 OK; 404 unknown book; 400 invalid book ID.
+}

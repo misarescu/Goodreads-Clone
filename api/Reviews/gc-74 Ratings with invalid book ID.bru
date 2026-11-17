@@ -1,0 +1,25 @@
+meta {
+  name: gc-74 Ratings with invalid book ID
+  type: http
+  seq: 28
+}
+
+get {
+  url: {{baseUrl}}/api/books/abc/ratings
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has the error message", function () {
+    expect(res.body.Error).to.equal("invalid book ID");
+  });
+}
+
+docs {
+  Response: 400 Bad Request (ID is not a number)
+}

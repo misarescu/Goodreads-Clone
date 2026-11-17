@@ -104,6 +104,8 @@ type ReviewRepository interface {
 	) ([]db.ListReviewsByBookRow, error)
 	ListByUser(ctx context.Context, userID, limit, offset int64) ([]db.ListReviewsByUserRow, error)
 	Stats(ctx context.Context, bookIDs []int64) ([]db.GetReviewStatsRow, error)
+	// RatingCounts returns a book's review count per rating, for ratings that have any.
+	RatingCounts(ctx context.Context, bookID int64) ([]db.GetRatingCountsRow, error)
 }
 
 // RecommendationRepository defines operations for book recommendations.

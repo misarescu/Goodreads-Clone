@@ -1,0 +1,19 @@
+meta {
+  name: gc-74 Teardown User A
+  type: http
+  seq: 29
+}
+
+delete {
+  url: {{baseUrl}}/api/users/{{gc74UserAId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deletes reviewer A.
+}

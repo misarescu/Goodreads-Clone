@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -160,4 +161,44 @@ func (b *Business) ListUserReviews(
 		return nil, fmt.Errorf("failed to list user reviews: %w", err)
 	}
 	return rows, nil
+}
+
+// RatingSpread is how a book's reviews are spread across the ratings.
+type RatingSpread struct {
+	BookID        int64            `json:"book_id"`
+	ReviewCount   int64            `json:"review_count"`
+	AverageRating *float64         `json:"average_rating"`
+	Stars         map[string]int64 `json:"stars"`
+}
+
+// RatingSpread counts a book's reviews per rating. Stars always has the keys
+// "1" to "5"; the average is rounded like BookWithStats and nil without
+// reviews. It returns an error wrapping sql.ErrNoRows when the book does not
+// exist.
+func (b *Business) RatingSpread(ctx context.Context, bookID int64) (*RatingSpread, error) {
+	if _, err := b.Storage.Books.GetByID(ctx, bookID); err != nil {
+		return nil, fmt.Errorf("failed to get book for rating spread: %w", err)
+	}
+	rows, err := b.Storage.Reviews.RatingCounts(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count ratings: %w", err)
+	}
+	spread := &RatingSpread{BookID: bookID, Stars: make(map[string]int64, MaxRating)}
+	for star := MinRating; star <= MaxRating; star++ {
+		spread.Stars[strconv.Itoa(star)] = 0
+	}
+	var sum int64
+	for _, r := range rows {
+		if r.Rating < MinRating || r.Rating > MaxRating {
+			continue
+		}
+		spread.Stars[strconv.FormatInt(r.Rating, 10)] = r.ReviewCount
+		spread.ReviewCount += r.ReviewCount
+		sum += r.Rating * r.ReviewCount
+	}
+	if spread.ReviewCount > 0 {
+		avg := math.Round(float64(sum)/float64(spread.ReviewCount)*10) / 10
+		spread.AverageRating = &avg
+	}
+	return spread, nil
 }

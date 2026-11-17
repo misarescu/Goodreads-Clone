@@ -1,0 +1,37 @@
+meta {
+  name: gc-74 Setup User A
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/users
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "gc74-a-{{runId}}@example.com",
+    "username": "gc74-a-{{runId}}",
+    "password_hash": "hashed_password_here"
+  }
+}
+
+script:post-response {
+  bru.setVar("gc74UserAId", res.body.id);
+}
+
+assert {
+  res.status: eq 201
+}
+
+tests {
+  test("creates the user", function () {
+    expect(res.body.id).to.be.a("number");
+  });
+}
+
+docs {
+  Creates reviewer A for the gc-74 requests. Teardown deletes it.
+}

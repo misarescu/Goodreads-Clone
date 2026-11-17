@@ -396,3 +396,69 @@ func TestReviewListBadParams(t *testing.T) {
 		}
 	}
 }
+
+type ratingSpreadBody struct {
+	BookID        int64            `json:"book_id"`
+	ReviewCount   int64            `json:"review_count"`
+	AverageRating *float64         `json:"average_rating"`
+	Stars         map[string]int64 `json:"stars"`
+}
+
+func getSpread(s *Server, path string) ratingSpreadBody {
+	rec := doRequest(s, http.MethodGet, path, "")
+	var got ratingSpreadBody
+	_ = json.Unmarshal(rec.Body.Bytes(), &got)
+	return got
+}
+
+func TestReviewRatingSpread(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewRows(t, s) // book 1: ratings 3 and 5; book 2: none
+
+	got := getSpread(s, "/api/books/1/ratings")
+	wantStars := map[string]int64{"1": 0, "2": 0, "3": 1, "4": 0, "5": 1}
+	if got.BookID != 1 || got.ReviewCount != 2 || !reflect.DeepEqual(got.Stars, wantStars) {
+		t.Errorf("spread = %+v", got)
+	}
+	if got.AverageRating == nil || *got.AverageRating != 4 {
+		t.Errorf("average = %v", got.AverageRating)
+	}
+}
+
+func TestReviewRatingSpreadFollowsReviews(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewRows(t, s)
+
+	doRequest(s, http.MethodPost, "/api/books/1/reviews", `{"user_id":1,"rating":4,"body":"x"}`)
+	doRequest(s, http.MethodDelete, "/api/books/1/reviews/2", "")
+	got := getSpread(s, "/api/books/1/ratings")
+	want := map[string]int64{"1": 0, "2": 0, "3": 0, "4": 1, "5": 0}
+	if got.ReviewCount != 1 || !reflect.DeepEqual(got.Stars, want) {
+		t.Errorf("after replace+delete = %+v", got)
+	}
+}
+
+func TestReviewRatingSpreadEmpty(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewRows(t, s)
+
+	rec := doRequest(s, http.MethodGet, "/api/books/2/ratings", "")
+	if !strings.Contains(rec.Body.String(), `"average_rating":null`) ||
+		!strings.Contains(rec.Body.String(), `"stars":{"1":0,"2":0,"3":0,"4":0,"5":0}`) {
+		t.Errorf("empty = %d %s", rec.Code, rec.Body)
+	}
+}
+
+func TestReviewRatingSpreadErrors(t *testing.T) {
+	s := newShelfBooksServer(t)
+	seedReviewRows(t, s)
+
+	rec := doRequest(s, http.MethodGet, "/api/books/99/ratings", "")
+	if rec.Code != http.StatusNotFound || !strings.Contains(rec.Body.String(), `"Error":"resource not found"`) {
+		t.Errorf("unknown = %d %s", rec.Code, rec.Body)
+	}
+	rec = doRequest(s, http.MethodGet, "/api/books/x/ratings", "")
+	if rec.Code != http.StatusBadRequest || !strings.Contains(rec.Body.String(), `"Error":"invalid book ID"`) {
+		t.Errorf("bad id = %d %s", rec.Code, rec.Body)
+	}
+}
