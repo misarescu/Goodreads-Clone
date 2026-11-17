@@ -28,6 +28,16 @@ assert {
   res.status: eq 201
 }
 
+tests {
+  test("echoes what it sent and returns an id", function () {
+    const runId = bru.getVar("runId");
+    expect(res.body.id).to.be.a("number");
+    expect(res.body.email).to.equal("user-" + runId + "@example.com");
+    expect(res.body.username).to.equal("user-" + runId);
+    expect(res.body).to.not.have.property("password_hash");
+  });
+}
+
 docs {
   Creates a new user account.
 

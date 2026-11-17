@@ -1,0 +1,33 @@
+meta {
+  name: Create Shelf Without Name
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/shelves
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": {{userId}}
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  A shelf needs a user_id and a name.
+
+  Response: 400 Bad Request
+}

@@ -1,7 +1,7 @@
 meta {
   name: Get Shelf by Name
   type: http
-  seq: 7
+  seq: 9
 }
 
 get {
@@ -16,6 +16,17 @@ params:query {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the shelf", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.equal(bru.getVar("shelfId"));
+    expect(res.body.user_id).to.equal(bru.getVar("userId"));
+    expect(res.body.name).to.equal("My Custom Shelf " + runId);
+    expect(res.body.is_default).to.equal(false);
+  });
 }
 
 docs {

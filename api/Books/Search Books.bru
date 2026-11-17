@@ -1,7 +1,7 @@
 meta {
   name: Search Books
   type: http
-  seq: 5
+  seq: 7
 }
 
 get {
@@ -17,6 +17,16 @@ params:query {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the pagination envelope with the created book", function () {
+    expect(res.body.books).to.be.an("array");
+    expect(res.body.total).to.be.a("number").and.at.least(1);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(0);
+    expect(res.body.books.map((b) => b.id)).to.include(bru.getVar("bookId"));
+  });
 }
 
 docs {

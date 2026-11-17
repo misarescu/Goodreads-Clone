@@ -1,7 +1,7 @@
 meta {
   name: Update Shelf
   type: http
-  seq: 8
+  seq: 10
 }
 
 put {
@@ -18,6 +18,15 @@ body:json {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("echoes the new name", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.equal(bru.getVar("shelfId"));
+    expect(res.body.name).to.equal("Updated Shelf Name " + runId);
+  });
 }
 
 docs {

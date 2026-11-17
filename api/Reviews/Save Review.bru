@@ -18,8 +18,22 @@ body:json {
   }
 }
 
+script:post-response {
+  bru.setVar("reviewId", res.body.id);
+}
+
 assert {
   res.status: eq 201
+}
+
+tests {
+  test("returns the review", function () {
+    expect(res.body.id).to.be.a("number");
+    expect(res.body.book_id).to.equal(bru.getVar("bookId"));
+    expect(res.body.user_id).to.equal(bru.getVar("userId"));
+    expect(res.body.rating).to.equal(5);
+    expect(res.body.body).to.equal("Loved it.");
+  });
 }
 
 docs {

@@ -1,0 +1,27 @@
+meta {
+  name: List Reviews After Delete
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("the book has no reviews", function () {
+    expect(res.body).to.be.an("array").with.lengthOf(0);
+  });
+}
+
+docs {
+  After Delete Review the book has no reviews.
+
+  Response: 200 OK, []
+}

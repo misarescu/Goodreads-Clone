@@ -1,7 +1,7 @@
 meta {
   name: Get User by ID
   type: http
-  seq: 2
+  seq: 3
 }
 
 get {
@@ -12,6 +12,14 @@ get {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the created user", function () {
+    expect(res.body.id).to.equal(bru.getVar("userId"));
+    expect(res.body.email).to.equal(bru.getVar("userEmail"));
+    expect(res.body.username).to.equal(bru.getVar("userUsername"));
+  });
 }
 
 docs {

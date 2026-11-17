@@ -1,0 +1,27 @@
+meta {
+  name: Get Deleted Second Shelf
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/api/shelves/{{shelf2Id}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  After Delete Second Shelf the shelf no longer exists.
+
+  Response: 404 Not Found
+}

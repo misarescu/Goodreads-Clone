@@ -1,0 +1,31 @@
+meta {
+  name: Set Tags of Deleted Book
+  type: http
+  seq: 17
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{bookId}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tags": ["classic"]
+  }
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 404 Not Found (unknown book)
+}

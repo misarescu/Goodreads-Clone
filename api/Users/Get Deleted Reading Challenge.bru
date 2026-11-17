@@ -1,0 +1,27 @@
+meta {
+  name: Get Deleted Reading Challenge
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/users/{{userId}}/challenges/2026
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  After Delete Reading Challenge the challenge no longer exists.
+
+  Response: 404 Not Found
+}

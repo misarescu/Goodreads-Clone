@@ -1,0 +1,29 @@
+meta {
+  name: List Books by Invalid Tag
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/books?tag=Bad_Tag
+  body: none
+  auth: none
+}
+
+params:query {
+  tag: Bad_Tag
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 400 Bad Request (invalid tag)
+}

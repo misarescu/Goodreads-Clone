@@ -1,0 +1,27 @@
+meta {
+  name: Delete Review Again
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{bookId}}/reviews/{{userId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  The review is already gone.
+
+  Response: 404 Not Found
+}

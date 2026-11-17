@@ -1,0 +1,25 @@
+meta {
+  name: Get Shelf With Invalid ID
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/shelves/abc
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 400 Bad Request (invalid shelf ID)
+}

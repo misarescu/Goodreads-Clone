@@ -1,0 +1,33 @@
+meta {
+  name: Add Book to Shelf Twice
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/shelves/{{shelfId}}/books
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "book_id": {{bookId}}
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  The book is already on the shelf.
+
+  Response: 409 Conflict
+}

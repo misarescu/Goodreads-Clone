@@ -1,0 +1,25 @@
+meta {
+  name: Get Reading Stats With Invalid ID
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/users/abc/stats
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Response: 400 Bad Request (invalid user ID)
+}

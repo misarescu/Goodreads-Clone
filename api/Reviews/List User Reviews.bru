@@ -1,7 +1,7 @@
 meta {
   name: List User Reviews
   type: http
-  seq: 5
+  seq: 8
 }
 
 get {
@@ -12,6 +12,16 @@ get {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("lists the review with the book's title", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body).to.be.an("array").with.lengthOf(1);
+    expect(res.body[0].book_id).to.equal(bru.getVar("bookId"));
+    expect(res.body[0].book_title).to.equal("Setup Book " + runId);
+  });
 }
 
 docs {

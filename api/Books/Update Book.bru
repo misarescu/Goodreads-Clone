@@ -1,7 +1,7 @@
 meta {
   name: Update Book
   type: http
-  seq: 6
+  seq: 10
 }
 
 put {
@@ -25,6 +25,17 @@ body:json {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("echoes the update", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.equal(bru.getVar("bookId"));
+    expect(res.body.title).to.equal("The Great Gatsby " + runId + " (Updated)");
+    expect(res.body.page_count.Int64).to.equal(185);
+    expect(res.body.rating.Float64).to.equal(4.5);
+  });
 }
 
 docs {

@@ -1,0 +1,33 @@
+meta {
+  name: Move Book Not on Shelf
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/api/shelves/{{shelfId}}/books/{{bookId}}/move
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "to_shelf_id": {{shelf2Id}}
+  }
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  After Move Book the book is no longer on the source shelf.
+
+  Response: 404 Not Found
+}

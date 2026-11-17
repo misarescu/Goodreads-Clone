@@ -1,7 +1,7 @@
 meta {
   name: List Users
   type: http
-  seq: 3
+  seq: 5
 }
 
 get {
@@ -17,6 +17,14 @@ params:query {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns an array of users", function () {
+    expect(res.body).to.be.an("array");
+    expect(res.body.length).to.be.at.most(20);
+    res.body.forEach((u) => expect(u).to.include.keys("id", "email", "username"));
+  });
 }
 
 docs {

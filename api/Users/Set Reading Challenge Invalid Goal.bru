@@ -1,0 +1,33 @@
+meta {
+  name: Set Reading Challenge Invalid Goal
+  type: http
+  seq: 14
+}
+
+put {
+  url: {{baseUrl}}/api/users/{{userId}}/challenges/2026
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "goal": 0
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("body has an error message", function () {
+    expect(res.body.Error).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  A goal outside 1-1000 is rejected.
+
+  Response: 400 Bad Request
+}

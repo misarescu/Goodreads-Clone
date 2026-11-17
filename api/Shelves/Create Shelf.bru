@@ -26,6 +26,17 @@ assert {
   res.status: eq 201
 }
 
+tests {
+  test("echoes what it sent and returns an id", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.body.id).to.be.a("number");
+    expect(res.body.user_id).to.equal(bru.getVar("userId"));
+    expect(res.body.name).to.equal("My Custom Shelf " + runId);
+    expect(res.body.is_default).to.equal(false);
+  });
+}
+
 docs {
   Creates a new custom shelf for a user.
 

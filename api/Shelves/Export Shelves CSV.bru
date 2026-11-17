@@ -1,7 +1,7 @@
 meta {
   name: Export Shelves CSV
   type: http
-  seq: 12
+  seq: 17
 }
 
 get {
@@ -12,6 +12,18 @@ get {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("is a CSV with a header and the shelved book", function () {
+    const runId = bru.getVar("runId");
+
+    expect(res.getHeader("content-type")).to.contain("text/csv");
+    const lines = String(res.body).trim().split("\n");
+    expect(lines[0]).to.equal("shelf,title,author,isbn,pages_read,progress_percent,finished_at,added_at");
+    expect(lines.length).to.equal(2);
+    expect(lines[1]).to.contain("Setup Book " + runId);
+  });
 }
 
 docs {

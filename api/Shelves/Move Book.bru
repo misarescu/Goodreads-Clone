@@ -1,7 +1,7 @@
 meta {
   name: Move Book
   type: http
-  seq: 13
+  seq: 18
 }
 
 post {
@@ -18,6 +18,15 @@ body:json {
 
 assert {
   res.status: eq 200
+}
+
+tests {
+  test("returns the book on the target shelf with its progress", function () {
+    expect(res.body.shelf_id).to.equal(bru.getVar("shelf2Id"));
+    expect(res.body.book_id).to.equal(bru.getVar("bookId"));
+    expect(res.body.pages_read).to.equal(120);
+    expect(res.body.progress_percent).to.equal(40);
+  });
 }
 
 docs {

@@ -1,0 +1,33 @@
+meta {
+  name: Set Book Tags With Invalid Tag
+  type: http
+  seq: 12
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{bookId}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "tags": ["Bad Tag!"]
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+tests {
+  test("names the invalid tag", function () {
+    expect(res.body.Error).to.contain("Bad Tag!");
+  });
+}
+
+docs {
+  A tag with characters outside a-z, 0-9 and - is rejected and the book keeps its tags.
+
+  Response: 400 Bad Request
+}
