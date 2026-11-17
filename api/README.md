@@ -79,6 +79,13 @@ Requests that predate this convention need no tag.
 - `PUT /api/shelves/{id}` - Update shelf name (custom shelves only)
 - `DELETE /api/shelves/{id}` - Delete shelf (custom shelves only)
 
+### Reviews
+- `POST /api/books/{id}/reviews` - Create the user's review of a book, or replace it
+- `GET /api/books/{id}/reviews` - List a book's reviews (`sort`, `min_rating`, pagination)
+- `GET /api/books/{id}/ratings` - How the book's ratings are spread: `{"book_id": 12, "review_count": 3, "average_rating": 4.3, "stars": {"1": 0, "2": 0, "3": 0, "4": 2, "5": 1}}`. `stars` always has the keys `"1"` to `"5"` (reviews with that rating, 0 when none); `review_count` is their sum; `review_count` and `average_rating` (one decimal, `null` without reviews) equal those of `GET /api/books/{id}`. 404 `{"Error":"resource not found"}` for an unknown book, 400 `{"Error":"invalid book ID"}` for a non-numeric ID
+- `DELETE /api/books/{id}/reviews/{userID}` - Delete a user's review
+- `GET /api/users/{id}/reviews` - List a user's reviews
+
 ## Response Format
 
 All API responses follow a consistent envelope structure:

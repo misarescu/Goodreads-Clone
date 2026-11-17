@@ -28,6 +28,41 @@ func (q *Queries) DeleteReview(ctx context.Context, arg DeleteReviewParams) (int
 	return result.RowsAffected()
 }
 
+const getRatingCounts = `-- name: GetRatingCounts :many
+SELECT rating, COUNT(*) AS review_count
+FROM reviews
+WHERE book_id = ?
+GROUP BY rating
+`
+
+type GetRatingCountsRow struct {
+	Rating      int64 `json:"rating"`
+	ReviewCount int64 `json:"review_count"`
+}
+
+func (q *Queries) GetRatingCounts(ctx context.Context, bookID int64) ([]GetRatingCountsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getRatingCounts, bookID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetRatingCountsRow{}
+	for rows.Next() {
+		var i GetRatingCountsRow
+		if err := rows.Scan(&i.Rating, &i.ReviewCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getReview = `-- name: GetReview :one
 SELECT id, book_id, user_id, rating, body, created_at, updated_at FROM reviews WHERE book_id = ? AND user_id = ?
 `

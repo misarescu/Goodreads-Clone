@@ -1,0 +1,28 @@
+meta {
+  name: gc-74 Book stats agree with ratings
+  type: http
+  seq: 25
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("review_count and average_rating match the ratings endpoint", function () {
+    expect(res.body.review_count).to.equal(1);
+    expect(res.body.average_rating).to.equal(2);
+  });
+}
+
+docs {
+  GET /api/books/{id} reports the same review_count and average_rating as
+  GET /api/books/{id}/ratings (the previous request).
+  Response: 200 OK
+}

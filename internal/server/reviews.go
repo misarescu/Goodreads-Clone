@@ -113,3 +113,17 @@ func (s *Server) handleListUserReviews(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, reviews)
 }
+
+func (s *Server) handleRatingSpread(w http.ResponseWriter, r *http.Request) {
+	bookID, err := parseID(r, "id")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid book ID")
+		return
+	}
+	spread, err := s.business.RatingSpread(r.Context(), bookID)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, spread)
+}

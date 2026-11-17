@@ -1,0 +1,19 @@
+meta {
+  name: gc-74 Teardown Book
+  type: http
+  seq: 26
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  Deletes the gc-74 book (its reviews go with it).
+}

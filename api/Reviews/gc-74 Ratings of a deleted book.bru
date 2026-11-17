@@ -1,0 +1,25 @@
+meta {
+  name: gc-74 Ratings of a deleted book
+  type: http
+  seq: 27
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}/ratings
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 404
+}
+
+tests {
+  test("body has the error message", function () {
+    expect(res.body.Error).to.equal("resource not found");
+  });
+}
+
+docs {
+  The book was just deleted, so it is unknown. Response: 404 Not Found
+}

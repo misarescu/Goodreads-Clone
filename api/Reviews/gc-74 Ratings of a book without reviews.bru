@@ -1,0 +1,33 @@
+meta {
+  name: gc-74 Ratings of a book without reviews
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}/ratings
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the spread", function () {
+    expect(res.body.book_id).to.equal(bru.getVar("gc74BookId"));
+    expect(res.body.stars).to.deep.equal({ "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 });
+    expect(res.body.review_count).to.equal(0);
+    expect(res.body.average_rating).to.equal(null);
+  });
+}
+
+docs {
+  GET /api/books/{id}/ratings returns {book_id, review_count, average_rating, stars}.
+  stars always has the keys "1" to "5" (reviews with that rating, 0 when none);
+  review_count is their sum; average_rating is rounded to one decimal like
+  GET /api/books/{id}, and null without reviews.
+  A book without reviews: all counts 0, average_rating null.
+  Response: 200 OK; 404 unknown book; 400 invalid book ID.
+}

@@ -88,3 +88,11 @@ func (r *reviewRepository) ListByUser(
 	}
 	return rows, nil
 }
+
+func (r *reviewRepository) RatingCounts(ctx context.Context, bookID int64) ([]db.GetRatingCountsRow, error) {
+	rows, err := r.queries.GetRatingCounts(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("rating counts query failed: %w", err)
+	}
+	return rows, nil
+}

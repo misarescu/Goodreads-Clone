@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,6 +44,31 @@ func TestReviewRepository_ListByUser(t *testing.T) {
 	assert.Equal(t, "First", rows[0].BookTitle)
 
 	rows, err = s.Reviews.ListByUser(ctx, 999, 20, 0)
+	require.NoError(t, err)
+	assert.Empty(t, rows)
+}
+
+func TestReviewRepository_RatingCounts(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+
+	book := createTestBook(t, s, "First", "A")
+	for i, rating := range []int{4, 4, 5} {
+		u := createTestUser(t, s, fmt.Sprintf("u%d@example.com", i), fmt.Sprintf("u%d", i))
+		_, err := s.Reviews.Upsert(ctx, book.ID, u.ID, int64(rating), "x")
+		require.NoError(t, err)
+	}
+
+	rows, err := s.Reviews.RatingCounts(ctx, book.ID)
+	require.NoError(t, err)
+	got := map[int64]int64{}
+	for _, r := range rows {
+		got[r.Rating] = r.ReviewCount
+	}
+	assert.Equal(t, map[int64]int64{4: 2, 5: 1}, got)
+
+	rows, err = s.Reviews.RatingCounts(ctx, 999)
 	require.NoError(t, err)
 	assert.Empty(t, rows)
 }

@@ -1,0 +1,33 @@
+meta {
+  name: gc-74 Replace review by A 2 stars
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/books/{{gc74BookId}}/reviews
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "user_id": {{gc74UserAId}},
+    "rating": 2,
+    "body": "gc-74 rating 2."
+  }
+}
+
+assert {
+  res.status: in [200, 201]
+}
+
+tests {
+  test("returns the review with the rating", function () {
+    expect(res.body.rating).to.equal(2);
+  });
+}
+
+docs {
+  User A replaces their review with 2 stars.
+}
