@@ -27,6 +27,12 @@ type SearchParams struct {
 	Offset   int64
 }
 
+// TagCount is a tag and the number of books carrying it.
+type TagCount struct {
+	Tag   string `json:"tag"`
+	Books int64  `json:"books"`
+}
+
 // BookRepository defines operations for managing book data.
 type BookRepository interface {
 	Create(ctx context.Context, params db.CreateBookParams) (*db.Book, error)
@@ -43,6 +49,9 @@ type BookRepository interface {
 	SetTags(ctx context.Context, bookID int64, tags []string) error
 	// TagsFor returns the sorted tags of each book; books without tags are absent from the map.
 	TagsFor(ctx context.Context, bookIDs []int64) (map[int64][]string, error)
+	// ListTagCounts returns one page of the tags in use starting with prefix (empty means all),
+	// most books first then alphabetical, plus the total number of matching tags.
+	ListTagCounts(ctx context.Context, prefix string, limit, offset int64) ([]TagCount, int64, error)
 }
 
 // ShelfRepository defines operations for managing user shelves.

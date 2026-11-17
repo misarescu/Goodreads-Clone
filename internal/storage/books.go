@@ -157,3 +157,23 @@ func (r *bookRepository) TagsFor(ctx context.Context, bookIDs []int64) (map[int6
 	}
 	return out, nil
 }
+
+// ListTagCounts returns one page of the tags in use that start with prefix (empty means all),
+// ordered by number of books (most first) then tag, and the total number of matching tags.
+func (r *bookRepository) ListTagCounts(
+	ctx context.Context, prefix string, limit, offset int64,
+) ([]TagCount, int64, error) {
+	total, err := r.queries.CountTags(ctx, prefix)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count tags query failed: %w", err)
+	}
+	rows, err := r.queries.ListTagCounts(ctx, db.ListTagCountsParams{Prefix: prefix, Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, 0, fmt.Errorf("list tag counts query failed: %w", err)
+	}
+	out := make([]TagCount, len(rows))
+	for i, row := range rows {
+		out[i] = TagCount{Tag: row.Tag, Books: row.Books}
+	}
+	return out, total, nil
+}

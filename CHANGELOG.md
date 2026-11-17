@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `GET /api/tags` (gc-75): the tags in use with the number of books carrying each (`{tags: [{tag, books}], total, limit, offset}`), most books first then alphabetical. `limit` (max 100) and `offset` as in other lists; `prefix` filters (trimmed, lowercased) and answers 400 when no valid tag can start with it. Counted in one grouped query plus one count.
+
 - Added `GET /api/books/{id}/ratings` (gc-74): a book's review count, average rating and the number of reviews at each of 1 to 5 stars (`stars` always has all five keys). Counted in one grouped query.
 
 - The server now applies `db/migrations/*.sql` itself at startup (gc-45), embedded in the binary and recorded in a `schema_migrations` table. A database made by `make migrate` has 001 to 006 recorded as applied. The docker-compose `migrate` service is removed; `make migrate` stays for local use.

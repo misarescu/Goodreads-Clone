@@ -1,0 +1,26 @@
+meta {
+  name: List Tags of Deleted Book
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/tags?prefix=sci-fi-{{runId}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("a tag no book carries is gone", function () {
+    expect(res.body.tags).to.eql([]);
+    expect(res.body.total).to.equal(0);
+  });
+}
+
+docs {
+  After the only book carrying the tag is deleted, the tag is no longer listed.
+}

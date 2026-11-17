@@ -87,3 +87,33 @@ func TestBookRepository_Delete_CascadeTags(t *testing.T) {
 	require.NoError(t, s.DB().QueryRowContext(ctx, "SELECT COUNT(*) FROM book_tags").Scan(&n))
 	assert.Zero(t, n)
 }
+
+func TestBookRepository_ListTagCounts(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+	a := createTestBook(t, s, "A", "x")
+	b := createTestBook(t, s, "B", "x")
+	require.NoError(t, s.Books.SetTags(ctx, a.ID, []string{"fantasy", "fan-fic", "zeta"}))
+	require.NoError(t, s.Books.SetTags(ctx, b.ID, []string{"fantasy", "zeta"}))
+
+	got, total, err := s.Books.ListTagCounts(ctx, "", 10, 0)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, total)
+	assert.Equal(t, []TagCount{{"fantasy", 2}, {"zeta", 2}, {"fan-fic", 1}}, got)
+
+	got, total, err = s.Books.ListTagCounts(ctx, "fan", 1, 1)
+	require.NoError(t, err)
+	assert.EqualValues(t, 2, total)
+	assert.Equal(t, []TagCount{{"fan-fic", 1}}, got)
+
+	require.NoError(t, s.Books.Delete(ctx, b.ID))
+	got, _, err = s.Books.ListTagCounts(ctx, "", 10, 0)
+	require.NoError(t, err)
+	assert.Equal(t, []TagCount{{"fan-fic", 1}, {"fantasy", 1}, {"zeta", 1}}, got)
+
+	got, total, err = s.Books.ListTagCounts(ctx, "nope", 10, 0)
+	require.NoError(t, err)
+	assert.Empty(t, got)
+	assert.Zero(t, total)
+}

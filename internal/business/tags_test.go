@@ -117,3 +117,56 @@ func TestBusiness_WithTags(t *testing.T) {
 	assert.Equal(t, []string{}, got[0].Tags)
 	assert.Equal(t, []string{"a"}, got[1].Tags)
 }
+
+func TestBusiness_ListTags(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("normalizes the prefix and passes the page", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		want := []storage.TagCount{{Tag: "fantasy", Books: 3}}
+		books.EXPECT().ListTagCounts(ctx, "fan", int64(5), int64(10)).Return(want, 7, nil)
+		got, total, err := b.ListTags(ctx, "  Fan ", 5, 10)
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
+		assert.Equal(t, int64(7), total)
+	})
+
+	t.Run("empty prefix matches all and nil becomes empty", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().ListTagCounts(ctx, "", int64(20), int64(0)).Return(nil, 0, nil)
+		got, total, err := b.ListTags(ctx, "", 20, 0)
+		require.NoError(t, err)
+		assert.NotNil(t, got)
+		assert.Empty(t, got)
+		assert.Zero(t, total)
+	})
+
+	t.Run("invalid prefix", func(t *testing.T) {
+		t.Parallel()
+		b, _ := newTagBusiness(t)
+		for _, p := range []string{"a b", "a_b", "café", "a/", strings.Repeat("a", 33)} {
+			_, _, err := b.ListTags(ctx, p, 20, 0)
+			require.ErrorIs(t, err, business.ErrInvalidTag, p)
+		}
+	})
+
+	t.Run("longest valid prefix", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		p := strings.Repeat("a", 32)
+		books.EXPECT().ListTagCounts(ctx, p, int64(20), int64(0)).Return(nil, 0, nil)
+		_, _, err := b.ListTags(ctx, p, 20, 0)
+		require.NoError(t, err)
+	})
+
+	t.Run("storage error", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().ListTagCounts(ctx, "", int64(20), int64(0)).Return(nil, 0, sql.ErrConnDone)
+		_, _, err := b.ListTags(ctx, "", 20, 0)
+		require.ErrorIs(t, err, sql.ErrConnDone)
+	})
+}
