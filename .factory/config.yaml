@@ -57,3 +57,20 @@ stages:
       path: apps/goodreads/staging/kustomization.yaml
       image: ghcr.io/misarescu/goodreads-clone
       versionURL: http://goodreads-stg.stages.svc.cluster.local/api/version
+  # Production (Frankie D139), on the homelab next to staging: a release that
+  # passed staging waits in Frankie's approvals inbox until a person approves
+  # it, then the factory commits its tag here as it does for staging. A release
+  # the stage does not report within 3 minutes (Flux polls every minute) is
+  # rolled back by committing the previous tag. The API suite does not run
+  # against production: it writes data, and production may hold real users'.
+  - name: production
+    driver: flux
+    url: http://goodreads.stages.svc.cluster.local
+    gate: human
+    rollback: true
+    readyTimeout: 3m
+    config:
+      repo: misarescu/Goodreads-CD
+      path: apps/goodreads/production/kustomization.yaml
+      image: ghcr.io/misarescu/goodreads-clone
+      versionURL: http://goodreads.stages.svc.cluster.local/api/version
