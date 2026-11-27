@@ -182,3 +182,4 @@ The application follows a clean layered architecture:
 The frontend builds to `static/dist/` and is embedded in the Go binary using `//go:embed`, allowing the backend to serve the complete application as a single executable.
 
 The factory runs verification against staging before prompting a human to promote a release to production.
+Production promotions require explicit approval in the inbox and roll back automatically if unhealthy.
