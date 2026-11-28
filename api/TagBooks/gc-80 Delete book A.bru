@@ -1,0 +1,19 @@
+meta {
+  name: gc-80 Delete book A
+  type: http
+  seq: 18
+}
+
+delete {
+  url: {{baseUrl}}/api/books/{{gc80A}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 204
+}
+
+docs {
+  gc-80 Delete book A. Response: 204
+}

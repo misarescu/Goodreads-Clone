@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Remove tag from B
+  type: http
+  seq: 15
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc80B}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {"tags":["g80{{runId}}-y"]}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the book", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  gc-80 Remove tag from B. Response: 200
+}

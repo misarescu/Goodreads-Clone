@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Put tag on A
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/books/{{gc80A}}/tags
+  body: json
+  auth: none
+}
+
+body:json {
+  {"tags":["g80{{runId}}-x"]}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the book", function () {
+    expect(res.body.tags).to.be.an("array");
+  });
+}
+
+docs {
+  gc-80 Put tag on A. Response: 200
+}

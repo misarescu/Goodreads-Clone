@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Books of a tag with last page
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/tags/g80{{runId}}-x/books?limit=2&offset=2
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the page", function () {
+    expect(res.body.books).to.be.an("array");
+    expect(res.body.books.map(function (b) { return b.id; })).to.eql([bru.getVar("gc80C")]);
+    expect(res.body.total).to.equal(3);
+    expect(res.body.limit).to.equal(2);
+    expect(res.body.offset).to.equal(2);
+  });
+}
+
+docs {
+  gc-80 Books of a tag with last page. Response: 200
+}

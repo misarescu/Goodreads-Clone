@@ -1,0 +1,26 @@
+meta {
+  name: gc-80 Books of a tag nobody carries
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/api/tags/g80{{runId}}-none/books
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("answers an empty list", function () {
+    expect(res.body.books).to.be.an("array").with.lengthOf(0);
+    expect(res.body.total).to.equal(0);
+  });
+}
+
+docs {
+  gc-80 Books of a tag nobody carries. Response: 200
+}
