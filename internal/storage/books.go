@@ -121,6 +121,22 @@ func (r *bookRepository) ListByTag(ctx context.Context, tag string, limit, offse
 	return books, nil
 }
 
+// ListByTagTitle returns one page of the books carrying exactly tag, ordered by title then id,
+// and the total number of books carrying it.
+func (r *bookRepository) ListByTagTitle(
+	ctx context.Context, tag string, limit, offset int64,
+) ([]db.Book, int64, error) {
+	total, err := r.queries.CountBooksByTag(ctx, tag)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count books by tag query failed: %w", err)
+	}
+	books, err := r.queries.ListBooksByTagTitle(ctx, db.ListBooksByTagTitleParams{Tag: tag, Limit: limit, Offset: offset})
+	if err != nil {
+		return nil, 0, fmt.Errorf("list books by tag title query failed: %w", err)
+	}
+	return books, total, nil
+}
+
 // SetTags replaces all of a book's tags with tags (already validated and unique) in one transaction.
 func (r *bookRepository) SetTags(ctx context.Context, bookID int64, tags []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)

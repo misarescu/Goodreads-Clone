@@ -252,3 +252,58 @@ func TestHandleListUserTags(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "Error")
 	})
 }
+
+func TestHandleListTagBooks(t *testing.T) {
+	s := newTagServer(t)
+	b := createBook(t, s, "Beta", "1")
+	a := createBook(t, s, "Alpha", "2")
+	c := createBook(t, s, "Gamma", "3")
+	setTags(t, s, b, `["fantasy"]`)
+	setTags(t, s, a, `["fantasy"]`)
+	setTags(t, s, c, `["other"]`)
+
+	type page struct {
+		Books []struct {
+			ID    int64    `json:"id"`
+			Title string   `json:"title"`
+			Tags  []string `json:"tags"`
+		} `json:"books"`
+		Total  int64 `json:"total"`
+		Limit  int64 `json:"limit"`
+		Offset int64 `json:"offset"`
+	}
+	get := func(path string) page {
+		rec := do(t, s, http.MethodGet, path, "")
+		require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
+		require.NotContains(t, rec.Body.String(), `"books":null`)
+		var p page
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &p))
+		return p
+	}
+
+	p := get("/api/tags/fantasy/books")
+	require.Len(t, p.Books, 2)
+	assert.Equal(t, "Alpha", p.Books[0].Title)
+	assert.Equal(t, "Beta", p.Books[1].Title)
+	assert.Equal(t, []string{"fantasy"}, p.Books[0].Tags)
+	assert.Equal(t, int64(2), p.Total)
+	assert.Equal(t, int64(20), p.Limit)
+
+	p = get("/api/tags/fantasy/books?limit=1&offset=1")
+	require.Len(t, p.Books, 1)
+	assert.Equal(t, "Beta", p.Books[0].Title)
+	assert.Equal(t, int64(2), p.Total)
+	assert.Equal(t, int64(1), p.Offset)
+
+	p = get("/api/tags/fantasy/books?offset=5")
+	assert.Empty(t, p.Books)
+	assert.Equal(t, int64(2), p.Total)
+
+	setTags(t, s, a, `[]`)
+	p = get("/api/tags/fantasy/books")
+	require.Len(t, p.Books, 1)
+	assert.Equal(t, int64(1), p.Total)
+
+	rec := do(t, s, http.MethodGet, "/api/tags/nothing/books", "")
+	assert.JSONEq(t, `{"books":[],"total":0,"limit":20,"offset":0}`, rec.Body.String())
+}

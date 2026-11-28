@@ -73,3 +73,23 @@ func (s *Server) handleListUserTags(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, listTagsResponse{Tags: tags, Total: total, Limit: limit, Offset: offset})
 }
+
+// tagBooksResponse is a page of the books carrying a tag.
+type tagBooksResponse struct {
+	Books  []business.BookWithStats `json:"books"`
+	Total  int64                    `json:"total"`
+	Limit  int64                    `json:"limit"`
+	Offset int64                    `json:"offset"`
+}
+
+func (s *Server) handleListTagBooks(w http.ResponseWriter, r *http.Request) {
+	limit, offset := getPaginationParams(r)
+
+	books, total, err := s.business.ListTagBooks(r.Context(), r.PathValue("tag"), limit, offset)
+	if err != nil {
+		handleDBError(w, err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, tagBooksResponse{Books: books, Total: total, Limit: limit, Offset: offset})
+}

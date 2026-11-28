@@ -12,6 +12,17 @@ import (
 	"time"
 )
 
+const countBooksByTag = `-- name: CountBooksByTag :one
+SELECT COUNT(*) FROM book_tags WHERE tag = ?
+`
+
+func (q *Queries) CountBooksByTag(ctx context.Context, tag string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countBooksByTag, tag)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countSimilarBooks = `-- name: CountSimilarBooks :one
 SELECT COUNT(DISTINCT o.book_id) FROM book_tags o
 JOIN book_tags m ON m.tag = o.tag AND m.book_id = ?1
@@ -130,6 +141,53 @@ type ListBooksByTagParams struct {
 
 func (q *Queries) ListBooksByTag(ctx context.Context, arg ListBooksByTagParams) ([]Book, error) {
 	rows, err := q.db.QueryContext(ctx, listBooksByTag, arg.Tag, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Book{}
+	for rows.Next() {
+		var i Book
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Author,
+			&i.PageCount,
+			&i.Isbn,
+			&i.ReleaseDate,
+			&i.Language,
+			&i.CreatedAt,
+			&i.Rating,
+			&i.CoverUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listBooksByTagTitle = `-- name: ListBooksByTagTitle :many
+SELECT b.id, b.title, b.author, b.page_count, b.isbn, b.release_date, b.language, b.created_at, b.rating, b.cover_url FROM books b
+JOIN book_tags t ON t.book_id = b.id
+WHERE t.tag = ?
+ORDER BY b.title, b.id LIMIT ? OFFSET ?
+`
+
+type ListBooksByTagTitleParams struct {
+	Tag    string `json:"tag"`
+	Limit  int64  `json:"limit"`
+	Offset int64  `json:"offset"`
+}
+
+func (q *Queries) ListBooksByTagTitle(ctx context.Context, arg ListBooksByTagTitleParams) ([]Book, error) {
+	rows, err := q.db.QueryContext(ctx, listBooksByTagTitle, arg.Tag, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

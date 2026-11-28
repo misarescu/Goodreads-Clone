@@ -255,3 +255,45 @@ func TestBusiness_ListUserTags(t *testing.T) {
 		require.ErrorIs(t, err, assert.AnError)
 	})
 }
+
+func TestBusiness_ListTagBooks(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+
+	t.Run("page with tags and stats, tag used as given", func(t *testing.T) {
+		t.Parallel()
+		books := mocks.NewMockBookRepository(t)
+		reviews := mocks.NewMockReviewRepository(t)
+		b := &business.Business{Storage: &storage.Storage{Books: books, Reviews: reviews}}
+		books.EXPECT().ListByTagTitle(ctx, "Sci-Fi", int64(5), int64(10)).
+			Return([]db.Book{{ID: 1}, {ID: 2}}, int64(12), nil)
+		reviews.EXPECT().Stats(ctx, []int64{1, 2}).Return(nil, nil)
+		books.EXPECT().TagsFor(ctx, []int64{1, 2}).Return(map[int64][]string{1: {"a"}}, nil)
+
+		got, total, err := b.ListTagBooks(ctx, "Sci-Fi", 5, 10)
+		require.NoError(t, err)
+		assert.Equal(t, int64(12), total)
+		require.Len(t, got, 2)
+		assert.Equal(t, []string{"a"}, got[0].Tags)
+		assert.Equal(t, []string{}, got[1].Tags)
+	})
+
+	t.Run("no books is an empty non-nil page", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().ListByTagTitle(ctx, "none", int64(20), int64(0)).Return(nil, int64(0), nil)
+		got, total, err := b.ListTagBooks(ctx, "none", 20, 0)
+		require.NoError(t, err)
+		assert.NotNil(t, got)
+		assert.Empty(t, got)
+		assert.Zero(t, total)
+	})
+
+	t.Run("storage error", func(t *testing.T) {
+		t.Parallel()
+		b, books := newTagBusiness(t)
+		books.EXPECT().ListByTagTitle(ctx, "x", int64(1), int64(0)).Return(nil, int64(0), assert.AnError)
+		_, _, err := b.ListTagBooks(ctx, "x", 1, 0)
+		require.ErrorIs(t, err, assert.AnError)
+	})
+}
