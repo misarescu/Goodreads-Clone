@@ -212,7 +212,7 @@ func TestBookRepository_ListByTagTitle(t *testing.T) {
 	t.Parallel()
 	s := newTestStorage(t)
 	ctx := context.Background()
-	var ids []int64
+	ids := make([]int64, 0, 3)
 	for _, title := range []string{"B", "A", "C"} {
 		ids = append(ids, createTestBook(t, s, title, "x").ID)
 	}
