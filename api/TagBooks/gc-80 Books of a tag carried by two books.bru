@@ -1,0 +1,35 @@
+meta {
+  name: gc-80 Books of a tag carried by two books
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/tags/g80{{runId}}-x/books
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  const runId = bru.getVar("runId");
+  const tag = "g80" + runId + "-x";
+  test("lists both books ordered by title", function () {
+    expect(res.body.books).to.be.an("array");
+    expect(res.body.books.map(function (b) { return b.id; })).to.eql([bru.getVar("gc80B"), bru.getVar("gc80A")]);
+    expect(res.body.total).to.equal(2);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(0);
+  });
+  test("items have the fields of GET /api/books items", function () {
+    expect(res.body.books[0]).to.eql(bru.getVar("gc80SnapB"));
+    expect(res.body.books[1]).to.eql(bru.getVar("gc80SnapA"));
+  });
+}
+
+docs {
+  gc-80 Books of a tag carried by two books. Response: 200
+}

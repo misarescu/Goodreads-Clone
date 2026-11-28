@@ -45,6 +45,7 @@ func (s *Server) registerRoutes() {
 	// Tags API
 	s.mux.HandleFunc("GET /api/users/{id}/tags", s.handleListUserTags)
 	s.mux.HandleFunc("GET /api/tags", s.handleListTags)
+	s.mux.HandleFunc("GET /api/tags/{tag}/books", s.handleListTagBooks)
 
 	// Reviews API
 	s.mux.HandleFunc("POST /api/books/{id}/reviews", s.handleSaveReview)

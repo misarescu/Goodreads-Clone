@@ -207,3 +207,34 @@ func TestBookRepository_ListUserTagCounts(t *testing.T) {
 	assert.EqualValues(t, 0, total)
 	assert.Empty(t, got)
 }
+
+func TestBookRepository_ListByTagTitle(t *testing.T) {
+	t.Parallel()
+	s := newTestStorage(t)
+	ctx := context.Background()
+	ids := make([]int64, 0, 3)
+	for _, title := range []string{"B", "A", "C"} {
+		ids = append(ids, createTestBook(t, s, title, "x").ID)
+	}
+	require.NoError(t, s.Books.SetTags(ctx, ids[0], []string{"fantasy"}))
+	require.NoError(t, s.Books.SetTags(ctx, ids[1], []string{"fantasy"}))
+	require.NoError(t, s.Books.SetTags(ctx, ids[2], []string{"fantasyx"}))
+
+	page, total, err := s.Books.ListByTagTitle(ctx, "fantasy", 10, 0)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), total)
+	require.Len(t, page, 2)
+	assert.Equal(t, "A", page[0].Title)
+	assert.Equal(t, "B", page[1].Title)
+
+	page, total, err = s.Books.ListByTagTitle(ctx, "fantasy", 1, 1)
+	require.NoError(t, err)
+	assert.Equal(t, int64(2), total)
+	require.Len(t, page, 1)
+	assert.Equal(t, "B", page[0].Title)
+
+	none, total, err := s.Books.ListByTagTitle(ctx, "FANTASY", 10, 0)
+	require.NoError(t, err)
+	assert.Empty(t, none)
+	assert.Zero(t, total)
+}

@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Books of a tag with offset past the end
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/tags/g80{{runId}}-x/books?offset=10
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the page", function () {
+    expect(res.body.books).to.be.an("array");
+    expect(res.body.books.map(function (b) { return b.id; })).to.eql([]);
+    expect(res.body.total).to.equal(3);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(10);
+  });
+}
+
+docs {
+  gc-80 Books of a tag with offset past the end. Response: 200
+}

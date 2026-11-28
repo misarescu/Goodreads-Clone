@@ -59,3 +59,12 @@ WHERE t.book_id IN (
     JOIN shelves s ON s.id = sb.shelf_id
     WHERE s.user_id = sqlc.arg('user_id')
 );
+
+-- name: ListBooksByTagTitle :many
+SELECT b.* FROM books b
+JOIN book_tags t ON t.book_id = b.id
+WHERE t.tag = ?
+ORDER BY b.title, b.id LIMIT ? OFFSET ?;
+
+-- name: CountBooksByTag :one
+SELECT COUNT(*) FROM book_tags WHERE tag = ?;

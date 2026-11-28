@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Get book A
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/books/{{gc80A}}
+  body: none
+  auth: none
+}
+
+script:post-response {
+  bru.setVar("gc80SnapA", res.body);
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("saves the book", function () {
+    expect(res.body.id).to.equal(bru.getVar("gc80A"));
+  });
+}
+
+docs {
+  gc-80 Get book A. Response: 200
+}

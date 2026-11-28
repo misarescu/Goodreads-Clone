@@ -89,6 +89,24 @@ func (b *Business) ListBooksByTag(ctx context.Context, tag string, limit, offset
 	return books, nil
 }
 
+// ListTagBooks lists one page of the books carrying exactly tag (as stored, no normalization),
+// ordered by title then id, with review stats and tags, and the total number carrying it.
+// A tag no book carries gives an empty page and a total of 0.
+func (b *Business) ListTagBooks(ctx context.Context, tag string, limit, offset int64) ([]BookWithStats, int64, error) {
+	books, total, err := b.Storage.Books.ListByTagTitle(ctx, tag, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list tag books: %w", err)
+	}
+	if len(books) == 0 {
+		return []BookWithStats{}, total, nil
+	}
+	withStats, err := b.WithReviewStats(ctx, books)
+	if err != nil {
+		return nil, 0, err
+	}
+	return withStats, total, nil
+}
+
 // tagsByBook loads the tags of books, returning a non-nil slice for every book.
 func (b *Business) tagsByBook(ctx context.Context, books []db.Book) (map[int64][]string, error) {
 	ids := make([]int64, len(books))

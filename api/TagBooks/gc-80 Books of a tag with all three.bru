@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Books of a tag with all three
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/tags/g80{{runId}}-x/books
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the page", function () {
+    expect(res.body.books).to.be.an("array");
+    expect(res.body.books.map(function (b) { return b.id; })).to.eql([bru.getVar("gc80B"), bru.getVar("gc80A"), bru.getVar("gc80C")]);
+    expect(res.body.total).to.equal(3);
+    expect(res.body.limit).to.equal(20);
+    expect(res.body.offset).to.equal(0);
+  });
+}
+
+docs {
+  gc-80 Books of a tag with all three. Response: 200
+}

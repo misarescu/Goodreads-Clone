@@ -1,0 +1,29 @@
+meta {
+  name: gc-80 Books of a tag with limit and offset
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/tags/g80{{runId}}-x/books?limit=1&offset=1
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns the page", function () {
+    expect(res.body.books).to.be.an("array");
+    expect(res.body.books.map(function (b) { return b.id; })).to.eql([bru.getVar("gc80A")]);
+    expect(res.body.total).to.equal(3);
+    expect(res.body.limit).to.equal(1);
+    expect(res.body.offset).to.equal(1);
+  });
+}
+
+docs {
+  gc-80 Books of a tag with limit and offset. Response: 200
+}

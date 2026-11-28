@@ -514,6 +514,92 @@ func (_c *MockBookRepository_ListByTag_Call) RunAndReturn(run func(ctx context.C
 	return _c
 }
 
+// ListByTagTitle provides a mock function for the type MockBookRepository
+func (_mock *MockBookRepository) ListByTagTitle(ctx context.Context, tag string, limit int64, offset int64) ([]db.Book, int64, error) {
+	ret := _mock.Called(ctx, tag, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ListByTagTitle")
+	}
+
+	var r0 []db.Book
+	var r1 int64
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64) ([]db.Book, int64, error)); ok {
+		return returnFunc(ctx, tag, limit, offset)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, int64, int64) []db.Book); ok {
+		r0 = returnFunc(ctx, tag, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]db.Book)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, int64, int64) int64); ok {
+		r1 = returnFunc(ctx, tag, limit, offset)
+	} else {
+		r1 = ret.Get(1).(int64)
+	}
+	if returnFunc, ok := ret.Get(2).(func(context.Context, string, int64, int64) error); ok {
+		r2 = returnFunc(ctx, tag, limit, offset)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
+}
+
+// MockBookRepository_ListByTagTitle_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListByTagTitle'
+type MockBookRepository_ListByTagTitle_Call struct {
+	*mock.Call
+}
+
+// ListByTagTitle is a helper method to define mock.On call
+//   - ctx context.Context
+//   - tag string
+//   - limit int64
+//   - offset int64
+func (_e *MockBookRepository_Expecter) ListByTagTitle(ctx interface{}, tag interface{}, limit interface{}, offset interface{}) *MockBookRepository_ListByTagTitle_Call {
+	return &MockBookRepository_ListByTagTitle_Call{Call: _e.mock.On("ListByTagTitle", ctx, tag, limit, offset)}
+}
+
+func (_c *MockBookRepository_ListByTagTitle_Call) Run(run func(ctx context.Context, tag string, limit int64, offset int64)) *MockBookRepository_ListByTagTitle_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 int64
+		if args[2] != nil {
+			arg2 = args[2].(int64)
+		}
+		var arg3 int64
+		if args[3] != nil {
+			arg3 = args[3].(int64)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+		)
+	})
+	return _c
+}
+
+func (_c *MockBookRepository_ListByTagTitle_Call) Return(books []db.Book, n int64, err error) *MockBookRepository_ListByTagTitle_Call {
+	_c.Call.Return(books, n, err)
+	return _c
+}
+
+func (_c *MockBookRepository_ListByTagTitle_Call) RunAndReturn(run func(ctx context.Context, tag string, limit int64, offset int64) ([]db.Book, int64, error)) *MockBookRepository_ListByTagTitle_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // ListSimilar provides a mock function for the type MockBookRepository
 func (_mock *MockBookRepository) ListSimilar(ctx context.Context, bookID int64, limit int64, offset int64) ([]storage.SimilarBook, int64, error) {
 	ret := _mock.Called(ctx, bookID, limit, offset)
